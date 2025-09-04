@@ -1,0 +1,69 @@
+package net.ankrya.rider_api.client.sound;
+
+import net.ankrya.rider_api.message.MessageLoader;
+import net.ankrya.rider_api.message.common.LoopSoundMessage;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Player;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.tick.ServerTickEvent;
+
+import java.util.HashMap;
+import java.util.Map;
+
+@EventBusSubscriber
+public class DelayPlaySound {
+    public static final Map<Player, Map<ResourceLocation, DelaySound>> sounds;
+
+    public static void add(ServerPlayer player, LoopSoundMessage sound, int delay) {
+        if (sounds.containsKey(player))
+            sounds.get(player).put(sound.getSound(), new DelaySound(player, sound, delay));
+        else {
+            sounds.put(player, new HashMap<>());
+            add(player, sound, delay);
+        }
+    }
+
+    public static void cancel(Player player,ResourceLocation location){
+        if (sounds.containsKey(player)){
+            sounds.get(player).remove(location);
+        }
+    }
+
+    @SubscribeEvent
+    public static void tick(ServerTickEvent.Post event) {
+        if (event.hasTime()) {
+            sounds.forEach((player, delaySounds) -> {
+                for (DelaySound delaySound : delaySounds.values()){
+                    if (delaySound.delay > 0) {
+                        delaySound.tick();
+                    } else {
+                        MessageLoader.sendToPlayersNearby(delaySound.sound, delaySound.player);
+                        DelayPlaySound.cancel(player, delaySound.sound.getSound());
+                    }
+                }
+            });
+        }
+    }
+
+    static {
+        sounds = new HashMap<>();
+    }
+
+    public static class DelaySound{
+        final ServerPlayer player;
+        final LoopSoundMessage sound;
+        int delay;
+
+        public DelaySound(ServerPlayer player, LoopSoundMessage sound, int delay) {
+            this.player = player;
+            this.sound = sound;
+            this.delay = delay;
+        }
+
+        public void tick() {
+            this.delay = (this.delay > 0) ? (this.delay - 1) : this.delay;
+        }
+    }
+}

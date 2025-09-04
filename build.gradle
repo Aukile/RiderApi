@@ -1,0 +1,224 @@
+import java.text.SimpleDateFormat
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+}
+
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+    id 'idea'
+    id 'net.neoforged.moddev' version '2.0.103'
+}
+
+SimpleDateFormat FORMAT = new SimpleDateFormat("MMdd-HHmmss")
+FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"))
+
+//version = mod_version
+version = FORMAT.format(new Date())
+group = mod_group_id
+
+repositories {
+    maven {
+        // 阿里云镜像，方便国内开发
+        url = uri("https://maven.aliyun.com/repository/public/")
+        content {
+            includeGroup 'org.apache.commons'
+        }
+    }
+    maven {
+        // location of the maven that hosts JEI files since January 2023
+        // Patchouli
+        name = "Jared's maven"
+        url = "https://maven.blamejared.com/"
+    }
+    maven {
+        name "KosmX's maven"
+        url 'https://maven.kosmx.dev/'
+    }
+    maven {
+        // location of a maven mirror for JEI files, as a fallback
+        name = "Mod Maven"
+        url = "https://modmaven.k-4u.nl"
+    }
+    exclusiveContent {
+        forRepository {
+            maven {
+                url "https://cursemaven.com"
+            }
+        }
+        filter {
+            includeGroup "curse.maven"
+        }
+    }
+    mavenLocal()
+}
+
+base {
+    archivesName = mod_id
+}
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+
+neoForge {
+    // 指定要使用的 NeoForge 版本。
+    version = project.neo_version
+
+    parchment {
+        mappingsVersion = project.parchment_mappings_version
+        minecraftVersion = project.parchment_minecraft_version
+    }
+
+    // 这行是可选的。访问转换器会自动检测
+//    accessTransformers = file('src/main/resources/META-INF/accesstransformer.cfg')
+
+    // 默认的运行配置。
+    // 这些配置可以根据需要进行调整、删除或复制。
+    runs {
+        client {
+            client()
+
+            // 以逗号分隔的命名空间列表，用于加载游戏测试内容。空值表示所有命名空间。
+            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+        }
+
+        client2 {
+            client()
+
+            gameDirectory = project.file('run-client2')
+
+            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+
+            programArgument '--username=Ankrya'
+        }
+
+        server {
+            server()
+            programArgument '--nogui'
+            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+        }
+
+        // 此运行配置启动 GameTestServer 并运行所有已注册的游戏测试，然后退出。
+        // 默认情况下，如果没有提供游戏测试，服务器将崩溃。
+        // 游戏测试系统默认也在其他运行配置下启用，通过 /test 命令使用。
+        gameTestServer {
+            type = "gameTestServer"
+            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+        }
+
+        data {
+            data()
+
+            // 示例：覆盖上面 configureEach 中设置的工作目录，如果需要使用它，请取消注释
+            // gameDirectory = project.file('run-data')
+
+            // 指定数据生成的 modid，输出资源的位置，以及查找现有资源的位置。
+            programArguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
+        }
+
+        // 应用于所有上述运行配置
+        configureEach {
+            // 推荐的用户开发环境日志记录数据
+            // 可以根据需要添加/删除标记，用逗号分隔。
+            // "SCAN": 用于模组扫描。
+            // "REGISTRIES": 用于触发注册表事件。
+            // "REGISTRYDUMP": 用于获取所有注册表的内容。
+            systemProperty 'forge.logging.markers', 'REGISTRIES'
+
+            // 控制台推荐的日志记录级别
+            // 你可以在这里设置不同的级别。
+            // 请阅读: https://stackoverflow.com/questions/2031163/when-to-use-the-different-log-levels
+            logLevel = org.slf4j.event.Level.DEBUG
+        }
+    }
+
+    mods {
+        // 定义模组与源代码的绑定关系
+        // 这些关系用于告诉游戏哪些源代码属于哪个模组
+        // 在单模组项目中大多是可选的
+        // 但多模组项目应为每个模组定义一个
+        "${mod_id}" {
+            sourceSet(sourceSets.main)
+        }
+    }
+}
+
+// 包含数据生成器生成的资源。
+sourceSets.main.resources { srcDir 'src/generated/resources' }
+
+
+dependencies {
+    implementation "dev.kosmx.player-anim:player-animation-lib-forge:${player_animation_lib}"
+    compileOnly "mezz.jei:jei-${minecraft_version}-common-api:${jei_version}"
+    compileOnly "mezz.jei:jei-${minecraft_version}-neoforge-api:${jei_version}"
+    runtimeOnly "mezz.jei:jei-${minecraft_version}-neoforge:${jei_version}"
+    implementation "curse.maven:geckolib-${geckolib_version}"
+
+//    compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:0.3.6"))
+//    implementation(jarJar("io.github.llamalad7:mixinextras-forge:0.3.6"))
+
+    // 示例模组依赖关系，使用 ./libs 中的 mod jar 文件和扁平目录仓库
+    // 这对应于 ./libs/coolmod-${mc_version}-${coolmod_version}.jar
+    // 在搜索时，组 ID 被忽略 -- 在这种情况下，它是 "blank"
+    // implementation "blank:coolmod-${mc_version}:${coolmod_version}"
+
+    // 示例使用文件作为依赖项的模组依赖关系
+    // implementation files("libs/coolmod-${mc_version}-${coolmod_version}.jar")
+
+    // 示例使用兄弟或子项目的项目依赖关系:
+    // implementation project(":myproject")
+
+    // 更多信息:
+    // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
+    // http://www.gradle.org/docs/current/userguide/dependency_management.html
+}
+
+// 这个代码块扩展了在指定资源目标中声明的所有替换属性。
+// 缺少属性将导致错误。属性使用 ${} Groovy 表示法扩展。
+var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {
+    var replaceProperties = [minecraft_version      : minecraft_version,
+                             minecraft_version_range: minecraft_version_range,
+                             neo_version            : neo_version,
+                             neo_version_range      : neo_version_range,
+                             loader_version_range   : loader_version_range,
+                             mod_id                 : mod_id,
+                             mod_name               : mod_name,
+                             mod_license            : mod_license,
+                             mod_version            : mod_version,
+                             mod_authors            : mod_authors,
+                             mod_description        : mod_description]
+    inputs.properties replaceProperties
+    expand replaceProperties
+    from "src/main/templates"
+    into "build/generated/sources/modMetadata"
+}
+
+// 将 "generateModMetadata" 的输出包含为构建的输入目录
+// 这适用于通过 Gradle 和 IDE 进行的构建。
+sourceSets.main.resources.srcDir generateModMetadata
+// 为了避免必须手动运行 "generateModMetadata"，使其在每次项目重新加载时运行
+neoForge.ideSyncTask generateModMetadata
+
+// 示例配置，允许使用 maven-publish 插件发布
+publishing {
+    publications {
+        register('mavenJava', MavenPublication) {
+            from components.java
+        }
+    }
+    repositories {
+        maven {
+            url "file://${project.projectDir}/repo"
+        }
+    }
+}
+
+// IDEA 不再自动下载依赖项的源代码/javadoc jar 文件，因此我们需要显式启用该行为。
+idea {
+    module {
+        downloadSources = true
+        downloadJavadoc = true
+    }
+}

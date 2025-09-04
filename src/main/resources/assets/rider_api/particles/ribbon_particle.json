@@ -1,0 +1,15 @@
+{
+  "textures": [
+    "rider_api:ribbon_particle"
+  ],
+  "canCollide": true,
+  "emissive": false,
+  "duration": 30,
+  "drag": 0.9,
+  "gravity": 0.0,
+  "r": 1.0,
+  "g": 1.0,
+  "b": 1.0,
+  "a": 1.0,
+  "scale": 1.0
+}

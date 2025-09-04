@@ -1,0 +1,11 @@
+{
+  "parent": "minecraft:item/handheld",
+  "textures": {
+    "layer0": "rider_api:item/test/layer_0",
+    "layer1": "rider_api:item/test/layer_1"
+  },
+  "loader": "rider_api:cosmic",
+  "cosmic": {
+    "mask": "rider_api:item/test/mask"
+  }
+}
