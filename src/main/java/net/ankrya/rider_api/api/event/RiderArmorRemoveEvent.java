@@ -2,7 +2,7 @@ package net.ankrya.rider_api.api.event;
 
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
-import net.neoforged.bus.api.Event;
+import net.minecraftforge.eventbus.api.Event;
 
 /**
  * 使用{@link net.ankrya.rider_api.item.base.armor.BaseRiderArmor#unequip} 解除变身时触发
@@ -30,17 +30,9 @@ public class RiderArmorRemoveEvent extends Event {
      * @see net.ankrya.rider_api.item.base.armor.BaseRiderArmor#unequip
      */
     public static class Pre extends RiderArmorRemoveEvent {
-        boolean isCanceled = false;
 
         public Pre(LivingEntity entity, EquipmentSlot slot) {
             super(entity, slot);
-        }
-        public boolean canRun() {
-            return !isCanceled;
-        }
-
-        public void setCanceled(boolean cancel){
-            this.isCanceled = cancel;
         }
     }
 

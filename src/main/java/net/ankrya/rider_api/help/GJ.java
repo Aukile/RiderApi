@@ -291,6 +291,29 @@ public abstract class GJ {
         }
     }
 
+    public static class TimerControl {
+        public static void timerStartUp(Level level, LivingEntity livingEntity, int timerState){
+            timerStartUp(level, timerState);
+            Variables.setVariable(livingEntity, ModVariable.TIME_STATUS, timerState);
+        }
+
+        public static int getWorldTime(Level level){
+            return (int) Variables.getVariable(level, ModVariable.TIME_STATUS);
+        }
+
+        public static void timerStartUp(Level level, int timerState){
+            Variables.setVariable(level, ModVariable.TIME_STATUS, timerState);
+        }
+
+        public static boolean isSlowEntity(Entity entity) {
+            return (int) Variables.getVariable(entity, ModVariable.TIME_STATUS) == 1;
+        }
+
+        public static boolean isPauseEntity(Entity entity) {
+            return (int) Variables.getVariable(entity, ModVariable.TIME_STATUS) == 2;
+        }
+    }
+
     /**
      * 超能粒子相关/案例<br>
      * (乱叫喵~)<br>

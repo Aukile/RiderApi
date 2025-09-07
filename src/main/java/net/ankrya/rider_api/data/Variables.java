@@ -120,7 +120,7 @@ public final class Variables implements INBTSerializable<ListTag> {
      * @param clazz 类型
      * @param name 名称
      * @param defaultValue 默认值
-     * @param save 是否保存（玩家死亡是否保存/世界维度间是否同步）
+     * @param save 是否保存（玩家死亡是否保存/世界之间维度间是否同步）
      */
     public <T> void registerVariable(Class<T> clazz, String name, T defaultValue, boolean save){
         syncVariables(name, defaultValue, VariableSerializer.auto(clazz), save);
@@ -196,8 +196,11 @@ public final class Variables implements INBTSerializable<ListTag> {
 
     /**获取世界的同步数据*/
     public static <T> T getVariable(Level level, String name){
-        Variables data = level.getData(Variables.VARIABLES);
-        return data.getVariable(name);
+        if (level != null){
+            Variables data = level.getData(Variables.VARIABLES);
+            return data.getVariable(name);
+        }
+        return null;
     }
 
     public static class Data<T>{

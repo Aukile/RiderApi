@@ -24,7 +24,7 @@ public class ConditionsToCall<T>{
     }
 
     public ConditionsToCall(Callable<T> callable, Predicate<Integer> conditions) {
-        this(NeoForge.EVENT_BUS, callable, conditions);
+        this(MinecraftForge.EVENT_BUS, callable, conditions);
     }
 
     @SubscribeEvent

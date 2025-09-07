@@ -22,7 +22,7 @@ public class ConditionsToRun {
     }
 
     public ConditionsToRun(Runnable runnable, Predicate<Integer> conditions) {
-        this(NeoForge.EVENT_BUS, runnable, conditions);
+        this(MinecraftForge.EVENT_BUS, runnable, conditions);
     }
 
     @SubscribeEvent

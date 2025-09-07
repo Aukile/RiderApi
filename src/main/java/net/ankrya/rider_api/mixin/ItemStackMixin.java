@@ -24,7 +24,7 @@ public class ItemStackMixin {
             at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ItemStack;getItem()Lnet/minecraft/world/item/Item;", ordinal = 1))
     public void hurtAndBreak(int damage, ServerLevel level, @Nullable LivingEntity entity, Consumer<Item> itemConsumer, CallbackInfo ci) {
         ItemStack itemStack = (ItemStack) (Object) this;
-        NeoForge.EVENT_BUS.post(new ArmorBrokenEvent(entity, itemStack));
+        MinecraftForge.EVENT_BUS.post(new ArmorBrokenEvent(entity, itemStack));
     }
 
     @Inject(method = "inventoryTick", at = @At("HEAD"))

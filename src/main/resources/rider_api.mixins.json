@@ -2,13 +2,34 @@
   "required": true,
   "minVersion": "0.8",
   "package": "net.ankrya.rider_api.mixin",
-  "compatibilityLevel": "JAVA_21",
+  "compatibilityLevel": "JAVA_8",
   "mixins": [
     "EntityMixin",
-    "ItemStackMixin"
+    "ItemStackMixin",
+    "timer.ServerLevelMixin",
+    "timer.ServerPauseTick$EndDragonFightMixin",
+    "timer.ServerPauseTick$LevelChunkMixin",
+    "timer.ServerPauseTick$LevelMixin",
+    "timer.ServerPauseTick$RaidsMixin",
+    "timer.client.GeoModelMixin"
   ],
   "client": [
-    "ItemRendererMixin"
+    "ItemRendererMixin",
+    "accessor.MinecraftAccessor",
+    "client.MouseHandlerMixin",
+    "timer.client.ClientLevelMixin",
+    "timer.client.ClientPauseTick$CameraMixin",
+    "timer.client.ClientPauseTick$ItemInHandRendererMixin",
+    "timer.client.ClientPauseTick$LevelRendererMixin",
+    "timer.client.ClientPauseTick$LightTextureMixin",
+    "timer.client.ClientPauseTick$MusicManagerMixin",
+    "timer.client.ClientPauseTick$RenderStateShardMixin",
+    "timer.client.ClientPauseTick$SoundEngineMixin",
+    "timer.client.ClientPauseTick$TextureManagerMixin",
+    "timer.client.GameRendererMixin",
+    "timer.client.MinecraftMixin",
+    "timer.client.ParticleEngineMixin",
+    "timer.client.TimerMixin"
   ],
   "injectors": {
     "defaultRequire": 1

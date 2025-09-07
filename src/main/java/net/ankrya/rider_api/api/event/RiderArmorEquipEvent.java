@@ -3,7 +3,7 @@ package net.ankrya.rider_api.api.event;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.bus.api.Event;
+import net.minecraftforge.eventbus.api.Event;
 
 /**
  * 使用{@link net.ankrya.rider_api.item.base.armor.BaseRiderArmor#equip} 来穿甲时会触发

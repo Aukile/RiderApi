@@ -20,7 +20,7 @@ public class WaitToRun {
     }
 
     public WaitToRun(Runnable runnable, int delayTick) {
-        this(NeoForge.EVENT_BUS, runnable, delayTick);
+        this(MinecraftForge.EVENT_BUS, runnable, delayTick);
     }
 
     @SubscribeEvent

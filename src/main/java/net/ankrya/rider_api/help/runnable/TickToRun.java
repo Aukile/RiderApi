@@ -23,7 +23,7 @@ public class TickToRun {
     }
 
     public TickToRun(Runnable runnable, int tick, float interval) {
-        this(runnable, tick, interval, NeoForge.EVENT_BUS);
+        this(runnable, tick, interval, MinecraftForge.EVENT_BUS);
     }
 
     @SubscribeEvent

@@ -10,19 +10,16 @@ displayURL = "https://space.bilibili.com/155938791"
 authors = "${mod_authors}"
 description = '''${mod_description}'''
 
-[[mixins]]
-config = "${mod_id}.mixins.json"
-
 [[dependencies."${mod_id}"]]
-modId = "neoforge"
-type = "required"
-versionRange = "${neo_version_range}"
+modId = "forge"
+mandatory = true
+versionRange = "${forge_version_range}"
 ordering = "NONE"
 side = "BOTH"
 
 [[dependencies."${mod_id}"]]
 modId = "minecraft"
-type = "required"
+mandatory = true
 versionRange = "${minecraft_version_range}"
 ordering = "NONE"
 side = "BOTH"

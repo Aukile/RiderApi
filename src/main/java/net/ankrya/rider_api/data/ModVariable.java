@@ -3,6 +3,8 @@ package net.ankrya.rider_api.data;
 public class ModVariable {
     /**攻击冷却变量，int类型*/
     public static final String HIT_COOLING = "hit_cooling";
+    /**时停控制器，int类型*/
+    public static final String TIME_STATUS = "time_status";
 
     /**
      * 添加变量 <br>
@@ -10,5 +12,6 @@ public class ModVariable {
      */
     public static void init(Variables variables){
         variables.registerVariable(int.class, HIT_COOLING, 0, false);
+        variables.registerVariable(int.class, TIME_STATUS, 0, false);
     }
 }

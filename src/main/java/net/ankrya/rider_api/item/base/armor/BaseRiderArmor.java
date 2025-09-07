@@ -3,9 +3,8 @@ package net.ankrya.rider_api.item.base.armor;
 import net.ankrya.rider_api.api.event.RiderArmorEquipEvent;
 import net.ankrya.rider_api.api.event.RiderArmorRemoveEvent;
 import net.ankrya.rider_api.help.GJ;
-import net.ankrya.rider_api.item.data.ArmorData;
 import net.minecraft.core.Holder;
-import net.minecraft.core.component.DataComponentType;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -18,8 +17,8 @@ import net.minecraft.world.item.ArmorMaterial;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.items.ItemHandlerHelper;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.items.ItemHandlerHelper;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
@@ -27,9 +26,7 @@ import java.util.Map;
 public abstract class BaseRiderArmor extends BaseRiderArmorBase {
     //干脆记下来算了？
     public final EquipmentSlot slot;
-    public static final DataComponentType<ArmorData> BACKUP_ARMOR =
-            DataComponentType.<ArmorData>builder().persistent(ArmorData.CODEC)
-                    .networkSynchronized(ArmorData.STREAM_CODEC).build();
+    public static final String BACKUP_ARMOR = "backupArmor";
 
     public BaseRiderArmor(Holder<ArmorMaterial> material, Item.Properties properties, EquipmentSlot slot) {
         super(material, getType(slot), properties);
@@ -85,13 +82,12 @@ public abstract class BaseRiderArmor extends BaseRiderArmorBase {
 
     // 存储备用盔甲
     public static void storeBackupArmor(ItemStack storageArmor, ItemStack backupArmor) {
-        storageArmor.set(BACKUP_ARMOR, ArmorData.fromItemStack(backupArmor));
+        storageArmor.getOrCreateTag().put(BACKUP_ARMOR, backupArmor.save(new CompoundTag()));
     }
 
     // 获取备用盔甲
     public static ItemStack getBackupArmor(ItemStack storageArmor) {
-        ArmorData data = storageArmor.get(BACKUP_ARMOR);
-        return data != null ? data.toItemStack() : ItemStack.EMPTY;
+        return ItemStack.of(storageArmor.getOrCreateTag().getCompound(BACKUP_ARMOR));
     }
 
     /**
@@ -99,13 +95,13 @@ public abstract class BaseRiderArmor extends BaseRiderArmorBase {
      * 会触发{@link RiderArmorEquipEvent}
      */
     public static void equip(LivingEntity entity, EquipmentSlot slot, ItemStack stack){
-        if (NeoForge.EVENT_BUS.post(new RiderArmorEquipEvent.Pre(entity, slot, stack)).canRun()){
+        if (MinecraftForge.EVENT_BUS.post(new RiderArmorEquipEvent.Pre(entity, slot, stack))){
             ItemStack original = entity.getItemBySlot(slot);
             if (!original.isEmpty()) storeBackupArmor(stack, original);
             if (entity instanceof Player player) {
                 GJ.ToItem.equipBySlot(player, slot, stack);
             } else entity.setItemSlot(slot, stack);
-            NeoForge.EVENT_BUS.post(new RiderArmorEquipEvent.Post(entity, slot, stack));
+            MinecraftForge.EVENT_BUS.post(new RiderArmorEquipEvent.Post(entity, slot, stack));
         }
     }
 
@@ -114,11 +110,11 @@ public abstract class BaseRiderArmor extends BaseRiderArmorBase {
      * 会触发{@link RiderArmorRemoveEvent}
      */
     public static void unequip(LivingEntity entity, EquipmentSlot slot){
-        if (NeoForge.EVENT_BUS.post(new RiderArmorRemoveEvent.Pre(entity, slot)).canRun()){
+        if (MinecraftForge.EVENT_BUS.post(new RiderArmorRemoveEvent.Pre(entity, slot))){
             ItemStack stack = entity.getItemBySlot(slot);
             ItemStack backup = getBackupArmor(stack);
             entity.setItemSlot(slot, backup);
-            NeoForge.EVENT_BUS.post(new RiderArmorRemoveEvent.Post(entity, slot));
+            MinecraftForge.EVENT_BUS.post(new RiderArmorRemoveEvent.Post(entity, slot));
         }
     }
 
