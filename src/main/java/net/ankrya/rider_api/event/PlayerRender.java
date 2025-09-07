@@ -1,6 +1,5 @@
 package net.ankrya.rider_api.event;
 
-import net.ankrya.rider_api.item.base.armor.BaseGeoArmor;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
@@ -59,13 +58,13 @@ public class PlayerRender {
         PlayerModel<AbstractClientPlayer> playermodel = ((PlayerRenderer)entityrenderer).getModel();
         poseStack.pushPose();
 
-        if(chest.getItem() instanceof BaseGeoArmor items){
-            GeoArmorRenderer<BaseGeoArmor> geoArmorRender = (GeoArmorRenderer) getArmorModelHook(player, chest, EquipmentSlot.CHEST, playermodel);
+        if(chest.getItem() instanceof GeoItem items){
+            GeoArmorRenderer geoArmorRender = (GeoArmorRenderer) getArmorModelHook(player, chest, EquipmentSlot.CHEST, playermodel);
 
             VertexConsumer buffer = bufferSource.getBuffer(RenderType.entityTranslucent(geoArmorRender.getTextureLocation(items)));
             RenderType renderType = RenderType.entityTranslucent(geoArmorRender.getTextureLocation(items));
 
-            GeoModel<BaseGeoArmor> geoModel = geoArmorRender.getGeoModel();
+            GeoModel geoModel = geoArmorRender.getGeoModel();
             BakedGeoModel model = geoModel.getBakedModel(geoModel.getModelResource(items, geoArmorRender));
 
             SetAllBoneNoVisible(geoArmorRender);
@@ -82,7 +81,7 @@ public class PlayerRender {
                 left.updateRotation(0, 0, 0);
                 left.updatePosition(0, 0, 0);
             }
-            geoArmorRender.actuallyRender(poseStack, items,model,renderType,bufferSource, buffer,true,partialTick, packedLight, OverlayTexture.NO_OVERLAY, -1);
+            geoArmorRender.actuallyRender(poseStack, (Item) items,model,renderType,bufferSource, buffer,true,partialTick, packedLight, OverlayTexture.NO_OVERLAY, -1);
             event.setCanceled(true);
         }
 
@@ -154,7 +153,7 @@ public class PlayerRender {
 
         ItemStack chest = player.getItemBySlot(EquipmentSlot.CHEST);
 
-        if(chest.getItem() instanceof BaseGeoArmor items){
+        if(chest.getItem() instanceof GeoItem){
             poseStack.pushPose();
             if (!player.isScoping()) {
                 if (stack.isEmpty()) {
