@@ -4,7 +4,7 @@ import net.ankrya.rider_api.interfaces.geo.IGeoItem;
 import net.minecraft.world.item.SwordItem;
 import net.minecraft.world.item.Tier;
 import software.bernie.geckolib.animatable.SingletonGeoAnimatable;
-import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
+import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
 /**
@@ -14,8 +14,8 @@ import software.bernie.geckolib.util.GeckoLibUtil;
 public abstract class BaseGeoSword extends SwordItem implements IGeoItem {
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
 
-    public BaseGeoSword(Tier tier, Properties properties) {
-        super(tier, properties);
+    public BaseGeoSword(Tier tier, int attackDamage, float attackSpeed, Properties properties) {
+        super(tier, attackDamage, attackSpeed, properties);
         SingletonGeoAnimatable.registerSyncedAnimatable(this);
     }
 

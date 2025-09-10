@@ -17,7 +17,7 @@ import org.lwjgl.system.MemoryUtil;
 
 import java.util.Arrays;
 
-public abstract class CCUniform  extends Uniform implements ICCUniform {
+public abstract class CCUniform extends Uniform implements ICCUniform {
     protected final UniformType type;
 
     @SuppressWarnings("ConstantConditions")

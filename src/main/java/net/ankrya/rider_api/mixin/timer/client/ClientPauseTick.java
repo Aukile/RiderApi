@@ -1,6 +1,11 @@
 package net.ankrya.rider_api.mixin.timer.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import net.ankrya.rider_api.data.ModVariable;
+import net.ankrya.rider_api.data.Variables;
+import net.ankrya.rider_api.help.GJ;
+import net.ankrya.rider_api.interfaces.timer.ITimer;
+import net.ankrya.rider_api.mixin.accessor.MinecraftAccessor;
 import net.minecraft.Util;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
@@ -12,11 +17,6 @@ import net.minecraft.client.sounds.MusicManager;
 import net.minecraft.client.sounds.SoundEngine;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
-import net.ankrya.rider_api.help.GJ.TimerControl;
-import net.ankrya.rider_api.interfaces.timer.ITimer;
-import net.ankrya.rider_api.mixin.accessor.MinecraftAccessor;
-import net.ankrya.rider_api.data.ModVariable;
-import net.ankrya.rider_api.data.Variables;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -42,7 +42,7 @@ public class ClientPauseTick {
         @Inject(method = {"tick", "tickRain"}, at = {@At("HEAD")}, cancellable = true)
         private void pauseTick(CallbackInfo ci) {
             if (level != null) {
-                int time_state = (int)Variables.getVariable(level, ModVariable.TIME_STATUS);
+                int time_state = (int) Variables.getVariable(level, ModVariable.TIME_STATUS);
                 if (time_state == 2) {
                     ci.cancel();
                 }
@@ -56,17 +56,17 @@ public class ClientPauseTick {
             ClientLevel level = (Minecraft.getInstance()).level;
             if (level == null)
                 return original;
-            return (int)Variables.getVariable(level, ModVariable.TIME_STATUS) ==2 ? 0.0F : original;
+            return (int) Variables.getVariable(level, ModVariable.TIME_STATUS) ==2 ? 0.0F : original;
         }
 
         @Inject(method = "renderEntity",at = @At("HEAD"),cancellable = true)
         private void renderEntity(Entity p_109518_, double p_109519_, double p_109520_, double p_109521_, float p_109522_, PoseStack p_109523_, MultiBufferSource p_109524_, CallbackInfo ci) {
             if (this.level != null) {
-                if (((int)Variables.getVariable(level, ModVariable.TIME_STATUS) == 2 && TimerControl.isPauseEntity(p_109518_))
-                        || ((int)Variables.getVariable(level, ModVariable.TIME_STATUS) == 1 && TimerControl.isSlowEntity(p_109518_) ) ){
+                if (((int) Variables.getVariable(level, ModVariable.TIME_STATUS) == 2 && GJ.TimerControl.isPauseEntity(p_109518_))
+                        || ((int) Variables.getVariable(level, ModVariable.TIME_STATUS) == 1 && GJ.TimerControl.isSlowEntity(p_109518_) ) ){
 
-                    ITimer timerTimer = (ITimer) ((MinecraftAccessor)minecraft).getTimer();
-                    float patialTick = timerTimer.riderApi$deltaTick();
+                    ITimer ITimer = (ITimer) ((MinecraftAccessor)minecraft).getTimer();
+                    float patialTick = ITimer.rider_api$partialTick();
                     double d0 = Mth.lerp((double)patialTick, p_109518_.xOld, p_109518_.getX());
                     double d1 = Mth.lerp((double)patialTick, p_109518_.yOld, p_109518_.getY());
                     double d2 = Mth.lerp((double)patialTick, p_109518_.zOld, p_109518_.getZ());
@@ -100,8 +100,8 @@ public class ClientPauseTick {
         @Inject(method = {"tick"}, at = {@At("HEAD")}, cancellable = true)
         private void pauseTick(CallbackInfo ci) {
             ClientLevel level = (Minecraft.getInstance()).level;
-            if (level != null){
-                int time_state = Variables.getVariable(level, ModVariable.TIME_STATUS);
+            if (level == null){
+                int time_state = (int) Variables.getVariable(level, ModVariable.TIME_STATUS);
                 if (time_state == 2) {
                     ci.cancel();
                 }
@@ -117,8 +117,8 @@ public class ClientPauseTick {
         private void pauseTick(CallbackInfo ci) {
             ClientLevel level = (Minecraft.getInstance()).level;
             if (level != null){
-                int time_state = Variables.getVariable(level, ModVariable.TIME_STATUS);
-                if(time_state == 2 && !TimerControl.isPauseEntity(entity)){
+                int time_state = (int) Variables.getVariable(level, ModVariable.TIME_STATUS);
+                if(time_state == 2 && !GJ.TimerControl.isPauseEntity(entity)){
                     ci.cancel();
                 }
             }
@@ -136,8 +136,8 @@ public class ClientPauseTick {
             ClientLevel level = minecraft.level;
             if (level != null)
             {
-                int time_state = (int)Variables.getVariable(level, ModVariable.TIME_STATUS);
-                if(time_state == 2 && this.minecraft.player != null && !TimerControl.isPauseEntity(this.minecraft.player)){
+                int time_state = (int) Variables.getVariable(level, ModVariable.TIME_STATUS);
+                if(time_state == 2 && this.minecraft.player != null && !GJ.TimerControl.isPauseEntity(this.minecraft.player)){
                     ci.cancel();
                 }
             }
@@ -156,7 +156,7 @@ public class ClientPauseTick {
             ClientLevel level = (Minecraft.getInstance()).level;
             if (level == null)
                 return Util.getMillis();
-            if ((int)Variables.getVariable(level, ModVariable.TIME_STATUS) == 1) {
+            if ((int) Variables.getVariable(level, ModVariable.TIME_STATUS) == 1) {
                 timeclock$millis = Util.getMillis() * 2L / 20L;
             }
             return timeclock$millis;
@@ -170,7 +170,7 @@ public class ClientPauseTick {
             ClientLevel level = (Minecraft.getInstance()).level;
             if (level != null)
             {
-                int time_state = (int)Variables.getVariable(level, ModVariable.TIME_STATUS);
+                int time_state = (int) Variables.getVariable(level, ModVariable.TIME_STATUS);
                 if(time_state == 2){
                     ci.cancel();
                 }
@@ -185,7 +185,7 @@ public class ClientPauseTick {
             ClientLevel level = (Minecraft.getInstance()).level;
             if (level != null)
             {
-                int time_state = Variables.getVariable(level, ModVariable.TIME_STATUS);
+                int time_state = (int) Variables.getVariable(level, ModVariable.TIME_STATUS);
                 if(time_state == 2){
                     ci.cancel();
                 }

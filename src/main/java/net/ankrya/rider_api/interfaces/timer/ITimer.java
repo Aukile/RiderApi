@@ -3,12 +3,14 @@ package net.ankrya.rider_api.interfaces.timer;
 import org.spongepowered.asm.mixin.Unique;
 
 public interface ITimer {
-    int riderApi$advanceTime(long time);
+    int timeStop = 1;
+    int timeSlow = 2;
+    int rider_api$advanceTime(long p_92526_);
 
-    float riderApi$deltaTick();
+    float rider_api$partialTick();
 
     @Unique
-    float riderApi$tickDelta();
+    float rider_api$tickDelta();
 
-    void setRiderApi$deltaTick(float deltaTick);
+    void setrider_api$partialTick(float partialTick);
 }

@@ -8,9 +8,9 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.neoforge.network.handling.IPayloadContext;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.network.NetworkEvent;
 import org.jetbrains.annotations.NotNull;
 
 public class StopLoopSound implements INMessage {
@@ -30,9 +30,9 @@ public class StopLoopSound implements INMessage {
     }
 
     @Override
-    public void run(IPayloadContext ctx) {
+    public void run(NetworkEvent.Context ctx) {
         ctx.enqueueWork(() ->{
-            Level level = ctx.player().level();
+            Level level = ctx.getSender().serverLevel();
             Entity entity = level.getEntity(id);
             if (entity instanceof ISoundMap soundMap && soundMap.rider$containsLoopSound(location))
                 soundMap.rider$removeLoopSound(location);

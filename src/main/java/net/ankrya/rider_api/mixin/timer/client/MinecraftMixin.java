@@ -1,21 +1,20 @@
 package net.ankrya.rider_api.mixin.timer.client;
 
+import com.mojang.blaze3d.pipeline.RenderTarget;
+import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.platform.WindowEventHandler;
-import net.ankrya.rider_api.help.GJ.TimerControl;
 import net.ankrya.rider_api.data.ModVariable;
 import net.ankrya.rider_api.data.Variables;
+import net.ankrya.rider_api.help.GJ;
 import net.ankrya.rider_api.interfaces.timer.ITimer;
 import net.ankrya.rider_api.interfaces.timer.TimerClientLevel;
 import net.minecraft.CrashReport;
 import net.minecraft.CrashReportCategory;
 import net.minecraft.ReportedException;
 import net.minecraft.Util;
-import net.minecraft.client.DeltaTracker;
-import net.minecraft.client.KeyboardHandler;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.Options;
+import net.minecraft.client.*;
 import net.minecraft.client.gui.Gui;
-import net.minecraft.client.gui.components.DebugScreenOverlay;
+import net.minecraft.client.gui.components.toasts.ToastComponent;
 import net.minecraft.client.gui.components.toasts.TutorialToast;
 import net.minecraft.client.gui.screens.DeathScreen;
 import net.minecraft.client.gui.screens.InBedChatScreen;
@@ -28,17 +27,19 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.texture.TextureManager;
+import net.minecraft.client.server.IntegratedServer;
 import net.minecraft.client.sounds.MusicManager;
 import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.client.tutorial.Tutorial;
 import net.minecraft.network.Connection;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.FrameTimer;
+import net.minecraft.util.profiling.ProfileResults;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.util.thread.ReentrantBlockableEventLoop;
 import net.minecraft.world.phys.HitResult;
-import net.neoforged.neoforge.client.ClientHooks;
-import net.neoforged.neoforge.client.extensions.IMinecraftExtension;
-import net.neoforged.neoforge.event.EventHooks;
+import net.minecraftforge.client.extensions.IForgeMinecraft;
+import net.minecraftforge.event.ForgeEventFactory;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -46,11 +47,14 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import javax.annotation.Nullable;
+import java.util.Queue;
+import java.util.concurrent.CompletableFuture;
 
 @Mixin(Minecraft.class)
-public abstract class MinecraftMixin extends ReentrantBlockableEventLoop<Runnable> implements WindowEventHandler, IMinecraftExtension {
+public abstract class MinecraftMixin extends ReentrantBlockableEventLoop<Runnable> implements WindowEventHandler, IForgeMinecraft {
 
     @Shadow
     public ClientLevel level;
@@ -61,7 +65,7 @@ public abstract class MinecraftMixin extends ReentrantBlockableEventLoop<Runnabl
     private volatile boolean pause;
     @Final
     @Shadow
-    private DeltaTracker.Timer timer;
+    private Timer timer;
     @Shadow
     private ProfilerFiller profiler;
     @Shadow
@@ -117,7 +121,8 @@ public abstract class MinecraftMixin extends ReentrantBlockableEventLoop<Runnabl
     @Shadow
     public LevelRenderer levelRenderer;
     @Final
-    @Shadow private TextureManager textureManager;
+    @Shadow
+    public TextureManager textureManager;
     @Final
     @Shadow
     private Tutorial tutorial;
@@ -127,21 +132,86 @@ public abstract class MinecraftMixin extends ReentrantBlockableEventLoop<Runnabl
     public abstract void setScreen(@Nullable Screen p_91153_);
 
     @Shadow
+    public abstract void clearLevel();
+
+    @Shadow
+    @Final
+    private Window window;
+
+    @Shadow
+    public abstract void stop();
+
+    @Shadow
+    @Nullable
+    private CompletableFuture<Void> pendingReload;
+
+    @Shadow
+    public abstract CompletableFuture<Void> reloadResourcePacks();
+
+    @Shadow
+    @Final
+    private Queue<Runnable> progressTasks;
+    @Shadow
+    @Final
+    public MouseHandler mouseHandler;
+    @Shadow
+    @Final
+    private RenderTarget mainRenderTarget;
+    @Shadow
+    @Final
+    public static boolean ON_OSX;
+    @Shadow
+    public boolean noRender;
+    @Shadow
+    private float pausePartialTick;
+    @Shadow
+    @Final
+    private ToastComponent toast;
+    @Shadow
+    @Nullable
+    private ProfileResults fpsPieResults;
+
+    @Shadow
+    protected abstract int getFramerateLimit();
+
+    @Shadow
+    private int frames;
+
+    @Shadow
+    public abstract boolean hasSingleplayerServer();
+
+    @Shadow
+    @Nullable
+    private IntegratedServer singleplayerServer;
+    @Shadow
+    @Final
+    public FrameTimer frameTimer;
+    @Shadow
+    private long lastNanoTime;
+    @Shadow
+    private long lastTime;
+    @Shadow
+    private static int fps;
+    @Shadow
+    public String fpsString;
+
+    @Shadow
     public abstract void tick();
 
-    @Shadow public abstract DebugScreenOverlay getDebugOverlay();
+    @Unique
+    private float rider_api$pausePartialTick;
 
-    @Inject(method = "runTick", at = @At("HEAD"))
+    @Inject(method = "runTick", at = @At("HEAD"), cancellable = true)
     public void runTick(boolean p_91384_, CallbackInfo ci) {
-        ITimer rider_api$timerTimer = (ITimer) this.timer;
+        ITimer rider_api$ITimer = (ITimer) this.timer;
 
         if (this.level != null) {
-            int time_Status = Variables.getVariable(this.level, ModVariable.TIME_STATUS);
+            int time_Status = (int) Variables.getVariable(this.level, ModVariable.TIME_STATUS);
             if (time_Status == 1) {
 
                 int i1;
                 if (p_91384_) {
-                    int j = rider_api$timerTimer.riderApi$advanceTime(Util.getMillis());
+                    int j = rider_api$ITimer.rider_api$advanceTime(Util.getMillis());
 
                     for (i1 = 0; i1 < Math.min(10, j); ++i1) {
                         this.rider_api$specialTickStart(time_Status);
@@ -152,7 +222,7 @@ public abstract class MinecraftMixin extends ReentrantBlockableEventLoop<Runnabl
             }else if (time_Status == 2) {
                 int i1;
                 if (p_91384_) {
-                    int j = rider_api$timerTimer.riderApi$advanceTime(Util.getMillis());
+                    int j = rider_api$ITimer.rider_api$advanceTime(Util.getMillis());
 
                     for (i1 = 0; i1 < Math.min(10, j); ++i1) {
                         this.tick();
@@ -170,27 +240,27 @@ public abstract class MinecraftMixin extends ReentrantBlockableEventLoop<Runnabl
     }
 
     @Inject(method = "tick", at = @At("HEAD"), cancellable = true)
-    public void tick(CallbackInfo ci) {
+    public void tickM(CallbackInfo ci) {
         if (this.level != null && (int) Variables.getVariable(this.level, ModVariable.TIME_STATUS) != 0) {
             boolean speed_down = true;
 
-            int time_state = Variables.getVariable(this.level, ModVariable.TIME_STATUS);
+            int time_state = (int) Variables.getVariable(this.level, ModVariable.TIME_STATUS);
 
             if (this.level != null && this.player != null) {
                 if ((int) Variables.getVariable(this.level, ModVariable.TIME_STATUS) ==1)
-                    speed_down = !TimerControl.isSlowEntity(this.player);
+                    speed_down = !GJ.TimerControl.isSlowEntity(this.player);
                 else if ((int) Variables.getVariable(this.level, ModVariable.TIME_STATUS) ==2) {
-                    speed_down = TimerControl.isPauseEntity(this.player);
+                    speed_down = GJ.TimerControl.isPauseEntity(this.player);
                 }
             }
 
-            ClientHooks.fireClientTickPre();
             if (speed_down) {
                 if (this.rightClickDelay > 0) {
                     --this.rightClickDelay;
                 }
             }
 
+            ForgeEventFactory.onPreClientTick();
             this.profiler.push("gui");
 
             if (speed_down) {
@@ -256,7 +326,7 @@ public abstract class MinecraftMixin extends ReentrantBlockableEventLoop<Runnabl
             }
 
 
-            if (!this.getDebugOverlay().showDebugScreen()) {
+            if (!this.options.renderDebug) {
                 this.gui.clearCache();
             }
 
@@ -321,10 +391,14 @@ public abstract class MinecraftMixin extends ReentrantBlockableEventLoop<Runnabl
                     }
 
                     this.tutorial.tick();
-                    EventHooks.fireLevelTickPre(this.level, () -> true);
+                    ForgeEventFactory.onPreLevelTick(this.level, () -> {
+                        return true;
+                    });
 
                     try {
-                        this.level.tick(() -> true);
+                        this.level.tick(() -> {
+                            return true;
+                        });
                     } catch (Throwable var4) {
                         CrashReport crashreport = CrashReport.forThrowable(var4, "Exception in world tick");
                         if (this.level == null) {
@@ -337,7 +411,9 @@ public abstract class MinecraftMixin extends ReentrantBlockableEventLoop<Runnabl
                         throw new ReportedException(crashreport);
                     }
 
-                    EventHooks.fireLevelTickPost(this.level, () -> true);
+                    ForgeEventFactory.onPreLevelTick(this.level, () -> {
+                        return true;
+                    });
                 }
 
                 this.profiler.popPush("animateTick");
@@ -359,7 +435,7 @@ public abstract class MinecraftMixin extends ReentrantBlockableEventLoop<Runnabl
                 this.keyboardHandler.tick();
             }
             this.profiler.pop();
-            ClientHooks.fireClientTickPost();
+            ForgeEventFactory.onPostClientTick();
             ci.cancel();
         }
     }
@@ -369,7 +445,7 @@ public abstract class MinecraftMixin extends ReentrantBlockableEventLoop<Runnabl
 
         if (this.level == null || this.player == null) return;
 
-        boolean speed_down =! TimerControl.isSlowEntity(this.player);
+        boolean speed_down =! GJ.TimerControl.isSlowEntity(this.player);
 
         if (!speed_down) {
             if (this.rightClickDelay > 0) {
@@ -424,7 +500,7 @@ public abstract class MinecraftMixin extends ReentrantBlockableEventLoop<Runnabl
         if (!this.pause && this.level != null) {
             this.gameMode.tick();
         }
-        if (!this.getDebugOverlay().showDebugScreen()) {
+        if (!this.options.renderDebug) {
             this.gui.clearCache();
         }
 

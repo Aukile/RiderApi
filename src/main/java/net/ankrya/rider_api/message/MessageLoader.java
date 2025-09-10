@@ -1,61 +1,94 @@
 package net.ankrya.rider_api.message;
 
-import net.ankrya.rider_api.RiderApi;
+import net.ankrya.rider_api.help.GJ;
 import net.ankrya.rider_api.message.common.LoopSoundMessage;
-import net.ankrya.rider_api.message.common.SyncVariableMessage;
-import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.level.Level;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.network.PacketDistributor;
-import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
-import net.neoforged.neoforge.network.handling.DirectionalPayloadHandler;
-import net.neoforged.neoforge.network.registration.PayloadRegistrar;
+import net.minecraftforge.network.NetworkEvent;
+import net.minecraftforge.network.NetworkRegistry;
+import net.minecraftforge.network.PacketDistributor;
+import net.minecraftforge.network.simple.SimpleChannel;
+import net.minecraftforge.server.ServerLifecycleHooks;
 
-@EventBusSubscriber
+import java.util.function.BiConsumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
+
 public final class MessageLoader {
+    private static MessageLoader loader;
 
-    @SubscribeEvent
-    public static void load(final RegisterPayloadHandlersEvent event) {
-        final PayloadRegistrar registrar = event.registrar(RiderApi.MODID);
-        registrar.playBidirectional(SyncVariableMessage.TYPE, SyncVariableMessage.CODEC, new DirectionalPayloadHandler<>(SyncVariableMessage::handle, null));
-        registrar.playBidirectional(LoopSoundMessage.TYPE, LoopSoundMessage.CODEC, new DirectionalPayloadHandler<>(LoopSoundMessage::handle, null));
-        registrar.playBidirectional(MessageCreater.TYPE, MessageCreater.CODEC, new DirectionalPayloadHandler<>(MessageCreater::run,MessageCreater::run));
-        registrar.playBidirectional(EXMessageCreater.TYPE, EXMessageCreater.CODEC, new DirectionalPayloadHandler<>(EXMessageCreater::run, EXMessageCreater::run));
-        registrar.playBidirectional(NMessageCreater.TYPE, NMessageCreater.CODEC, new DirectionalPayloadHandler<>(NMessageCreater::run, NMessageCreater::run));
-
+    public static MessageLoader getLoader() {
+        if (loader == null) loader = new MessageLoader();
+        return loader;
     }
 
-    //下面的方法有点意义不明？ 额，当搬版本的集中处理器。。。大概
+    public final SimpleChannel instance;
+    private static final String PROTOCOL_VERSION = "1";
 
-    public static <MSG extends CustomPacketPayload> void sendToServer(MSG message) {
-        PacketDistributor.sendToServer(message);
+    public int id = 0;
+
+    private MessageLoader() {
+        instance = NetworkRegistry.newSimpleChannel(GJ.Easy.getApiResource("main")
+                , () -> PROTOCOL_VERSION, PROTOCOL_VERSION::equals, PROTOCOL_VERSION::equals);
     }
 
-    public static <MSG extends CustomPacketPayload> void sendToPlayer(MSG message, ServerPlayer player) {
-        PacketDistributor.sendToPlayer(player, message);
+    public void load() {
+        registerMessage(LoopSoundMessage.class, LoopSoundMessage::toBuf, LoopSoundMessage::fromBuf, LoopSoundMessage::handle);
+        registerMessage(MessageCreater.class, MessageCreater::toBuf, MessageCreater::fromBuf, MessageCreater::run);
+        registerMessage(EXMessageCreater.class, EXMessageCreater::toBuf, EXMessageCreater::fromBuf, EXMessageCreater::run);
+        registerMessage(NMessageCreater.class, NMessageCreater::toBuf, NMessageCreater::fromBuf, NMessageCreater::run);
     }
 
-    public static <MSG extends CustomPacketPayload> void sendToPlayersNearby(MSG message, ServerPlayer player) {
-        sendToPlayer(message, player);
-        PacketDistributor.sendToPlayersNear((ServerLevel) player.level(), player, player.getX(), player.getY(), player.getZ(), 64, message);
+    private <MSG> void registerMessage(Class<MSG> messageType, BiConsumer<MSG, FriendlyByteBuf> encoder, Function<FriendlyByteBuf, MSG> decoder, BiConsumer<MSG, Supplier<NetworkEvent.Context>> messageConsumer) {
+        instance.registerMessage(id++, messageType, encoder, decoder, messageConsumer);
     }
 
-    public static <MSG extends CustomPacketPayload> void sendToPlayersInDimension(MSG message, Level level) {
-        if (level instanceof ServerLevel serverLevel)
-            PacketDistributor.sendToPlayersInDimension(serverLevel, message);
+    public <MSG> void sendToServer(MSG message) {
+        instance.sendToServer(message);
     }
 
-    public static <MSG extends CustomPacketPayload> void sendToPlayersInDimension(MSG message, Entity entity) {
-        if (!entity.level().isClientSide)
-            PacketDistributor.sendToPlayersInDimension((ServerLevel) entity.level(), message);
+    public <MSG> void sendToPlayer(MSG message, ServerPlayer player) {
+        instance.send(PacketDistributor.PLAYER.with(() -> player), message);
     }
 
-    public static <MSG extends CustomPacketPayload> void sendToEntityAndSelf(MSG message, Entity entity) {
-        if (!entity.level().isClientSide)
-            PacketDistributor.sendToPlayersTrackingEntityAndSelf(entity, message);
+    public <MSG> void sendToPlayersNearby(MSG message, ServerPlayer player) {
+        instance.send(PacketDistributor.TRACKING_ENTITY.with(() -> player), message);
+    }
+
+    public <MSG> void sendToPlayersNearbyAndSelf(MSG message, ServerPlayer player) {
+        instance.send(PacketDistributor.TRACKING_ENTITY_AND_SELF.with(() -> player), message);
+    }
+
+    public <MSG> void sendToAll(MSG message) {
+        instance.send(PacketDistributor.ALL.noArg(), message);
+    }
+
+    public <MSG> void sendToPlayersInDimension(MSG message, ServerPlayer player) {
+        instance.send(PacketDistributor.DIMENSION.with(() -> player.level().dimension()), message);
+    }
+
+    public <MSG> void sendToPlayersInDimension(MSG message, ServerLevel level) {
+        instance.send(PacketDistributor.DIMENSION.with(level::dimension), message);
+    }
+
+    public <MSG>  void sendToEntityAndSelf(MSG message, Entity entity) {
+        instance.send(PacketDistributor.TRACKING_ENTITY_AND_SELF.with(() -> entity), message);
+    }
+    public <ITEM> void sendToAny(ITEM message) {
+        if (ServerLifecycleHooks.getCurrentServer() != null) {
+            instance.send(PacketDistributor.ALL.noArg(), message);
+        } else {
+            instance.sendToServer(message);
+        }
+    }
+
+    public <ITEM> void sendToAny(ITEM message, ServerPlayer player) {
+        if (ServerLifecycleHooks.getCurrentServer() != null) {
+            instance.send(PacketDistributor.PLAYER.with(() -> player), message);
+        } else {
+            instance.sendToServer(message);
+        }
     }
 }

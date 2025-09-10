@@ -2,20 +2,17 @@ package net.ankrya.rider_api.client.particle.rendertype;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.blaze3d.vertex.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.particle.ParticleRenderType;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.texture.AbstractTexture;
+import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.resources.ResourceLocation;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 
@@ -26,16 +23,24 @@ import org.lwjgl.opengl.GL12;
 @OnlyIn(Dist.CLIENT)
 public interface CustomParticleRenderType {
     ParticleRenderType PARTICLE_SHEET_LIT_TRANSLUCENT = new ParticleRenderType() {
-        @Override
-        public @NotNull BufferBuilder begin(@NotNull Tesselator tesselator, @NotNull TextureManager textureManager) {
+        public void begin(BufferBuilder bufferBuilder, @NotNull TextureManager textureManager) {
             RenderSystem.enableBlend();
             RenderSystem.disableCull();
             RenderSystem.blendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
             RenderSystem.depthMask(true);
             Minecraft.getInstance().gameRenderer.lightTexture().turnOnLightLayer();
             RenderSystem.setShader(GameRenderer::getParticleShader);
-            GLSetTexture(ResourceLocation.withDefaultNamespace("textures/atlas/particles.png"));
-            return tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.PARTICLE);
+            GLSetTexture(TextureAtlas.LOCATION_PARTICLES);
+            bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.PARTICLE);
+        }
+
+        public void end(Tesselator tesselator) {
+            tesselator.getBuilder().setQuadSorting(VertexSorting.byDistance(0.0F, 0.0F, 0.0F));
+            tesselator.end();
+            RenderSystem.disableBlend();
+            RenderSystem.defaultBlendFunc();
+            RenderSystem.depthMask(false);
+            RenderSystem.enableCull();
         }
 
         @Override
@@ -44,7 +49,7 @@ public interface CustomParticleRenderType {
         }
     };
 
-    static void GLSetTexture(ResourceLocation texture){
+    public static void GLSetTexture(ResourceLocation texture){
         TextureManager texturemanager = Minecraft.getInstance().getTextureManager();
         AbstractTexture abstracttexture = texturemanager.getTexture(texture);
         RenderSystem.bindTexture(abstracttexture.getId());

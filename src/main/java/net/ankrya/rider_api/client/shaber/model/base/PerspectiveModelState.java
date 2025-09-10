@@ -7,7 +7,7 @@ import net.minecraft.world.item.ItemDisplayContext;
 
 import java.util.Map;
 
-public class PerspectiveModelState implements ModelState {
+public final class PerspectiveModelState implements ModelState {
     public static final PerspectiveModelState IDENTITY = new PerspectiveModelState(ImmutableMap.of());
     private final Map<ItemDisplayContext, Transformation> transforms;
     private final boolean isUvLocked;

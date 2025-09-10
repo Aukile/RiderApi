@@ -7,7 +7,7 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
-import net.neoforged.neoforge.network.handling.IPayloadContext;
+import net.minecraftforge.network.NetworkEvent;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.UUID;
@@ -29,9 +29,9 @@ public class PlayerAnimationStopMessage implements INMessage {
     }
 
     @Override
-    public void run(IPayloadContext ctx) {
+    public void run(NetworkEvent.Context ctx) {
         ctx.enqueueWork(() -> {
-            Level level = ctx.player().level();
+            Level level = ctx.getSender().level();
             Player player = level.getPlayerByUUID(uuid);
             if (player instanceof AbstractClientPlayer clientPlayer) {
                 PlayerAnimator.instance().stopAnimation(clientPlayer, layer, fadeTime);

@@ -103,10 +103,10 @@ public class SpreadBase extends TextureSheetParticle {
         float $$17 = this.getV0();
         float $$18 = this.getV1();
         int $$19 = this.getLightColor(pPartialTicks);
-        pBuffer.addVertex($$11[0].x(), $$11[0].y(), $$11[0].z()).setUv($$16, $$18).setColor(this.rCol, this.gCol, this.bCol, this.alpha).setUv2($$19 & '\uffff', $$19 >> 16 & '\uffff');
-        pBuffer.addVertex($$11[1].x(), $$11[1].y(), $$11[1].z()).setUv($$16, $$17).setColor(this.rCol, this.gCol, this.bCol, this.alpha).setUv2($$19 & '\uffff', $$19 >> 16 & '\uffff');
-        pBuffer.addVertex($$11[2].x(), $$11[2].y(), $$11[2].z()).setUv($$15, $$17).setColor(this.rCol, this.gCol, this.bCol, this.alpha).setUv2($$19 & '\uffff', $$19 >> 16 & '\uffff');
-        pBuffer.addVertex($$11[3].x(), $$11[3].y(), $$11[3].z()).setUv($$15, $$18).setColor(this.rCol, this.gCol, this.bCol, this.alpha).setUv2($$19 & '\uffff', $$19 >> 16 & '\uffff');
+        pBuffer.vertex($$11[0].x(), $$11[0].y(), $$11[0].z()).uv($$16, $$18).color(this.rCol, this.gCol, this.bCol, this.alpha).uv2($$19).endVertex();
+        pBuffer.vertex($$11[1].x(), $$11[1].y(), $$11[1].z()).uv($$16, $$17).color(this.rCol, this.gCol, this.bCol, this.alpha).uv2($$19).endVertex();
+        pBuffer.vertex($$11[2].x(), $$11[2].y(), $$11[2].z()).uv($$15, $$17).color(this.rCol, this.gCol, this.bCol, this.alpha).uv2($$19).endVertex();
+        pBuffer.vertex($$11[3].x(), $$11[3].y(), $$11[3].z()).uv($$15, $$18).color(this.rCol, this.gCol, this.bCol, this.alpha).uv2($$19).endVertex();
     }
 
     public static class CaseSpreadProvider implements ParticleProvider<SimpleParticleType> {

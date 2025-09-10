@@ -1,11 +1,10 @@
 package net.ankrya.rider_api.data;
 
-import net.ankrya.rider_api.RiderApi;
+import com.google.common.primitives.Primitives;
 import net.ankrya.rider_api.interfaces.inside_use.IVariable;
 import net.ankrya.rider_api.message.MessageLoader;
 import net.ankrya.rider_api.message.common.SyncVariableMessage;
-import com.google.common.primitives.Primitives;
-import net.minecraft.core.HolderLookup;
+import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
@@ -13,24 +12,25 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
-import net.neoforged.neoforge.attachment.AttachmentType;
-import net.neoforged.neoforge.common.util.INBTSerializable;
-import net.neoforged.neoforge.registries.DeferredRegister;
-import net.neoforged.neoforge.registries.NeoForgeRegistries;
+import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.capabilities.CapabilityManager;
+import net.minecraftforge.common.capabilities.CapabilityToken;
+import net.minecraftforge.common.capabilities.ICapabilitySerializable;
+import net.minecraftforge.common.util.LazyOptional;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.UnknownNullability;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Supplier;
 
-public final class Variables implements INBTSerializable<ListTag> {
-    public static final DeferredRegister<AttachmentType<?>> ATTACHMENT_TYPES = DeferredRegister.create(NeoForgeRegistries.Keys.ATTACHMENT_TYPES, RiderApi.MODID);
-    public static final Supplier<AttachmentType<Variables>> VARIABLES = ATTACHMENT_TYPES.register("variables", () -> AttachmentType.serializable(Variables::new).build());
-    AtomicInteger idPool = new AtomicInteger();
-    Map<String, Data<?>> variables = new HashMap<>();
+public final class Variables implements ICapabilitySerializable<ListTag> {
+    public static final Capability<Variables> VARIABLES = CapabilityManager.get(new CapabilityToken<>() {});
     public static final Map<String, Data<?>> variablesDefault = new HashMap<>();
+    private final Variables holder = new Variables();
+    private final LazyOptional<Variables> optional = LazyOptional.of(() -> this.holder);
+    Map<String, Data<?>> variables = new HashMap<>();
+    AtomicInteger idPool = new AtomicInteger();
     private boolean dirty = false;
 
     public Variables(){
@@ -73,20 +73,13 @@ public final class Variables implements INBTSerializable<ListTag> {
         return (Data<T>) variables.get(name);
     }
 
-    public CompoundTag serializeCompoundTag(HolderLookup.@NotNull Provider provider) {
-        CompoundTag compoundTag = new CompoundTag();
-        ListTag listTag = serializeNBT(provider);
-        compoundTag.put("variables", listTag);
-        return compoundTag;
-    }
-
-    public void deserializeCompoundTag(HolderLookup.@NotNull Provider provider, CompoundTag tags){
-        ListTag listTag = tags.getList("variables", Tag.TAG_LIST);
-        deserializeNBT(provider, listTag);
+    @Override
+    public @NotNull <T> LazyOptional<T> getCapability(@NotNull Capability<T> capability, @Nullable Direction direction) {
+        return VARIABLES.orEmpty(capability, optional);
     }
 
     @Override
-    public @UnknownNullability ListTag serializeNBT(HolderLookup.@NotNull Provider provider) {
+    public ListTag serializeNBT() {
         ListTag listTag = new ListTag();
         variables.forEach((name, data) -> {
             CompoundTag tag = new CompoundTag();
@@ -101,7 +94,7 @@ public final class Variables implements INBTSerializable<ListTag> {
     }
 
     @Override
-    public void deserializeNBT(HolderLookup.@NotNull Provider provider, ListTag tags) {
+    public void deserializeNBT(ListTag tags) {
         tags.forEach(tag -> {
             CompoundTag compoundTag = (CompoundTag) tag;
             String name = compoundTag.getString("name");
@@ -163,44 +156,49 @@ public final class Variables implements INBTSerializable<ListTag> {
         return (T) variables.get(name).value;
     }
 
+    public static Variables getCapability(Entity entity) {
+        return entity.getCapability(VARIABLES).resolve().orElse(new Variables());
+    }
+
+    public static Variables getCapability(Level level) {
+        return level.getCapability(VARIABLES).resolve().orElse(new Variables());
+    }
+
     /**同步实体的同步数据*/
     public void syncVariables(Entity entity){
         if (entity instanceof ServerPlayer player)
-            MessageLoader.sendToPlayersInDimension(new SyncVariableMessage(entity.getId(), this), player);
-        else MessageLoader.sendToEntityAndSelf(new SyncVariableMessage(entity.getId(), this), entity);
+            MessageLoader.getLoader().sendToPlayersInDimension(new SyncVariableMessage(entity.getId(), this), player);
+        else MessageLoader.getLoader().sendToEntityAndSelf(new SyncVariableMessage(entity.getId(), this), entity);
     }
 
     /**同步世界的同步数据*/
     public void syncVariables(Level level){
         if (level instanceof ServerLevel serverLevel)
-            MessageLoader.sendToPlayersInDimension(new SyncVariableMessage(-1, this), serverLevel);
+            MessageLoader.getLoader().sendToPlayersInDimension(new SyncVariableMessage(-1, this), serverLevel);
     }
 
     /**设置实体的同步数据*/
     public static <T> void setVariable(Entity entity, String name, T value){
-        Variables data = entity.getData(Variables.VARIABLES);
+        Variables data = getCapability(entity);
         data.setToVariable(name, value, entity);
     }
 
     /**设置世界的同步数据*/
     public static <T> void setVariable(Level level, String name, T value){
-        Variables data = level.getData(Variables.VARIABLES);
+        Variables data = getCapability(level);
         data.setToVariable(name, value, level);
     }
 
     /**获取实体的同步数据*/
     public static <T> T getVariable(Entity entity, String name){
-        Variables data = entity.getData(Variables.VARIABLES);
+        Variables data = getCapability(entity);
         return data.getVariable(name);
     }
 
     /**获取世界的同步数据*/
     public static <T> T getVariable(Level level, String name){
-        if (level != null){
-            Variables data = level.getData(Variables.VARIABLES);
-            return data.getVariable(name);
-        }
-        return null;
+        Variables data = getCapability(level);
+        return data.getVariable(name);
     }
 
     public static class Data<T>{

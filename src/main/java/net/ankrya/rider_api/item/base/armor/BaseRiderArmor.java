@@ -57,8 +57,8 @@ public abstract class BaseRiderArmor extends BaseRiderArmorBase {
             if (allArmorEquip(livingEntity)){
                 livingEntity.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, 10, 0, false, false));
                 for (Map.Entry<Holder<MobEffect>, Integer> entry : getEffects().entrySet()){
-                    if (entry.getKey() == MobEffects.NIGHT_VISION) livingEntity.addEffect(new MobEffectInstance(entry.getKey(), 240, entry.getValue(), false, false));
-                    else livingEntity.addEffect(new MobEffectInstance(entry.getKey(), 10, entry.getValue(), false, false));
+                    if (entry.getKey() == MobEffects.NIGHT_VISION) livingEntity.addEffect(new MobEffectInstance(entry.getKey().get(), 240, entry.getValue(), false, false));
+                    else livingEntity.addEffect(new MobEffectInstance(entry.getKey().get(), 10, entry.getValue(), false, false));
                 }
             } else {
                 if (entity instanceof Player player) {
@@ -71,7 +71,7 @@ public abstract class BaseRiderArmor extends BaseRiderArmorBase {
                     }
                 } else unequip(livingEntity, slot);
                 for (Holder<MobEffect> effect : getEffects().keySet()){
-                    livingEntity.removeEffect(effect);
+                    livingEntity.removeEffect(effect.get());
                 }
                 livingEntity.removeEffect(MobEffects.INVISIBILITY);
             }

@@ -2,7 +2,7 @@ package net.ankrya.rider_api.mixin.timer;
 
 import net.ankrya.rider_api.data.ModVariable;
 import net.ankrya.rider_api.data.Variables;
-import net.ankrya.rider_api.help.GJ.TimerControl;
+import net.ankrya.rider_api.help.GJ;
 import net.ankrya.rider_api.interfaces.timer.TimerServerLevel;
 import net.minecraft.core.Holder;
 import net.minecraft.core.RegistryAccess;
@@ -10,15 +10,17 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerChunkCache;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.players.SleepStatus;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.entity.EntityTickList;
+import net.minecraft.world.level.entity.PersistentEntitySectionManager;
 import net.minecraft.world.level.storage.WritableLevelData;
-import net.neoforged.neoforge.entity.PartEntity;
-import net.neoforged.neoforge.event.EventHooks;
+import net.minecraftforge.entity.PartEntity;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -28,6 +30,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.Iterator;
+import java.util.List;
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
@@ -41,8 +45,8 @@ public abstract class ServerLevelMixin extends Level implements TimerServerLevel
     @Shadow
     EntityTickList entityTickList;
 
-    protected ServerLevelMixin(WritableLevelData levelData, ResourceKey<Level> dimension, RegistryAccess registryAccess, Holder<DimensionType> dimensionTypeRegistration, Supplier<ProfilerFiller> profiler, boolean isClientSide, boolean isDebug, long biomeZoomSeed, int maxChainedNeighborUpdates) {
-        super(levelData, dimension, registryAccess, dimensionTypeRegistration, profiler, isClientSide, isDebug, biomeZoomSeed, maxChainedNeighborUpdates);
+    protected ServerLevelMixin(WritableLevelData p_270739_, ResourceKey<Level> p_270683_, RegistryAccess p_270200_, Holder<DimensionType> p_270240_, Supplier<ProfilerFiller> p_270692_, boolean p_270904_, boolean p_270470_, long p_270248_, int p_270466_) {
+        super(p_270739_, p_270683_, p_270200_, p_270240_, p_270692_, p_270904_, p_270470_, p_270248_, p_270466_);
     }
 
     @Shadow
@@ -53,6 +57,21 @@ public abstract class ServerLevelMixin extends Level implements TimerServerLevel
 
 
     @Shadow protected abstract void tickPassenger(Entity p_8663_, Entity p_8664_);
+
+    @Shadow @Final private PersistentEntitySectionManager<Entity> entityManager;
+
+
+    @Shadow private boolean handlingTick;
+
+    @Shadow @Final private SleepStatus sleepStatus;
+
+    @Shadow @Final private List<ServerPlayer> players;
+
+    @Shadow public abstract void setDayTime(long p_8616_);
+
+    @Shadow protected abstract void wakeUpAllPlayers();
+
+    @Shadow protected abstract void resetWeatherCycle();
 
     @Inject(method = {"tickBlock", "tickChunk", "tickFluid", "tickTime", "tickCustomSpawners", "blockUpdated", "advanceWeatherCycle", "runBlockEvents", "gameEvent"}, at = {@At("HEAD")}, cancellable = true)
     private void freezeServerTick(CallbackInfo ci) {
@@ -65,7 +84,7 @@ public abstract class ServerLevelMixin extends Level implements TimerServerLevel
     @Inject(method = "tick",at = @At("HEAD"),cancellable = true)
     public void tick(BooleanSupplier p_8794_, CallbackInfo ci) {
 
-        int time_state = Variables.getVariable(this, ModVariable.TIME_STATUS);
+        int time_state = (int) Variables.getVariable(this, ModVariable.TIME_STATUS);
 
 
 
@@ -86,20 +105,24 @@ public abstract class ServerLevelMixin extends Level implements TimerServerLevel
 
     @Inject(method = "tickNonPassenger",at = @At("HEAD"),cancellable = true)
     public void tickNonPassengerM(Entity p_8648_,CallbackInfo ci) {
-        int time_state = Variables.getVariable(this, ModVariable.TIME_STATUS);
+        int time_state = (int) Variables.getVariable(this, ModVariable.TIME_STATUS);
 
         if (time_state == 1 ){
-            if (TimerControl.isSlowEntity(p_8648_)){
+            if (GJ.TimerControl.isSlowEntity(p_8648_)){
+                Iterator var3M = p_8648_.getPassengers().iterator();
 
-                for (Entity entity : p_8648_.getPassengers()) {
+                while(var3M.hasNext()) {
+                    Entity entity = (Entity)var3M.next();
                     this.tickPassenger(p_8648_, entity);
                 }
                 ci.cancel();
             }
         }else if (time_state == 2 ) {
-            if (!TimerControl.isPauseEntity(p_8648_)){
+            if (!GJ.TimerControl.isPauseEntity(p_8648_)){
+                Iterator var3M = p_8648_.getPassengers().iterator();
 
-                for (Entity entity : p_8648_.getPassengers()) {
+                while(var3M.hasNext()) {
+                    Entity entity = (Entity)var3M.next();
                     this.tickPassenger(p_8648_, entity);
                 }
                 ci.cancel();
@@ -113,11 +136,11 @@ public abstract class ServerLevelMixin extends Level implements TimerServerLevel
         int time_state = (int) Variables.getVariable(this, ModVariable.TIME_STATUS);
         if (time_state == 1) {
 
-            if (TimerControl.isSlowEntity(p_8664_)){
+            if (GJ.TimerControl.isSlowEntity(p_8664_)){
                 ci.cancel();
             }
         }else if (time_state == 2) {
-            if (!TimerControl.isPauseEntity(p_8664_)){
+            if (!GJ.TimerControl.isPauseEntity(p_8664_)){
                 ci.cancel();
             }
         }
@@ -130,7 +153,7 @@ public abstract class ServerLevelMixin extends Level implements TimerServerLevel
         ProfilerFiller profilerfiller = this.getProfiler();
 
         this.entityTickList.forEach((p_184065_) -> {
-            if(!TimerControl.isSlowEntity(p_184065_)){
+            if(!GJ.TimerControl.isSlowEntity(p_184065_)){
                 if (!p_184065_.isRemoved() && !(p_184065_ instanceof PartEntity)) {
                     this.guardEntityTick(this::rider_api$tickNonPassengerTimeSlow, p_184065_);
                 }
@@ -170,55 +193,59 @@ public abstract class ServerLevelMixin extends Level implements TimerServerLevel
 
 
     @Unique
-    public void rider_api$tickNonPassengerTimeSlow(Entity entity1) {
+    public void rider_api$tickNonPassengerTimeSlow(Entity p_8648_) {
 
-        if (TimerControl.isSlowEntity(entity1)) {
-            entity1.setOldPosAndRot();
+        if (GJ.TimerControl.isSlowEntity(p_8648_)) {
+            p_8648_.setOldPosAndRot();
             ProfilerFiller profilerfiller = this.getProfiler();
-            ++entity1.tickCount;
-            this.getProfiler().push(() -> BuiltInRegistries.ENTITY_TYPE.getKey(entity1.getType()).toString());
+            ++p_8648_.tickCount;
+            this.getProfiler().push(() -> {
+                return BuiltInRegistries.ENTITY_TYPE.getKey(p_8648_.getType()).toString();
+            });
             profilerfiller.incrementCounter("tickNonPassenger");
-            if (!EventHooks.fireEntityTickPre(entity1).isCanceled()) {
-                entity1.tick();
-                EventHooks.fireEntityTickPost(entity1);
+            if (p_8648_.canUpdate()) {
+                p_8648_.tick();
             }
 
             this.getProfiler().pop();
         }
+        Iterator var3 = p_8648_.getPassengers().iterator();
 
-        for (Entity entity : entity1.getPassengers()) {
-            this.rider_api$tickPassengerTimeSlow(entity1, entity);
+        while(var3.hasNext()) {
+            Entity entity = (Entity)var3.next();
+            this.rider_api$tickPassengerTimeSlow(p_8648_, entity);
         }
 
     }
 
     @Unique
-    private void rider_api$tickPassengerTimeSlow(Entity vehicle, Entity entity1) {
+    private void rider_api$tickPassengerTimeSlow(Entity p_8663_, Entity p_8664_) {
 
-        if (!TimerControl.isSlowEntity(entity1)) return;
+        if (!GJ.TimerControl.isSlowEntity(p_8664_)) return;
 
-        if (!entity1.isRemoved() && entity1.getVehicle() == vehicle) {
-            if (entity1 instanceof Player || this.entityTickList.contains(entity1)) {
-                entity1.setOldPosAndRot();
-                ++entity1.tickCount;
+        if (!p_8664_.isRemoved() && p_8664_.getVehicle() == p_8663_) {
+            if (p_8664_ instanceof Player || this.entityTickList.contains(p_8664_)) {
+                p_8664_.setOldPosAndRot();
+                ++p_8664_.tickCount;
                 ProfilerFiller profilerfiller = this.getProfiler();
                 profilerfiller.push(() -> {
-                    return BuiltInRegistries.ENTITY_TYPE.getKey(entity1.getType()).toString();
+                    return BuiltInRegistries.ENTITY_TYPE.getKey(p_8664_.getType()).toString();
                 });
                 profilerfiller.incrementCounter("tickPassenger");
-                if (!EventHooks.fireEntityTickPre(entity1).isCanceled()) {
-                    entity1.tick();
-                    EventHooks.fireEntityTickPost(entity1);
+                if (p_8664_.canUpdate()) {
+                    p_8664_.rideTick();
                 }
 
                 profilerfiller.pop();
+                Iterator var4 = p_8664_.getPassengers().iterator();
 
-                for (Entity entity : entity1.getPassengers()) {
-                    this.tickPassenger(entity1, entity);
+                while(var4.hasNext()) {
+                    Entity entity = (Entity)var4.next();
+                    this.tickPassenger(p_8664_, entity);
                 }
             }
         } else {
-            entity1.stopRiding();
+            p_8664_.stopRiding();
         }
 
     }
@@ -230,7 +257,7 @@ public abstract class ServerLevelMixin extends Level implements TimerServerLevel
         ProfilerFiller profilerfiller = this.getProfiler();
 
         this.entityTickList.forEach((p_184065_) -> {
-            if(!TimerControl.isPauseEntity(p_184065_)){
+            if(!GJ.TimerControl.isPauseEntity(p_184065_)){
                 if (!p_184065_.isRemoved() && !(p_184065_ instanceof PartEntity)) {
                     this.guardEntityTick(this::rider_api$tickNonPassengerTimePause, p_184065_);
                 }
@@ -270,56 +297,59 @@ public abstract class ServerLevelMixin extends Level implements TimerServerLevel
 
 
     @Unique
-    public void rider_api$tickNonPassengerTimePause(Entity entity1) {
-        if (TimerControl.isSlowEntity(entity1)) {
-            entity1.setOldPosAndRot();
+    public void rider_api$tickNonPassengerTimePause(Entity p_8648_) {
+
+        if (GJ.TimerControl.isSlowEntity(p_8648_)) {
+            p_8648_.setOldPosAndRot();
             ProfilerFiller profilerfiller = this.getProfiler();
-            ++entity1.tickCount;
+            ++p_8648_.tickCount;
             this.getProfiler().push(() -> {
-                return BuiltInRegistries.ENTITY_TYPE.getKey(entity1.getType()).toString();
+                return BuiltInRegistries.ENTITY_TYPE.getKey(p_8648_.getType()).toString();
             });
             profilerfiller.incrementCounter("tickNonPassenger");
-            if (!EventHooks.fireEntityTickPre(entity1).isCanceled()) {
-                entity1.tick();
-                EventHooks.fireEntityTickPost(entity1);
+            if (p_8648_.canUpdate()) {
+                p_8648_.tick();
             }
 
             this.getProfiler().pop();
         }
+        Iterator var3 = p_8648_.getPassengers().iterator();
 
-        for (Entity entity : entity1.getPassengers()) {
-            this.rider_api$tickPassengerTimeSlow(entity1, entity);
+        while(var3.hasNext()) {
+            Entity entity = (Entity)var3.next();
+            this.rider_api$tickPassengerTimeSlow(p_8648_, entity);
         }
 
     }
 
     @Unique
-    private void rider_api$tickPassengerTimePause(Entity vehicle, Entity entity1) {
+    private void rider_api$tickPassengerTimePause(Entity p_8663_, Entity p_8664_) {
 
-        if (!TimerControl.isSlowEntity(entity1)) return;
+        if (!GJ.TimerControl.isSlowEntity(p_8664_)) return;
 
-        if (!entity1.isRemoved() && entity1.getVehicle() == vehicle) {
-            if (entity1 instanceof Player || this.entityTickList.contains(entity1)) {
-                entity1.setOldPosAndRot();
-                ++entity1.tickCount;
+        if (!p_8664_.isRemoved() && p_8664_.getVehicle() == p_8663_) {
+            if (p_8664_ instanceof Player || this.entityTickList.contains(p_8664_)) {
+                p_8664_.setOldPosAndRot();
+                ++p_8664_.tickCount;
                 ProfilerFiller profilerfiller = this.getProfiler();
                 profilerfiller.push(() -> {
-                    return BuiltInRegistries.ENTITY_TYPE.getKey(entity1.getType()).toString();
+                    return BuiltInRegistries.ENTITY_TYPE.getKey(p_8664_.getType()).toString();
                 });
                 profilerfiller.incrementCounter("tickPassenger");
-                if (!EventHooks.fireEntityTickPre(entity1).isCanceled()) {
-                    entity1.tick();
-                    EventHooks.fireEntityTickPost(entity1);
+                if (p_8664_.canUpdate()) {
+                    p_8664_.rideTick();
                 }
 
                 profilerfiller.pop();
+                Iterator var4 = p_8664_.getPassengers().iterator();
 
-                for (Entity entity : entity1.getPassengers()) {
-                    this.tickPassenger(entity1, entity);
+                while(var4.hasNext()) {
+                    Entity entity = (Entity)var4.next();
+                    this.tickPassenger(p_8664_, entity);
                 }
             }
         } else {
-            entity1.stopRiding();
+            p_8664_.stopRiding();
         }
 
     }

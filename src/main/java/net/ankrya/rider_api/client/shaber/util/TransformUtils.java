@@ -13,7 +13,7 @@ import org.joml.Vector3f;
 import java.util.HashMap;
 import java.util.Map;
 
-public class TransformUtils {
+public final class TransformUtils {
     public static final PerspectiveModelState IDENTITY = PerspectiveModelState.IDENTITY;
     public static final PerspectiveModelState DEFAULT_TOOL;
     public static final double torad = 0.017453292519943;

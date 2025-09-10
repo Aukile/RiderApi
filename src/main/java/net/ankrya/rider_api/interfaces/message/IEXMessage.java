@@ -3,7 +3,7 @@ package net.ankrya.rider_api.interfaces.message;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
-import net.neoforged.neoforge.network.handling.IPayloadContext;
+import net.minecraftforge.network.NetworkEvent;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.UUID;
@@ -19,7 +19,7 @@ public interface IEXMessage {
             buf.writeInt(dataLong());
     }
 
-    void run(IPayloadContext ctx);
+    void run(NetworkEvent.Context ctx);
 
     boolean hasData();
     int dataLong();

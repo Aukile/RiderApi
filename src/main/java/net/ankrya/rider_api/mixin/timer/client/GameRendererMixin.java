@@ -1,17 +1,18 @@
 package net.ankrya.rider_api.mixin.timer.client;
 
-import net.ankrya.rider_api.help.GJ.TimerControl;
 import net.ankrya.rider_api.data.ModVariable;
 import net.ankrya.rider_api.data.Variables;
-import net.ankrya.rider_api.interfaces.timer.TimerGamerRenderer;
+import net.ankrya.rider_api.help.GJ;
 import net.ankrya.rider_api.interfaces.timer.ITimer;
+import net.ankrya.rider_api.interfaces.timer.TimerGamerRenderer;
 import net.ankrya.rider_api.mixin.accessor.MinecraftAccessor;
 import net.minecraft.client.Camera;
-import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.Timer;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.ItemInHandRenderer;
+import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.Final;
@@ -26,11 +27,15 @@ import javax.annotation.Nullable;
 @Mixin(GameRenderer.class)
 public abstract class GameRendererMixin implements TimerGamerRenderer {
 
-    @Shadow @Final Minecraft minecraft;
+    @Shadow @Final private Minecraft minecraft;
+
+    @Shadow @Final private LightTexture lightTexture;
 
     @Shadow @Final private Camera mainCamera;
 
     @Shadow protected abstract void tickFov();
+
+    @Shadow private int tick;
 
     @Shadow @Final public ItemInHandRenderer itemInHandRenderer;
 
@@ -42,15 +47,28 @@ public abstract class GameRendererMixin implements TimerGamerRenderer {
 
     @Shadow @Nullable private ItemStack itemActivationItem;
 
+//    @Inject(method = "tick",at = @At("HEAD"),cancellable = true)
+//    public void tick(CallbackInfo ci) {
+//        ClientLevel level = this.minecraft.level;
+//        if (level != null) {
+//            int time_state = (int) Variables.getVariable(level, ModVariable.TIME_STATUS);
+//            if (time_state == 2) {
+//                if (GJ.TimerControl.isPauseEntity(this.minecraft.player))
+//                    rider_api$tickSpecial();
+//                ci.cancel();
+//
+//
+//            }
+//        }
+//    }
+
     @Unique
     @Override
     public void rider_api$tickSpecial(){
         this.tickFov();
 
         if (this.minecraft.getCameraEntity() == null) {
-            if (this.minecraft.player != null) {
-                this.minecraft.setCameraEntity(this.minecraft.player);
-            }
+            this.minecraft.setCameraEntity(this.minecraft.player);
         }
 
         this.mainCamera.tick();
@@ -80,7 +98,7 @@ public abstract class GameRendererMixin implements TimerGamerRenderer {
         ClientLevel level = this.minecraft.level;
         if (level == null)
             return original;
-        return (int)Variables.getVariable(level, ModVariable.TIME_STATUS) ==2 ? 0.0F : original;
+        return (int) Variables.getVariable(level, ModVariable.TIME_STATUS) ==2 ? 0.0F : original;
     }
 
     @ModifyArg(method = {"renderLevel"}, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GameRenderer;pick(F)V"))
@@ -89,27 +107,27 @@ public abstract class GameRendererMixin implements TimerGamerRenderer {
         if (level == null)
             return original;
         Entity entity = this.minecraft.player;
-        if (entity != null && (int)Variables.getVariable(level, ModVariable.TIME_STATUS) ==2  && !TimerControl.isPauseEntity(entity) )
+        if (entity != null && (int) Variables.getVariable(level, ModVariable.TIME_STATUS) ==2  && !GJ.TimerControl.isPauseEntity(entity) )
             return 0.0F;
-        if ((int) Variables.getVariable(level, ModVariable.TIME_STATUS) == 2 && TimerControl.isPauseEntity(entity))
+        if (entity != null && (int) Variables.getVariable(level, ModVariable.TIME_STATUS) ==2  && GJ.TimerControl.isPauseEntity(entity) )
         {
-            return  ((MinecraftAccessor) minecraft).getTimer() instanceof ITimer timerTimer ? timerTimer.riderApi$deltaTick() : original;
+            return  ((MinecraftAccessor) minecraft).getTimer() instanceof  ITimer ITimer ? ITimer.rider_api$partialTick() : original;
         }
-        if ((int) Variables.getVariable(level, ModVariable.TIME_STATUS) == 1 && TimerControl.isSlowEntity(entity))
+        if (entity != null && (int) Variables.getVariable(level, ModVariable.TIME_STATUS) == 1  && GJ.TimerControl.isSlowEntity(entity) )
         {
-            return  ((MinecraftAccessor) minecraft).getTimer() instanceof ITimer timerTimer ? timerTimer.riderApi$deltaTick() : original;
+            return  ((MinecraftAccessor) minecraft).getTimer() instanceof  ITimer ITimer ? ITimer.rider_api$partialTick() : original;
         }
         return original;
     }
 
-    @ModifyArg(method = {"renderLevel"}, index = 0, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;renderLevel(Lnet/minecraft/client/DeltaTracker;ZLnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/GameRenderer;Lnet/minecraft/client/renderer/LightTexture;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;)V"))
-    private DeltaTracker renderLevel(DeltaTracker deltaTracker) {
+    @ModifyArg(method = {"renderLevel"}, index = 1, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;renderLevel(Lcom/mojang/blaze3d/vertex/PoseStack;FJZLnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/GameRenderer;Lnet/minecraft/client/renderer/LightTexture;Lorg/joml/Matrix4f;)V"))
+    private float renderLevel(float original) {
         ClientLevel level = this.minecraft.level;
         if (level == null)
-            return deltaTracker;
-        if ((int)Variables.getVariable(level, ModVariable.TIME_STATUS) ==2)
-            return DeltaTracker.ZERO;
-        return deltaTracker;
+            return original;
+        if ((int) Variables.getVariable(level, ModVariable.TIME_STATUS) ==2)
+            return 0.0F;
+        return original;
     }
 
     @ModifyArg(method = {"renderLevel"}, index = 1, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GameRenderer;bobHurt(Lcom/mojang/blaze3d/vertex/PoseStack;F)V"))
@@ -118,15 +136,15 @@ public abstract class GameRendererMixin implements TimerGamerRenderer {
         if (level == null)
             return original;
         Entity entity = this.minecraft.player;
-        if (entity != null && (int)Variables.getVariable(level, ModVariable.TIME_STATUS) ==2 && !TimerControl.isPauseEntity(entity) )
+        if (entity != null && (int) Variables.getVariable(level, ModVariable.TIME_STATUS) ==2 && !GJ.TimerControl.isPauseEntity(entity) )
             return 0.0F;
-        if ((int) Variables.getVariable(level, ModVariable.TIME_STATUS) == 2 && TimerControl.isPauseEntity(entity))
+        if (entity != null && (int) Variables.getVariable(level, ModVariable.TIME_STATUS) ==2  && GJ.TimerControl.isPauseEntity(entity) )
         {
-            return ((MinecraftAccessor) minecraft).getTimer() instanceof ITimer timerTimer ? timerTimer.riderApi$deltaTick() : original;
+            return  ((MinecraftAccessor) minecraft).getTimer() instanceof  ITimer ITimer ? ITimer.rider_api$partialTick() : original;
         }
-        if ((int) Variables.getVariable(level, ModVariable.TIME_STATUS) == 1 && TimerControl.isSlowEntity(entity))
+        if (entity != null && (int) Variables.getVariable(level, ModVariable.TIME_STATUS) == 1  && GJ.TimerControl.isSlowEntity(entity) )
         {
-            return ((MinecraftAccessor) minecraft).getTimer() instanceof ITimer timerTimer ? timerTimer.riderApi$deltaTick() : original;
+            return  ((MinecraftAccessor) minecraft).getTimer() instanceof  ITimer ITimer ? ITimer.rider_api$partialTick() : original;
         }
         return original;
     }
@@ -139,34 +157,34 @@ public abstract class GameRendererMixin implements TimerGamerRenderer {
         if (level == null)
             return original;
         Entity entity = this.minecraft.player;
-        if (entity != null && (int)Variables.getVariable(level, ModVariable.TIME_STATUS) ==2 && !TimerControl.isPauseEntity(entity) )
+        if (entity != null && (int) Variables.getVariable(level, ModVariable.TIME_STATUS) ==2 && !GJ.TimerControl.isPauseEntity(entity) )
             return 0.0F;
-        if ((int) Variables.getVariable(level, ModVariable.TIME_STATUS) == 2 && TimerControl.isPauseEntity(entity))
+        if (entity != null && (int) Variables.getVariable(level, ModVariable.TIME_STATUS) ==2  && GJ.TimerControl.isPauseEntity(entity) )
         {
-            return  ((MinecraftAccessor) minecraft).getTimer() instanceof  ITimer timerTimer ? timerTimer.riderApi$deltaTick() : original;
+            return  ((MinecraftAccessor) minecraft).getTimer() instanceof  ITimer ITimer ? ITimer.rider_api$partialTick() : original;
         }
-        if ((int) Variables.getVariable(level, ModVariable.TIME_STATUS) == 1 && TimerControl.isSlowEntity(entity))
+        if (entity != null && (int) Variables.getVariable(level, ModVariable.TIME_STATUS) == 1  && GJ.TimerControl.isSlowEntity(entity) )
         {
-            return  ((MinecraftAccessor) minecraft).getTimer() instanceof  ITimer timerTimer ? timerTimer.riderApi$deltaTick() : original;
+            return  ((MinecraftAccessor) minecraft).getTimer() instanceof  ITimer ITimer ? ITimer.rider_api$partialTick() : original;
         }
         return original;
     }
 
-    @ModifyArg(method = {"renderLevel"}, index = 1, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GameRenderer;renderItemInHand(Lnet/minecraft/client/Camera;FLorg/joml/Matrix4f;)V"))
+    @ModifyArg(method = {"renderLevel"}, index = 2, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GameRenderer;renderItemInHand(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/Camera;F)V"))
     private float renderItemInHand(float original) {
         ClientLevel level = this.minecraft.level;
         if (level == null)
             return original;
         Entity entity = this.minecraft.getCameraEntity();
-        if (entity != null && (int)Variables.getVariable(level, ModVariable.TIME_STATUS) ==2&& !TimerControl.isPauseEntity(entity) )
+        if (entity != null && (int) Variables.getVariable(level, ModVariable.TIME_STATUS) ==2&& !GJ.TimerControl.isPauseEntity(entity) )
             return 0.0F;
-        if ((int) Variables.getVariable(level, ModVariable.TIME_STATUS) == 2 && TimerControl.isPauseEntity(entity))
+        if (entity != null && (int) Variables.getVariable(level, ModVariable.TIME_STATUS) ==2  && GJ.TimerControl.isPauseEntity(entity) )
         {
-            return  ((MinecraftAccessor) minecraft).getTimer() instanceof  ITimer timerTimer ? timerTimer.riderApi$deltaTick() : original;
+            return  ((MinecraftAccessor) minecraft).getTimer() instanceof  ITimer ITimer ? ITimer.rider_api$partialTick() : original;
         }
-        if ((int) Variables.getVariable(level, ModVariable.TIME_STATUS) == 1 && TimerControl.isSlowEntity(entity))
+        if (entity != null && (int) Variables.getVariable(level, ModVariable.TIME_STATUS) == 1  && GJ.TimerControl.isSlowEntity(entity) )
         {
-            return  ((MinecraftAccessor) minecraft).getTimer() instanceof  ITimer timerTimer ? timerTimer.riderApi$deltaTick() : original;
+            return  ((MinecraftAccessor) minecraft).getTimer() instanceof  ITimer ITimer ? ITimer.rider_api$partialTick() : original;
         }
         return original;
     }
@@ -177,44 +195,44 @@ public abstract class GameRendererMixin implements TimerGamerRenderer {
         if (level == null)
             return original;
         Entity entity = this.minecraft.getCameraEntity();
-        if ((int) Variables.getVariable(level, ModVariable.TIME_STATUS) == 2 && TimerControl.isPauseEntity(entity))
+        if (entity != null && (int) Variables.getVariable(level, ModVariable.TIME_STATUS) ==2  && GJ.TimerControl.isPauseEntity(entity) )
         {
-            return  ((MinecraftAccessor) minecraft).getTimer() instanceof  ITimer timerTimer ? timerTimer.riderApi$deltaTick() : original;
+            return  ((MinecraftAccessor) minecraft).getTimer() instanceof  ITimer ITimer ? ITimer.rider_api$partialTick() : original;
         }
-        if ((int) Variables.getVariable(level, ModVariable.TIME_STATUS) == 1 && TimerControl.isSlowEntity(entity))
+        if (entity != null && (int) Variables.getVariable(level, ModVariable.TIME_STATUS) == 1  && GJ.TimerControl.isSlowEntity(entity) )
         {
-            return  ((MinecraftAccessor) minecraft).getTimer() instanceof  ITimer timerTimer ? timerTimer.riderApi$deltaTick() : original;
+            return  ((MinecraftAccessor) minecraft).getTimer() instanceof  ITimer ITimer ? ITimer.rider_api$partialTick() : original;
         }
-        return (int)Variables.getVariable(level, ModVariable.TIME_STATUS) ==2 ? 0.0F : original;
+        return (int) Variables.getVariable(level, ModVariable.TIME_STATUS) ==2 ? 0.0F : original;
     }
 
-    @ModifyArg(method = {"render"}, index = 1, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GameRenderer;renderItemActivationAnimation(Lnet/minecraft/client/gui/GuiGraphics;F)V"))
+    @ModifyArg(method = {"render"}, index = 2, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GameRenderer;renderItemActivationAnimation(IIF)V"))
     private float renderItemActivationAnimation(float original) {
         ClientLevel level = this.minecraft.level;
         if (level == null)
             return original;
         Entity entity = this.minecraft.getCameraEntity();
-        if ((int) Variables.getVariable(level, ModVariable.TIME_STATUS) == 1 && TimerControl.isSlowEntity(entity))
+        if (entity != null && (int) Variables.getVariable(level, ModVariable.TIME_STATUS) == 1  && GJ.TimerControl.isSlowEntity(entity) )
         {
-            return  ((MinecraftAccessor) minecraft).getTimer() instanceof  ITimer timerTimer ? timerTimer.riderApi$deltaTick() : original;
+            return  ((MinecraftAccessor) minecraft).getTimer() instanceof  ITimer ITimer ? ITimer.rider_api$partialTick() : original;
         }
-        if ((int) Variables.getVariable(level, ModVariable.TIME_STATUS) == 2 && TimerControl.isPauseEntity(entity))
+        if (entity != null && (int) Variables.getVariable(level, ModVariable.TIME_STATUS) ==2  && GJ.TimerControl.isPauseEntity(entity) )
         {
-            return  ((MinecraftAccessor) minecraft).getTimer() instanceof  ITimer timerTimer ? timerTimer.riderApi$deltaTick() : original;
+            return  ((MinecraftAccessor) minecraft).getTimer() instanceof  ITimer ITimer ? ITimer.rider_api$partialTick() : original;
         }
-        return (int)Variables.getVariable(level, ModVariable.TIME_STATUS) ==2 ? 0.0F : original;
+        return (int) Variables.getVariable(level, ModVariable.TIME_STATUS) ==2 ? 0.0F : original;
     }
 
-    @ModifyArg(method = "render",at = @At(value = "INVOKE", target = "Lnet/neoforged/neoforge/client/ClientHooks;drawScreen(Lnet/minecraft/client/gui/screens/Screen;Lnet/minecraft/client/gui/GuiGraphics;IIF)V"),index = 4,remap = false)
+    @ModifyArg(method = "render",at = @At(value = "INVOKE", target = "Lnet/minecraftforge/client/ForgeHooksClient;drawScreen(Lnet/minecraft/client/gui/screens/Screen;Lnet/minecraft/client/gui/GuiGraphics;IIF)V"),index = 4,remap = false)
     private float renderDeltaFrame1(float original) {
-        DeltaTracker.Timer rider_api$timer = ((MinecraftAccessor) Minecraft.getInstance()).getTimer();
+        Timer rider_api$timer = ((MinecraftAccessor) Minecraft.getInstance()).getTimer();
         if (rider_api$timer != null){
             ClientLevel level = this.minecraft.level;
             if (level != null && minecraft.player != null){
-                ITimer timerTimer = (ITimer) rider_api$timer;
-                if ( ((int)Variables.getVariable(level, ModVariable.TIME_STATUS) == 1 && TimerControl.isSlowEntity(minecraft.player))
-                        || ((int)Variables.getVariable(level, ModVariable.TIME_STATUS) == 2 && TimerControl.isPauseEntity(minecraft.player) ))
-                    return timerTimer.riderApi$tickDelta();
+                ITimer ITimer = (ITimer) rider_api$timer;
+                if ( ((int) Variables.getVariable(level, ModVariable.TIME_STATUS) == 1 && GJ.TimerControl.isSlowEntity(minecraft.player))
+                        || ((int) Variables.getVariable(level, ModVariable.TIME_STATUS) == 2 && GJ.TimerControl.isPauseEntity(minecraft.player) ))
+                    return ITimer.rider_api$tickDelta();
             }
         }
         return original;
@@ -222,30 +240,31 @@ public abstract class GameRendererMixin implements TimerGamerRenderer {
 
     @ModifyArg(method = "render",at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Overlay;render(Lnet/minecraft/client/gui/GuiGraphics;IIF)V"),index = 3)
     private float renderDeltaFrame2(float original) {
-        DeltaTracker.Timer rider_api$timer = ((MinecraftAccessor) Minecraft.getInstance()).getTimer();
+        Timer rider_api$timer = ((MinecraftAccessor) Minecraft.getInstance()).getTimer();
         if (rider_api$timer != null){
             ClientLevel level = this.minecraft.level;
             if (level != null && minecraft.player != null){
-                ITimer timerTimer = (ITimer) rider_api$timer;
-                if ( ((int)Variables.getVariable(level, ModVariable.TIME_STATUS) == 1 && TimerControl.isSlowEntity(minecraft.player))
-                        || ((int)Variables.getVariable(level, ModVariable.TIME_STATUS) == 2 && TimerControl.isPauseEntity(minecraft.player) ))
-                    return timerTimer.riderApi$tickDelta();
+                ITimer ITimer = (ITimer) rider_api$timer;
+                if ( ((int) Variables.getVariable(level, ModVariable.TIME_STATUS) == 1 && GJ.TimerControl.isSlowEntity(minecraft.player))
+                        || ((int) Variables.getVariable(level, ModVariable.TIME_STATUS) == 2 && GJ.TimerControl.isPauseEntity(minecraft.player) ))
+                    return ITimer.rider_api$tickDelta();
             }
         }
         return original;
     }
 
-    @ModifyArg(method = "render",at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/Gui;render(Lnet/minecraft/client/gui/GuiGraphics;Lnet/minecraft/client/DeltaTracker;)V"),index = 1)
-    private DeltaTracker renderFrameTime1(DeltaTracker deltaTracker) {
-        DeltaTracker.Timer rider_api$timer = ((MinecraftAccessor) Minecraft.getInstance()).getTimer();
+    @ModifyArg(method = "render",at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/Gui;render(Lnet/minecraft/client/gui/GuiGraphics;F)V"),index = 1)
+    private float renderFrameTime1(float original) {
+        Timer rider_api$timer = ((MinecraftAccessor) Minecraft.getInstance()).getTimer();
         if (rider_api$timer != null){
             ClientLevel level = this.minecraft.level;
             if (level != null && minecraft.player != null){
-                if ( ((int)Variables.getVariable(level, ModVariable.TIME_STATUS) == 1 && TimerControl.isSlowEntity(minecraft.player))
-                        || ((int)Variables.getVariable(level, ModVariable.TIME_STATUS) == 2 && TimerControl.isPauseEntity(minecraft.player) ))
-                    return rider_api$timer;
+                ITimer ITimer = (ITimer) rider_api$timer;
+                if ( ((int) Variables.getVariable(level, ModVariable.TIME_STATUS) == 1 && GJ.TimerControl.isSlowEntity(minecraft.player))
+                        || ((int) Variables.getVariable(level, ModVariable.TIME_STATUS) == 2 && GJ.TimerControl.isPauseEntity(minecraft.player) ))
+                    return ITimer.rider_api$partialTick();
             }
         }
-        return deltaTracker;
+        return original;
     }
 }

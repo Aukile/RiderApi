@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableMap;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
+import net.ankrya.rider_api.help.GJ;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
@@ -19,8 +20,8 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.inventory.InventoryMenu;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3f;
-import software.bernie.geckolib.animatable.GeoAnimatable;
 import software.bernie.geckolib.cache.object.*;
+import software.bernie.geckolib.core.animatable.GeoAnimatable;
 import software.bernie.geckolib.renderer.GeoItemRenderer;
 import software.bernie.geckolib.renderer.GeoRenderer;
 import software.bernie.geckolib.renderer.layer.GeoRenderLayer;
@@ -55,7 +56,7 @@ public class CosmicGeoRenderLayer<T extends GeoAnimatable> extends GeoRenderLaye
                 atlasSprite.add(Minecraft.getInstance().getTextureAtlas(InventoryMenu.BLOCK_ATLAS).apply(res));
             atlasSprite.forEach(sprite -> ITEM_MODEL_GENERATOR.processFrames(atlasSprite.indexOf(sprite), "layer" + atlasSprite.indexOf(sprite), sprite.contents()).forEach(element ->{
                 for (Map.Entry<Direction, BlockElementFace> entry : element.faces.entrySet()) {
-                    quads.add(FACE_BAKERY.bakeQuad(element.from, element.to, entry.getValue(), sprite, entry.getKey(), new PerspectiveModelState(ImmutableMap.of()), element.rotation, element.shade));
+                    quads.add(FACE_BAKERY.bakeQuad(element.from, element.to, entry.getValue(), sprite, entry.getKey(), new PerspectiveModelState(ImmutableMap.of()), element.rotation, element.shade, GJ.Easy.getApiResource("dynamic")));
                 }
             }));
         }
@@ -131,11 +132,11 @@ public class CosmicGeoRenderLayer<T extends GeoAnimatable> extends GeoRenderLaye
             GeoVertex vertex = vertices[i];
             Vector3f position = vertex.position();
 
-            consumer.addVertex(poseStack.last(), position.x(), position.y(), position.z())
-                    .setColor(1.0f, 1.0f, 1.0f, 1.0f)
-                    .setUv(vertex.texU(), vertex.texV())
-                    .setUv2(packedLight & '\uffff', packedLight >> 16 & '\uffff')
-                    .setNormal(normal.x(), normal.y(), normal.z());
+            consumer.vertex(position.x(), position.y(), position.z())
+                    .color(1.0f, 1.0f, 1.0f, 1.0f)
+                    .uv(vertex.texU(), vertex.texV())
+                    .uv2(packedLight & '\uffff', packedLight >> 16 & '\uffff')
+                    .normal(normal.x(), normal.y(), normal.z()).endVertex();
         }
     }
 

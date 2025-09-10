@@ -17,7 +17,7 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
-public class CCShaderInstance  extends ShaderInstance {
+public final class CCShaderInstance extends ShaderInstance {
     private final List<Runnable> applyCallbacks = new LinkedList<>();
 
     private CCShaderInstance(ResourceProvider resourceProvider, ResourceLocation loc, VertexFormat format) throws IOException {

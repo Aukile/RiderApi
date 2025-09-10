@@ -9,9 +9,9 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.neoforge.network.handling.IPayloadContext;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.network.NetworkEvent;
 import org.jetbrains.annotations.NotNull;
 
 // TODO 测试中发现播放多次后播放会瞬间停掉
@@ -48,9 +48,9 @@ public class PlayLoopSound implements INMessage {
     }
 
     @Override
-    public void run(IPayloadContext ctx) {
+    public void run(NetworkEvent.Context ctx) {
         ctx.enqueueWork(() -> {
-            Level level = ctx.player().level();
+            Level level = ctx.getSender().serverLevel();
             Entity entity = level.getEntity(id);
             LoopSound loopSound = new LoopSound(entity, sound, getSoundSource(type), loop, range);
             if (loop && entity instanceof ISoundMap soundMap)

@@ -15,8 +15,7 @@ import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.player.Player;
-import net.neoforged.fml.ModList;
-import net.neoforged.neoforge.network.PacketDistributor;
+import net.minecraftforge.fml.ModList;
 
 /**
  * 玩家动画的东东<br>
@@ -48,8 +47,8 @@ public class PlayerAnimator {
         }
     }
 
-    public static void playerAnimation(Player player, String animation, boolean override){
-        instance().playerAnimation(player, animation, true, false, override);
+    public static void playerAnimation(Player player, String modid, String animation, boolean override){
+        instance().playerAnimation(player, modid + ":" + animation, true, false, override);
     }
 
     public void playerAnimation(Player player, String animation, boolean showRightArm, boolean showLeftArm, boolean override){
@@ -89,8 +88,8 @@ public class PlayerAnimator {
     public void playerAnimation(Player player, ResourceLocation dataId, String animation, boolean showRightArm, boolean showLeftArm, boolean override){
         INMessage animationMessage = new PlayerAnimationMessage(player.getUUID(), dataId, animation, showRightArm, showLeftArm, override);
         if (player.level() instanceof ServerLevel serverLevel)
-            PacketDistributor.sendToPlayersInDimension(serverLevel, new NMessageCreater(animationMessage));
-        else MessageLoader.sendToServer(new NMessageCreater(animationMessage));
+            MessageLoader.getLoader().sendToPlayersInDimension(new NMessageCreater(animationMessage), serverLevel);
+        else MessageLoader.getLoader().sendToServer(new NMessageCreater(animationMessage));
     }
 
     @SuppressWarnings("unchecked")
@@ -126,7 +125,7 @@ public class PlayerAnimator {
     public void stopAnimation(Player player, ResourceLocation dataId, int fadeTime){
         PlayerAnimationStopMessage stopMessage = new PlayerAnimationStopMessage(player.getUUID(), dataId, fadeTime);
         if (player.level() instanceof ServerLevel serverLevel)
-            PacketDistributor.sendToPlayersInDimension(serverLevel, new NMessageCreater(stopMessage));
+            MessageLoader.getLoader().sendToPlayersInDimension(new NMessageCreater(stopMessage), serverLevel);
     }
 
     @SuppressWarnings("unchecked")

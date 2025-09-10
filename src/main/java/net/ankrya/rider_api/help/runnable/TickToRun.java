@@ -1,9 +1,9 @@
 package net.ankrya.rider_api.help.runnable;
 
-import net.neoforged.bus.api.IEventBus;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.event.tick.ServerTickEvent;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 public class TickToRun {
     Runnable runnable;
@@ -27,8 +27,8 @@ public class TickToRun {
     }
 
     @SubscribeEvent
-    public void tick(ServerTickEvent.Post event) {
-        if (event.hasTime()) {
+    public void tick(TickEvent.ServerTickEvent event) {
+        if (event.phase == TickEvent.Phase.END) {
             this.tick = (this.tick > 0) ? (this.tick - 1) : this.tick;
             if (this.tick % this.interval == 0.0F)
                 this.runnable.run();

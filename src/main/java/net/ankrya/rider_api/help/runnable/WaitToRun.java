@@ -1,9 +1,9 @@
 package net.ankrya.rider_api.help.runnable;
 
-import net.neoforged.bus.api.IEventBus;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.event.tick.ServerTickEvent;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 public class WaitToRun {
     Runnable runnable;
@@ -24,8 +24,8 @@ public class WaitToRun {
     }
 
     @SubscribeEvent
-    public void tick(ServerTickEvent.Post event) {
-        if (event.hasTime()) {
+    public void tick(TickEvent.ServerTickEvent event) {
+        if (event.phase == TickEvent.Phase.END) {
             this.delayTick = (this.delayTick > 0) ? (this.delayTick - 1) : 0;
             if (this.delayTick <= 0) {
                 this.runnable.run();

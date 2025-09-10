@@ -1,28 +1,23 @@
 package net.ankrya.rider_api.message;
 
-import net.ankrya.rider_api.help.GJ;
 import net.ankrya.rider_api.interfaces.message.IFMessage;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.neoforged.neoforge.network.handling.IPayloadContext;
-import org.jetbrains.annotations.NotNull;
+import net.minecraftforge.network.NetworkEvent;
+
+import java.util.function.Supplier;
 
 /**
  * {@link  IFMessage} 的创建器
  * @author 八云紫Ender <br>
  */
-public final class MessageCreater implements CustomPacketPayload {
-    public static final CustomPacketPayload.Type<MessageCreater> TYPE = new Type<>(GJ.Easy.getApiResource("message_creater"));
-    public static final StreamCodec<RegistryFriendlyByteBuf, MessageCreater> CODEC = StreamCodec.of(MessageCreater::toBuf, MessageCreater::fromBuf);
+public final class MessageCreater {
     final IFMessage message;
 
     public MessageCreater(IFMessage message) {
         this.message = message;
     }
 
-    public static void toBuf(FriendlyByteBuf buf, MessageCreater create) {
+    public static void toBuf(MessageCreater create, FriendlyByteBuf buf) {
         String path = create.message.getClass().getName();
         byte[] bytes = path.getBytes();
         buf.writeInt(bytes.length);
@@ -51,15 +46,12 @@ public final class MessageCreater implements CustomPacketPayload {
     }
 
     // 执行message对象的方法
-    public static void run(final MessageCreater create, final IPayloadContext ctx) {
-        ctx.enqueueWork(() -> {
+    public static void run(final MessageCreater create, final Supplier<NetworkEvent.Context> supplier) {
+        NetworkEvent.Context context = supplier.get();
+        context.enqueueWork(() -> {
 //			Main.LOGGER.info("run task " + create.message);
-            create.message.run(ctx);
+            create.message.run(context);
         });
-    }
-
-    @Override
-    public @NotNull Type<MessageCreater> type() {
-        return TYPE;
+        context.setPacketHandled(true);
     }
 }

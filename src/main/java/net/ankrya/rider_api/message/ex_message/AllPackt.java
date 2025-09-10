@@ -4,23 +4,17 @@ import net.ankrya.rider_api.interfaces.message.INMessage;
 import net.ankrya.rider_api.message.MessageLoader;
 import net.ankrya.rider_api.message.NMessageCreater;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.server.level.ServerPlayer;
-import net.neoforged.neoforge.network.handling.IPayloadContext;
+import net.minecraftforge.network.NetworkEvent;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * 用于发送网络包至服务器再发送至客户端（仅限于{@link INMessage}的实现类）
  */
 public class AllPackt implements INMessage {
-    List<Integer> types = new ArrayList<>();
-    List<?> values = new ArrayList<>();
     final String clazz;
     final INMessage message;
 
-    public AllPackt(String name, INMessage message, boolean hasData, int data) {
+    public AllPackt(String name, INMessage message) {
         this.clazz = name;
         this.message = message;
         if (this.message instanceof AllPackt)
@@ -28,15 +22,11 @@ public class AllPackt implements INMessage {
     }
 
     public AllPackt(INMessage message){
-        this(message.getClass().getName(), message, true, 2);
-    }
-
-    public AllPackt(String name, INMessage message){
-        this(name, message, true, 2);
+        this(message.getClass().getName(), message);
     }
 
     public AllPackt(Class<?> clazz, INMessage message) {
-        this(clazz.getName(), message, true, 2);
+        this(clazz.getName(), message);
     }
 
     @Override
@@ -46,11 +36,11 @@ public class AllPackt implements INMessage {
     }
 
     @Override
-    public void run(IPayloadContext ctx) {
+    public void run(NetworkEvent.Context ctx) {
         ctx.enqueueWork(()->{
             if (!(message instanceof AllPackt)) {
-                if (!ctx.flow().isServerbound())
-                    MessageLoader.sendToPlayersNearby(new NMessageCreater(message), (ServerPlayer) ctx.player());
+                if (ctx.getDirection().getReceptionSide().isClient())
+                    MessageLoader.getLoader().sendToPlayersNearby(new NMessageCreater(message), ctx.getSender());
                 else message.run(ctx);
             }
         });

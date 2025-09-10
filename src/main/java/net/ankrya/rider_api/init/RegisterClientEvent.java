@@ -9,18 +9,17 @@ import net.ankrya.rider_api.client.particle.base.advanced.RibbonParticleData;
 import net.ankrya.rider_api.client.shaber.ModShaders;
 import net.ankrya.rider_api.client.shaber.model.base.CosmicModelLoader;
 import net.ankrya.rider_api.compat.animation.PlayerAnimator;
-import net.ankrya.rider_api.help.GJ;
 import net.minecraft.core.particles.ParticleType;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.bus.api.EventPriority;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
-import net.neoforged.neoforge.client.event.ModelEvent;
-import net.neoforged.neoforge.client.event.RegisterParticleProvidersEvent;
-import net.neoforged.neoforge.client.event.RegisterShadersEvent;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.ModelEvent;
+import net.minecraftforge.client.event.RegisterParticleProvidersEvent;
+import net.minecraftforge.client.event.RegisterShadersEvent;
+import net.minecraftforge.eventbus.api.EventPriority;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 
-@EventBusSubscriber(modid = RiderApi.MODID, value = Dist.CLIENT)
+@Mod.EventBusSubscriber(modid = RiderApi.MODID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class RegisterClientEvent {
 
     @SubscribeEvent
@@ -43,6 +42,6 @@ public class RegisterClientEvent {
 
     @SubscribeEvent
     public static void registerLoaders(ModelEvent.RegisterGeometryLoaders event) {
-        event.register(GJ.Easy.getApiResource("cosmic"), CosmicModelLoader.INSTANCE);
+        event.register("cosmic", CosmicModelLoader.INSTANCE);
     }
 }

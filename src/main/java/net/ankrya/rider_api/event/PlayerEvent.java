@@ -9,20 +9,22 @@ import net.ankrya.rider_api.item.base.armor.BaseRiderArmor;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.event.tick.PlayerTickEvent;
+import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
 
 /**
  * 灾厄极狐的普攻~
  */
-@EventBusSubscriber
+@Mod.EventBusSubscriber
 public class PlayerEvent {
     /**普攻冷却*/
     @SubscribeEvent
-    public static void onPlayerTick(PlayerTickEvent.Pre event) {
-        int hit = Variables.getVariable(event.getEntity(), ModVariable.HIT_COOLING);
-        if (hit > 0) Variables.setVariable(event.getEntity(), ModVariable.HIT_COOLING, hit - 1);
+    public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
+        if (event.phase == TickEvent.Phase.END){
+            int hit = Variables.getVariable(event.player, ModVariable.HIT_COOLING);
+            if (hit > 0) Variables.setVariable(event.player, ModVariable.HIT_COOLING, hit - 1);
+        }
     }
 
     @SubscribeEvent

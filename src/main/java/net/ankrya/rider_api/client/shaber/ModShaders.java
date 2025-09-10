@@ -6,22 +6,23 @@ import net.ankrya.rider_api.client.shaber.base.CCUniform;
 import net.ankrya.rider_api.help.GJ;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.client.event.ClientTickEvent;
-import net.neoforged.neoforge.client.event.RegisterShadersEvent;
-import net.neoforged.neoforge.client.event.RenderFrameEvent;
-import net.neoforged.neoforge.client.event.ScreenEvent;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.client.event.RegisterShadersEvent;
+import net.minecraftforge.client.event.ScreenEvent;
+import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
 
 import java.util.Objects;
 
 /**欸嘿~ 单纯研究一下看看*/
-@EventBusSubscriber(modid = RiderApi.MODID, value = Dist.CLIENT)
-public class ModShaders {
+@Mod.EventBusSubscriber(modid = RiderApi.MODID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.FORGE)
+public final class ModShaders {
     private static class RenderStateShardAccess extends RenderStateShard {
         private static final RenderStateShard.DepthTestStateShard EQUAL_DEPTH_TEST = RenderStateShard.EQUAL_DEPTH_TEST;
         private static final RenderStateShard.LightmapStateShard LIGHT_MAP = RenderStateShard.LIGHTMAP;
@@ -48,7 +49,7 @@ public class ModShaders {
     public static final RenderType COSMIC_RENDER_TYPE = RenderType.create(RiderApi.MODID + ":cosmic", DefaultVertexFormat.BLOCK, VertexFormat.Mode.QUADS, 2097152, true, false, RenderType.CompositeState.builder().setShaderState(new RenderStateShard.ShaderStateShard(() -> cosmicShader)).setDepthTestState(RenderStateShardAccess.EQUAL_DEPTH_TEST).setLightmapState(RenderStateShardAccess.LIGHT_MAP).setTransparencyState(RenderStateShardAccess.TRANSLUCENT_TRANSPARENCY).setTextureState(RenderStateShardAccess.BLOCK_SHEET_MIPPED).createCompositeState(true));
 
     public static void onRegisterShaders(RegisterShadersEvent event) {
-        event.registerShader(CCShaderInstance.create(event.getResourceProvider(), GJ.Easy.getApiResource("cosmic"), DefaultVertexFormat.BLOCK), e -> {
+        event.registerShader(CCShaderInstance.create(event.getResourceProvider(), ResourceLocation.fromNamespaceAndPath(RiderApi.MODID, "cosmic"), DefaultVertexFormat.BLOCK), e -> {
             cosmicShader = (CCShaderInstance) e;
             cosmicTime = Objects.requireNonNull(cosmicShader.getUniform("time"));
             cosmicYaw = Objects.requireNonNull(cosmicShader.getUniform("yaw"));
@@ -62,17 +63,21 @@ public class ModShaders {
     }
 
     @SubscribeEvent
-    public static void clientTick(ClientTickEvent.Post event) {
-        ++renderTime;
-        tick += 1F;
-        if (tick >= 720.0f) {
-            tick = 0.0F;
+    public static void clientTick(TickEvent.ClientTickEvent event) {
+        if (!Minecraft.getInstance().isPaused() && event.phase == TickEvent.Phase.END) {
+            ++renderTime;
+            tick += 1F;
+            if (tick >= 720.0f) {
+                tick = 0.0F;
+            }
         }
     }
 
     @SubscribeEvent
-    public static void renderTick(RenderFrameEvent.Post event) {
-        renderFrame = event.getPartialTick().getGameTimeDeltaTicks();
+    public static void renderTick(TickEvent.RenderTickEvent event) {
+        if (!Minecraft.getInstance().isPaused() && event.phase == TickEvent.Phase.START) {
+            renderFrame = event.renderTickTime;
+        }
     }
 
     @OnlyIn(Dist.CLIENT)

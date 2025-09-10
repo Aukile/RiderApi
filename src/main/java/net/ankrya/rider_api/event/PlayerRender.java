@@ -1,6 +1,5 @@
 package net.ankrya.rider_api.event;
 
-import net.ankrya.rider_api.item.base.armor.BaseGeoArmor;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
@@ -24,24 +23,21 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.client.event.RenderArmEvent;
-import net.neoforged.neoforge.client.event.RenderHandEvent;
-import net.neoforged.neoforge.client.event.RenderPlayerEvent;
-import software.bernie.geckolib.animatable.GeoAnimatable;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.RenderArmEvent;
+import net.minecraftforge.client.event.RenderHandEvent;
+import net.minecraftforge.client.event.RenderPlayerEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
 import software.bernie.geckolib.animatable.GeoItem;
-import software.bernie.geckolib.animatable.client.GeoRenderProvider;
 import software.bernie.geckolib.cache.object.BakedGeoModel;
 import software.bernie.geckolib.cache.object.GeoBone;
-import software.bernie.geckolib.model.GeoModel;
+import software.bernie.geckolib.core.object.Color;
 import software.bernie.geckolib.renderer.GeoArmorRenderer;
 
 import java.util.Arrays;
-import java.util.Objects;
 
-@EventBusSubscriber(Dist.CLIENT)
+@Mod.EventBusSubscriber(Dist.CLIENT)
 public class PlayerRender {
     @SubscribeEvent
     public static void renderHandEvent(RenderArmEvent event) {
@@ -52,64 +48,63 @@ public class PlayerRender {
         PoseStack poseStack = event.getPoseStack();
         MultiBufferSource bufferSource = event.getMultiBufferSource();
         int packedLight = event.getPackedLight();
-        float partialTick = mc.getFrameTimeNs();
+        float partialTick = mc.getFrameTime();
         ItemStack chest = player.getItemBySlot(EquipmentSlot.CHEST);
         EntityRenderDispatcher entityrenderdispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
         EntityRenderer<?> entityrenderer = entityrenderdispatcher.getRenderer(player);
         PlayerModel<AbstractClientPlayer> playermodel = ((PlayerRenderer)entityrenderer).getModel();
         poseStack.pushPose();
 
-        if(chest.getItem() instanceof BaseGeoArmor items){
-            GeoArmorRenderer<BaseGeoArmor> geoArmorRender = (GeoArmorRenderer) getArmorModelHook(player, chest, EquipmentSlot.CHEST, playermodel);
+        if(chest.getItem() instanceof GeoItem items){
+            GeoArmorRenderer geoArmorRender = (GeoArmorRenderer) getArmorModelHook(player, chest, EquipmentSlot.CHEST, playermodel);
 
             VertexConsumer buffer = bufferSource.getBuffer(RenderType.entityTranslucent(geoArmorRender.getTextureLocation(items)));
             RenderType renderType = RenderType.entityTranslucent(geoArmorRender.getTextureLocation(items));
+            Color renderColor = Color.WHITE;
 
-            GeoModel<BaseGeoArmor> geoModel = geoArmorRender.getGeoModel();
-            BakedGeoModel model = geoModel.getBakedModel(geoModel.getModelResource(items, geoArmorRender));
+            BakedGeoModel model = geoArmorRender.getGeoModel().getBakedModel(geoArmorRender.getGeoModel().getModelResource(items));
 
             SetAllBoneNoVisible(geoArmorRender);
-            GeoBone right =  geoArmorRender.getRightArmBone(geoModel);
+            GeoBone right =  geoArmorRender.getRightArmBone();
             if (right != null) {
                 right.setHidden(event.getArm() != HumanoidArm.RIGHT);
                 right.updateRotation(0, 0, 0);
                 right.updatePosition(0, 0, 0);
             }
 
-            GeoBone left =  geoArmorRender.getLeftArmBone(geoModel);
+            GeoBone left =  geoArmorRender.getLeftArmBone();
             if (left != null) {
                 left.setHidden(event.getArm() != HumanoidArm.LEFT);
                 left.updateRotation(0, 0, 0);
                 left.updatePosition(0, 0, 0);
             }
-            geoArmorRender.actuallyRender(poseStack, items,model,renderType,bufferSource, buffer,true,partialTick, packedLight, OverlayTexture.NO_OVERLAY, -1);
+            geoArmorRender.actuallyRender(poseStack, (Item) items,model,renderType,bufferSource, buffer,true,partialTick, packedLight,OverlayTexture.NO_OVERLAY, renderColor.getRed() / 255f, renderColor.getGreen() / 255f,
+                    renderColor.getBlue() / 255f, renderColor.getAlpha() / 255f);
             event.setCanceled(true);
         }
 
         poseStack.popPose();
     }
 
-    private static <T extends Item & GeoAnimatable & GeoItem> void SetAllBoneNoVisible(GeoArmorRenderer<T> render){
-        GeoModel<T> model = render.getGeoModel();
+    private static void SetAllBoneNoVisible(GeoArmorRenderer<?> render){
         try {
-            for (GeoBone geoBone : Arrays.asList(render.getHeadBone(model)
-                    , render.getBodyBone(model), render.getRightLegBone(model)
-                    , render.getRightBootBone(model), render.getLeftLegBone(model)
-                    , render.getLeftBootBone(model))) {
-                if (geoBone != null) {
-                    geoBone.setHidden(true);
-                }
+            for (GeoBone geoBone : Arrays.asList(render.getHeadBone()
+                    , render.getBodyBone(), render.getRightLegBone()
+                    , render.getRightBootBone(), render.getLeftLegBone()
+                    , render.getLeftBootBone())) {
+                geoBone.setHidden(true);
             }
-        } catch (Exception ignored) {
+        } catch (Exception e) {
         }
     }
 
     @SubscribeEvent
     public static void renderPlayerEvent(RenderPlayerEvent.Pre event) {
+        if(event.getEntity() == null) return;
         Player player = event.getEntity();
         EntityRenderDispatcher entityrenderdispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
         EntityRenderer<?> entityrenderer = entityrenderdispatcher.getRenderer(player);
-        PlayerModel<AbstractClientPlayer> playermodel = ((net.minecraft.client.renderer.entity.player.PlayerRenderer)entityrenderer).getModel();
+        PlayerModel<AbstractClientPlayer> playermodel = ((PlayerRenderer)entityrenderer).getModel();
         ItemStack head = player.getItemBySlot(EquipmentSlot.HEAD);
         ItemStack chest = player.getItemBySlot(EquipmentSlot.CHEST);
         ItemStack leg = player.getItemBySlot(EquipmentSlot.LEGS);
@@ -132,8 +127,8 @@ public class PlayerRender {
             }
     }
 
-    private static <T extends LivingEntity> HumanoidModel<?> getArmorModelHook(T entity, ItemStack itemStack, EquipmentSlot slot, HumanoidModel<T> model) {
-        return GeoRenderProvider.of(itemStack).getGeoArmorRenderer(entity, itemStack, slot, model);
+    private static net.minecraft.client.model.Model getArmorModelHook(LivingEntity entity, ItemStack itemStack, EquipmentSlot slot, HumanoidModel model) {
+        return net.minecraftforge.client.ForgeHooksClient.getArmorModel(entity, itemStack, slot, model);
     }
 
     @SubscribeEvent
@@ -154,7 +149,7 @@ public class PlayerRender {
 
         ItemStack chest = player.getItemBySlot(EquipmentSlot.CHEST);
 
-        if(chest.getItem() instanceof BaseGeoArmor items){
+        if(chest.getItem() instanceof GeoItem){
             poseStack.pushPose();
             if (!player.isScoping()) {
                 if (stack.isEmpty()) {
@@ -184,14 +179,14 @@ public class PlayerRender {
         p_109347_.mulPose(Axis.YP.rotationDegrees(f * f6 * 70.0F));
         p_109347_.mulPose(Axis.ZP.rotationDegrees(f * f5 * -20.0F));
         AbstractClientPlayer abstractclientplayer = Minecraft.getInstance().player;
-        RenderSystem.setShaderTexture(0, Objects.requireNonNull(abstractclientplayer).getSkin().texture());
+        RenderSystem.setShaderTexture(0, abstractclientplayer.getSkinTextureLocation());
         p_109347_.translate(f * -1.0F, 3.6F, 3.5F);
         p_109347_.mulPose(Axis.ZP.rotationDegrees(f * 120.0F));
         p_109347_.mulPose(Axis.XP.rotationDegrees(200.0F));
         p_109347_.mulPose(Axis.YP.rotationDegrees(f * -135.0F));
         p_109347_.translate(f * 5.6F, 0.0F, 0.0F);
 
-        net.minecraft.client.renderer.entity.player.PlayerRenderer playerrenderer = (net.minecraft.client.renderer.entity.player.PlayerRenderer)Minecraft.getInstance().getEntityRenderDispatcher().<AbstractClientPlayer>getRenderer(abstractclientplayer);
+        PlayerRenderer playerrenderer = (PlayerRenderer)Minecraft.getInstance().getEntityRenderDispatcher().<AbstractClientPlayer>getRenderer(abstractclientplayer);
         if (flag) {
             playerrenderer.renderRightHand(p_109347_, p_109348_, p_109349_, abstractclientplayer);
         } else {

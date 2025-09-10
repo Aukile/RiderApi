@@ -1,11 +1,11 @@
 package net.ankrya.rider_api.item.renderer.base;
 
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.ankrya.rider_api.interfaces.geo.IGeoArmor;
 import net.ankrya.rider_api.interfaces.geo.IGeoItem;
 import net.ankrya.rider_api.item.base.armor.BaseGeoArmor;
 import net.ankrya.rider_api.item.model.base.BaseGeoArmorModel;
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -61,15 +61,15 @@ public class BaseGeoArmorRenderer<T extends BaseGeoArmor> extends GeoArmorRender
     }
 
     @Override
-    public void renderCubesOfBone(PoseStack poseStack, GeoBone bone, VertexConsumer buffer, int packedLight, int packedOverlay, int colour) {
+    public void renderCubesOfBone(PoseStack poseStack, GeoBone bone, VertexConsumer buffer, int packedLight, int packedOverlay, float red, float green, float blue, float alpha) {
         if (getGeoArmorInterface() != null && !getGeoArmorInterface().lightBones(this).isEmpty()){
             MultiBufferSource.BufferSource source = Minecraft.getInstance().renderBuffers().bufferSource();
             String name = bone.getName();
             if (getGeoArmorInterface().lightBones(this).contains(name)) {
                 VertexConsumer newBuffer = source.getBuffer(RenderType.beaconBeam(getTextureLocation(animatable), false));
-                super.renderCubesOfBone(poseStack, bone, newBuffer, packedLight, packedOverlay, colour);
-            } else super.renderCubesOfBone(poseStack, bone, buffer, packedLight, packedOverlay, colour);
-        } else super.renderCubesOfBone(poseStack, bone, buffer, packedLight, packedOverlay, colour);
+                super.renderCubesOfBone(poseStack, bone, newBuffer, packedLight, packedOverlay, red, green, blue, alpha);
+            } else super.renderCubesOfBone(poseStack, bone, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        } else super.renderCubesOfBone(poseStack, bone, buffer, packedLight, packedOverlay, red, green, blue, alpha);
     }
 
     private IGeoItem getGeoItemBaseInterface() {

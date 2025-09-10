@@ -10,6 +10,7 @@ import net.ankrya.rider_api.client.particle.base.advanced.RibbonParticleData;
 import net.ankrya.rider_api.client.sound.DelayPlaySound;
 import net.ankrya.rider_api.data.ModVariable;
 import net.ankrya.rider_api.data.Variables;
+import net.ankrya.rider_api.interfaces.timer.ITimer;
 import net.ankrya.rider_api.message.MessageLoader;
 import net.ankrya.rider_api.message.NMessageCreater;
 import net.ankrya.rider_api.message.common.LoopSoundMessage;
@@ -19,7 +20,6 @@ import net.minecraft.client.CameraType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleType;
 import net.minecraft.core.particles.ParticleTypes;
@@ -31,15 +31,12 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
@@ -152,7 +149,7 @@ public abstract class GJ {
 
         public static void playSound(Player player, String name, boolean loop) {
             if (player instanceof ServerPlayer serverPlayer) {
-                MessageLoader.sendToPlayersNearby(createLoopSoundMessage(player, name, loop), serverPlayer);
+                MessageLoader.getLoader().sendToPlayersNearby(createLoopSoundMessage(player, name, loop), serverPlayer);
             }
         }
 
@@ -174,7 +171,7 @@ public abstract class GJ {
 
         public static void stopSound(Player player, String name) {
             if (player instanceof ServerPlayer serverPlayer) {
-                MessageLoader.sendToPlayersNearby(
+                MessageLoader.getLoader().sendToPlayersNearby(
                         new NMessageCreater(new StopLoopSound(player.getId(), PlayLoopSound.PLAYERS
                                 , GJ.Easy.getApiResource(name))), serverPlayer);
             }
@@ -182,7 +179,7 @@ public abstract class GJ {
 
         public static boolean hasItem(Entity entity, ItemStack itemstack) {
             if (entity instanceof Player player)
-                return player.getInventory().contains(stack -> !stack.isEmpty() && ItemStack.isSameItem(stack, itemstack));
+                return player.getInventory().contains(itemstack);
             return false;
         }
 
@@ -219,12 +216,14 @@ public abstract class GJ {
             return entity.getItemBySlot(EquipmentSlot.LEGS);
         }
 
+        /**1.20就没必要用了*/
         public static void setNbt(ItemStack itemStack, Consumer<CompoundTag> updater){
-            CustomData.update(DataComponents.CUSTOM_DATA, itemStack, updater);
+            updater.accept(itemStack.getOrCreateTag());
         }
 
+        /**1.20就没必要用了*/
         public static CompoundTag getNbt(ItemStack itemStack){
-            return itemStack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag();
+            return itemStack.getOrCreateTag();
         }
 
         public static void equipBySlot(Entity entity, EquipmentSlot slot, ItemStack stack){
@@ -285,7 +284,7 @@ public abstract class GJ {
 
         public static void ExplosionTo(Entity source, Entity target, Level world, int amount) {
             ToEntity.playExplosionSound(target);
-            target.hurt(new DamageSource(world.holderOrThrow(DamageTypes.PLAYER_EXPLOSION), source), amount);
+            target.hurt(world.damageSources().explosion(target, source), amount);
             if (world instanceof ServerLevel level)
                 level.sendParticles(ParticleTypes.EXPLOSION, (target.getX()), (target.getY() + 1), (target.getZ()), 2, 0.1, 0.1, 0.1, 0.1);
         }
@@ -298,7 +297,7 @@ public abstract class GJ {
         }
 
         public static int getWorldTime(Level level){
-            return (int) Variables.getVariable(level, ModVariable.TIME_STATUS);
+            return (int) (int) Variables.getVariable(level, ModVariable.TIME_STATUS);
         }
 
         public static void timerStartUp(Level level, int timerState){
@@ -306,11 +305,11 @@ public abstract class GJ {
         }
 
         public static boolean isSlowEntity(Entity entity) {
-            return (int) Variables.getVariable(entity, ModVariable.TIME_STATUS) == 1;
+            return (int) Variables.getVariable(entity, ModVariable.TIME_STATUS) == ITimer.timeSlow;
         }
 
         public static boolean isPauseEntity(Entity entity) {
-            return (int) Variables.getVariable(entity, ModVariable.TIME_STATUS) == 2;
+            return (int) Variables.getVariable(entity, ModVariable.TIME_STATUS) == ITimer.timeStop;
         }
     }
 

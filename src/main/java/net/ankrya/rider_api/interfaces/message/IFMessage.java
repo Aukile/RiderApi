@@ -1,7 +1,7 @@
 package net.ankrya.rider_api.interfaces.message;
 
 import net.minecraft.network.FriendlyByteBuf;
-import net.neoforged.neoforge.network.handling.IPayloadContext;
+import net.minecraftforge.network.NetworkEvent;
 
 /**
  * @author 八云紫Ender <br>
@@ -14,5 +14,5 @@ public interface IFMessage {
 
     default void toBytes(FriendlyByteBuf buf){};
 
-    void run(IPayloadContext ctx);
+    void run(NetworkEvent.Context ctx);
 }

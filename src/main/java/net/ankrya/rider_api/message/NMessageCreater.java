@@ -1,20 +1,16 @@
 package net.ankrya.rider_api.message;
 
-import net.ankrya.rider_api.help.GJ;
+import com.google.common.primitives.Primitives;
 import net.ankrya.rider_api.interfaces.message.INMessage;
 import net.ankrya.rider_api.message.ex_message.AllPackt;
-import com.google.common.primitives.Primitives;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.neoforged.neoforge.network.handling.IPayloadContext;
-import org.jetbrains.annotations.NotNull;
+import net.minecraftforge.network.NetworkEvent;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 
 /**
  * {@link  INMessage} 网络包创建器 <br>
@@ -22,21 +18,18 @@ import java.util.concurrent.ConcurrentHashMap;
  * 千万别在run里抛出异常了TAT <br>
  * 痛死我了
  */
-public class NMessageCreater implements CustomPacketPayload{
+public class NMessageCreater{
     // 缓存类名的
     private static final Map<String, Class<?>> CLASS_CACHE = new ConcurrentHashMap<>();
     // 构造器缓存，因为有AllPackt的存在，太乱了，再说吧
 //    private static final Map<ClassKey, Constructor<?>> CONSTRUCTOR_CACHE = new ConcurrentHashMap<>();
-
-    public static final Type<NMessageCreater> TYPE = new Type<>(GJ.Easy.getApiResource("message_new_creater"));
-    public static final StreamCodec<RegistryFriendlyByteBuf, NMessageCreater> CODEC = StreamCodec.of(NMessageCreater::toBuf, NMessageCreater::fromBuf);
     final INMessage message;
 
     public NMessageCreater(INMessage message) {
         this.message = message;
     }
 
-    public static void toBuf(FriendlyByteBuf buf, NMessageCreater create) {
+    public static void toBuf(NMessageCreater create, FriendlyByteBuf buf) {
         String path = create.message.getClass().getName();
         buf.writeUtf(path);
         create.message.toBytes(buf);
@@ -50,18 +43,14 @@ public class NMessageCreater implements CustomPacketPayload{
         } catch (Throwable e) {
             throw new RuntimeException(e);
         }
-        NMessageCreater create = new NMessageCreater(message);
-        return create;
+        return new NMessageCreater(message);
     }
 
     // 执行message对象的方法
-    public static void run(final NMessageCreater create, final IPayloadContext ctx) {
-        ctx.enqueueWork(() -> create.message.run(ctx));
-    }
-
-    @Override
-    public @NotNull CustomPacketPayload.Type<NMessageCreater> type() {
-        return TYPE;
+    public static void run(final NMessageCreater create, final Supplier<NetworkEvent.Context> supplier) {
+        NetworkEvent.Context context = supplier.get();
+        context.enqueueWork(() -> create.message.run(context));
+        context.setPacketHandled(true);
     }
 
     private static INMessage creatMessage(FriendlyByteBuf buf, String path) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {

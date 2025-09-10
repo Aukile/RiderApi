@@ -3,9 +3,11 @@ package net.ankrya.rider_api.interfaces.message;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
-import net.neoforged.neoforge.network.handling.IPayloadContext;
+import net.minecraftforge.network.NetworkEvent;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 /**
  * 万用网络包，{@link IEXMessage}的迭代款，同样支持有参网络包 <br>
@@ -22,7 +24,7 @@ public interface INMessage {
      */
     void toBytes(FriendlyByteBuf buf);
 
-    void run(IPayloadContext ctx);
+    void run(NetworkEvent.Context ctx);
 
     /**自动解析,一行解决*/
     static void autoWriteAll(FriendlyByteBuf buf, Comparable<?>... values){

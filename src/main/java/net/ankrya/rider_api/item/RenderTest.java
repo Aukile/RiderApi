@@ -15,7 +15,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class RenderTest extends SwordItem implements ICCosmic {
     public RenderTest() {
-        super(Tiers.DIAMOND, new Properties().stacksTo(1).durability(1));
+        super(Tiers.DIAMOND, 0, -2.4f, new Properties().stacksTo(1).durability(1));
     }
 
     @Override

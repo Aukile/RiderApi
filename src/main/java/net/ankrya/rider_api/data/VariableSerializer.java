@@ -5,8 +5,6 @@ import com.google.common.primitives.Primitives;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.*;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
@@ -290,7 +288,6 @@ public final class VariableSerializer {
     };
 
     public static final IVariable<ItemStack> ITEM_STACK = new IVariable<>() {
-        private static final StreamCodec<RegistryFriendlyByteBuf, ItemStack> NETWORK_CODEC = ItemStack.STREAM_CODEC;
         @Override
         public int typeId() {
             return 8;
@@ -299,17 +296,12 @@ public final class VariableSerializer {
 
         @Override
         public void write(FriendlyByteBuf buf, ItemStack value) {
-            if (buf instanceof RegistryFriendlyByteBuf registryBuf) {
-                NETWORK_CODEC.encode(registryBuf, value);
-            }
+            buf.writeItemStack(value, true);
         }
 
         @Override
         public ItemStack read(FriendlyByteBuf buf) {
-            if (buf instanceof RegistryFriendlyByteBuf registryBuf) {
-                return NETWORK_CODEC.decode(registryBuf);
-            }
-            return ItemStack.EMPTY;
+            return buf.readItem();
         }
 
         @Override
@@ -362,12 +354,12 @@ public final class VariableSerializer {
 
         @Override
         public void write(FriendlyByteBuf buf, Vec3 value) {
-            buf.writeVec3(value);
+            buf.writeVector3f(value.toVector3f());
         }
 
         @Override
         public Vec3 read(FriendlyByteBuf buf) {
-            return buf.readVec3();
+            return new Vec3(buf.readVector3f());
         }
 
         @Override

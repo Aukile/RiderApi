@@ -14,8 +14,8 @@ import net.minecraft.core.particles.ParticleType;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
@@ -231,11 +231,10 @@ public class AdvancedParticleBase extends TextureSheetParticle {
             f8 = this.getU1();
             float f5 = this.getV0();
             float f6 = this.getV1();
-            int j = this.getLightColor(partialTicks);
-            buffer.addVertex(avector3f[0].x(), avector3f[0].y(), avector3f[0].z()).setUv(f8, f6).setColor(this.rCol, this.gCol, this.bCol, this.alpha).setUv2(15728880 & '\uffff', 15728880 >> 16 & '\uffff');
-            buffer.addVertex(avector3f[1].x(), avector3f[1].y(), avector3f[1].z()).setUv(f8, f5).setColor(this.rCol, this.gCol, this.bCol, this.alpha).setUv2(15728880 & '\uffff', 15728880 >> 16 & '\uffff');
-            buffer.addVertex(avector3f[2].x(), avector3f[2].y(), avector3f[2].z()).setUv(f7, f5).setColor(this.rCol, this.gCol, this.bCol, this.alpha).setUv2(15728880 & '\uffff', 15728880 >> 16 & '\uffff');
-            buffer.addVertex(avector3f[3].x(), avector3f[3].y(), avector3f[3].z()).setUv(f7, f6).setColor(this.rCol, this.gCol, this.bCol, this.alpha).setUv2(15728880 & '\uffff', 15728880 >> 16 & '\uffff');
+            int j = this.getLightColor(partialTicks);buffer.vertex(avector3f[0].x(), avector3f[0].y(), avector3f[0].z()).uv(f8, f6).color(this.rCol, this.gCol, this.bCol, this.alpha).uv2(15728880).endVertex();
+            buffer.vertex(avector3f[1].x(), avector3f[1].y(), avector3f[1].z()).uv(f8, f5).color(this.rCol, this.gCol, this.bCol, this.alpha).uv2(15728880).endVertex();
+            buffer.vertex(avector3f[2].x(), avector3f[2].y(), avector3f[2].z()).uv(f7, f5).color(this.rCol, this.gCol, this.bCol, this.alpha).uv2(15728880).endVertex();
+            buffer.vertex(avector3f[3].x(), avector3f[3].y(), avector3f[3].z()).uv(f7, f6).color(this.rCol, this.gCol, this.bCol, this.alpha).uv2(15728880).endVertex();
             ParticleComponent[] var35 = this.components;
             for (ParticleComponent component : var35) {
                 component.postRender(this, buffer, renderInfo, partialTicks, j);

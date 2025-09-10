@@ -1,5 +1,6 @@
 package net.ankrya.rider_api.entity;
 
+import net.ankrya.rider_api.RiderApi;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
@@ -7,28 +8,25 @@ import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
-import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.neoforge.event.EventHooks;
 import software.bernie.geckolib.animatable.GeoEntity;
-import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
-import software.bernie.geckolib.animation.*;
+import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache;
+import software.bernie.geckolib.core.animation.*;
+import software.bernie.geckolib.core.object.PlayState;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
 import java.util.Optional;
 import java.util.UUID;
 
-/**为什么你跟不紧，为什么乘骑也奇奇怪怪的，恶啊，我要淘汰你*/
 public class SpecialEffectEntity extends Entity implements GeoEntity {
     public static final EntityDataAccessor<Integer> DEAD_TIME = SynchedEntityData.defineId(SpecialEffectEntity.class, EntityDataSerializers.INT);
     public static final EntityDataAccessor<Boolean> AUTO_CLEAR = SynchedEntityData.defineId(SpecialEffectEntity.class, EntityDataSerializers.BOOLEAN);
     public static final EntityDataAccessor<String> ANIMATION = SynchedEntityData.defineId(SpecialEffectEntity.class, EntityDataSerializers.STRING);
     public static final EntityDataAccessor<String> TEXTURE = SynchedEntityData.defineId(SpecialEffectEntity.class, EntityDataSerializers.STRING);
     public static final EntityDataAccessor<String> MODEL = SynchedEntityData.defineId(SpecialEffectEntity.class, EntityDataSerializers.STRING);
+    public static final EntityDataAccessor<String> MODID = SynchedEntityData.defineId(SpecialEffectEntity.class, EntityDataSerializers.STRING);
     public static final EntityDataAccessor<Optional<UUID>> OWNER_UUID = SynchedEntityData.defineId(SpecialEffectEntity.class, EntityDataSerializers.OPTIONAL_UUID);
     public Player owner;
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
@@ -48,13 +46,14 @@ public class SpecialEffectEntity extends Entity implements GeoEntity {
     }
 
     @Override
-    protected void defineSynchedData(SynchedEntityData.Builder builder) {
-        builder.define(DEAD_TIME, 20);
-        builder.define(AUTO_CLEAR, true);
-        builder.define(ANIMATION, "idle");
-        builder.define(TEXTURE, "null");
-        builder.define(MODEL, "null");
-        builder.define(OWNER_UUID, Optional.empty());
+    protected void defineSynchedData() {
+        this.entityData.define(DEAD_TIME, 20);
+        this.entityData.define(AUTO_CLEAR, true);
+        this.entityData.define(ANIMATION, "idle");
+        this.entityData.define(TEXTURE, "null");
+        this.entityData.define(MODEL, "null");
+        this.entityData.define(MODID, RiderApi.MODID);
+        this.entityData.define(OWNER_UUID, Optional.empty());
     }
 
     @Override
@@ -70,6 +69,8 @@ public class SpecialEffectEntity extends Entity implements GeoEntity {
             this.entityData.set(TEXTURE, tag.getString("texture"));
         if (tag.contains("model"))
             this.entityData.set(MODEL, tag.getString("model"));
+        if (tag.contains("modid"))
+            this.entityData.set(MODID, tag.getString("modid"));
         if (tag.contains("owner_uuid")) {
             this.entityData.set(OWNER_UUID, Optional.of(tag.getUUID("owner_uuid")));
             this.owner = null;
@@ -83,6 +84,7 @@ public class SpecialEffectEntity extends Entity implements GeoEntity {
         tag.putString("animation", this.entityData.get(ANIMATION));
         tag.putString("texture", this.entityData.get(TEXTURE));
         tag.putString("model", this.entityData.get(MODEL));
+        tag.putString("modid", this.entityData.get(MODID));
         tag.putUUID("owner_uuid", this.entityData.get(OWNER_UUID).get());
     }
 
@@ -93,9 +95,24 @@ public class SpecialEffectEntity extends Entity implements GeoEntity {
 
     @Override
     public void rideTick() {
-        if (!EventHooks.fireEntityTickPre(this).isCanceled()) {
+        this.setDeltaMovement(Vec3.ZERO);
+        if (canUpdate())
             this.tick();
-            EventHooks.fireEntityTickPost(this);
+        if (this.isPassenger()) {
+            this.showSet(this);
+        }
+    }
+
+    public void showSet(Entity entity)
+    {
+        this.showSet(entity, Entity::setPos);
+    }
+    protected void showSet(Entity entity, Entity.MoveFunction function) {
+        if(this.getOwner() != null)
+        {
+            LivingEntity e = this.getOwner();
+            double d0 = e.getY()-0.136;
+            function.accept(entity, e.getX(), d0, e.getZ());
         }
     }
 
@@ -164,6 +181,14 @@ public class SpecialEffectEntity extends Entity implements GeoEntity {
         return this.entityData.get(TEXTURE);
     }
 
+    public String modid(){
+        return this.entityData.get(MODID);
+    }
+
+    public void setModid(String modid){
+        this.entityData.set(MODID,modid);
+    }
+
     public void setAnimationName(String animation){
         this.entityData.set(ANIMATION,animation);
     }
@@ -193,16 +218,16 @@ public class SpecialEffectEntity extends Entity implements GeoEntity {
         else return null;
     }
 
-    public static AttributeSupplier.Builder createAttributes() {
-        AttributeSupplier.Builder builder = Mob.createMobAttributes();
-        builder = builder.add(Attributes.MOVEMENT_SPEED, 0);
-        builder = builder.add(Attributes.MAX_HEALTH, 2);
-        builder = builder.add(Attributes.ARMOR, 0);
-        builder = builder.add(Attributes.ATTACK_DAMAGE, 0);
-        builder = builder.add(Attributes.FOLLOW_RANGE, 16);
-        builder = builder.add(Attributes.STEP_HEIGHT, 0.6);
-        return builder;
-    }
+//    public static AttributeSupplier.Builder createAttributes() {
+//        AttributeSupplier.Builder builder = Mob.createMobAttributes();
+//        builder = builder.add(Attributes.MOVEMENT_SPEED, 0);
+//        builder = builder.add(Attributes.MAX_HEALTH, 2);
+//        builder = builder.add(Attributes.ARMOR, 0);
+//        builder = builder.add(Attributes.ATTACK_DAMAGE, 0);
+//        builder = builder.add(Attributes.FOLLOW_RANGE, 16);
+//        builder = builder.add(Attributes.JUMP_STRENGTH, 0.6);
+//        return builder;
+//    }
 
     public String getModel() {
         return this.entityData.get(MODEL);

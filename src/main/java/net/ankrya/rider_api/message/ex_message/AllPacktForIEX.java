@@ -4,8 +4,7 @@ import net.ankrya.rider_api.interfaces.message.IEXMessage;
 import net.ankrya.rider_api.message.EXMessageCreater;
 import net.ankrya.rider_api.message.MessageLoader;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.server.level.ServerPlayer;
-import net.neoforged.neoforge.network.handling.IPayloadContext;
+import net.minecraftforge.network.NetworkEvent;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -17,21 +16,17 @@ public class AllPacktForIEX implements IEXMessage {
     final String clazz;
     final IEXMessage message;
 
-    public AllPacktForIEX(String name, IEXMessage message, boolean hasData, int data) {
+    public AllPacktForIEX(String name, IEXMessage message) {
         this.clazz = name;
         this.message = message;
     }
 
     public AllPacktForIEX(IEXMessage message){
-        this(message.getClass().getName(), message, true, 2);
-    }
-
-    public AllPacktForIEX(String name, IEXMessage message){
-        this(name, message, true, 2);
+        this(message.getClass().getName(), message);
     }
 
     public AllPacktForIEX(Class<?> clazz, IEXMessage message) {
-        this(clazz.getName(), message, true, 2);
+        this(clazz.getName(), message);
     }
 
     @Override
@@ -41,11 +36,11 @@ public class AllPacktForIEX implements IEXMessage {
     }
 
     @Override
-    public void run(IPayloadContext ctx) {
+    public void run(NetworkEvent.Context ctx) {
         ctx.enqueueWork(()->{
             if (!(message instanceof AllPackt)) {
-                if (!ctx.flow().isServerbound())
-                    MessageLoader.sendToPlayersNearby(new EXMessageCreater(message), (ServerPlayer) ctx.player());
+                if (ctx.getDirection().getReceptionSide().isClient())
+                    MessageLoader.getLoader().sendToPlayersNearby(new EXMessageCreater(message), ctx.getSender());
                 else message.run(ctx);
             }
         });

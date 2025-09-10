@@ -1,33 +1,27 @@
 package net.ankrya.rider_api.message;
 
-import net.ankrya.rider_api.help.GJ;
+import com.google.common.primitives.Primitives;
 import net.ankrya.rider_api.interfaces.message.IEXMessage;
 import net.ankrya.rider_api.message.ex_message.AllPackt;
-import com.google.common.primitives.Primitives;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.neoforged.neoforge.network.handling.IPayloadContext;
-import org.jetbrains.annotations.NotNull;
+import net.minecraftforge.network.NetworkEvent;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Objects;
+import java.util.function.Supplier;
 
 /**
  * {@link IEXMessage} 的创建器 <br>
  * 会自动解析出对应的网络包 <br>
  */
-public class EXMessageCreater implements CustomPacketPayload{
-    public static final Type<EXMessageCreater> TYPE = new Type<>(GJ.Easy.getApiResource("message_ex_creater"));
-    public static final StreamCodec<RegistryFriendlyByteBuf, EXMessageCreater> CODEC = StreamCodec.of(EXMessageCreater::toBuf, EXMessageCreater::fromBuf);
+public class EXMessageCreater{
     final IEXMessage message;
 
     public EXMessageCreater(IEXMessage message) {
         this.message = message;
     }
 
-    public static void toBuf(FriendlyByteBuf buf, EXMessageCreater create) {
+    public static void toBuf(EXMessageCreater create, FriendlyByteBuf buf) {
         String path = create.message.getClass().getName();
         byte[] bytes = path.getBytes();
         buf.writeInt(bytes.length);
@@ -52,13 +46,10 @@ public class EXMessageCreater implements CustomPacketPayload{
         return new EXMessageCreater(message);
     }
 
-    public static void run(final EXMessageCreater create, final IPayloadContext ctx) {
-        ctx.enqueueWork(() -> create.message.run(ctx));
-    }
-
-    @Override
-    public @NotNull CustomPacketPayload.Type<EXMessageCreater> type() {
-        return TYPE;
+    public static void run(final EXMessageCreater create, final Supplier<NetworkEvent.Context> supplier) {
+        NetworkEvent.Context context = supplier.get();
+        context.enqueueWork(() -> create.message.run(context));
+        context.setPacketHandled(true);
     }
 
     private static IEXMessage creatMessage(FriendlyByteBuf buf, String path) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {

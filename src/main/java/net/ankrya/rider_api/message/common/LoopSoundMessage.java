@@ -1,15 +1,13 @@
 package net.ankrya.rider_api.message.common;
 
 import net.ankrya.rider_api.client.sound.LoopSound;
-import net.ankrya.rider_api.help.GJ;
 import net.ankrya.rider_api.message.ex_message.PlayLoopSound;
 import net.minecraft.client.Minecraft;
-import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
-import net.neoforged.neoforge.network.handling.IPayloadContext;
-import org.jetbrains.annotations.NotNull;
+import net.minecraftforge.network.NetworkEvent;
+
+import java.util.function.Supplier;
 
 import static net.ankrya.rider_api.message.ex_message.PlayLoopSound.getSoundSource;
 
@@ -17,9 +15,7 @@ import static net.ankrya.rider_api.message.ex_message.PlayLoopSound.getSoundSour
  * 播放声音的网络包<br>
  * (常用的还是做成正常规格的好一点？
  */
-public class LoopSoundMessage implements CustomPacketPayload {
-    public static final Type<LoopSoundMessage> TYPE = new Type<>(GJ.Easy.getApiResource("loop_sound_message"));
-    public static final StreamCodec<RegistryFriendlyByteBuf, LoopSoundMessage> CODEC = StreamCodec.of(LoopSoundMessage::toBuf, LoopSoundMessage::fromBuf);
+public class LoopSoundMessage {
 
     final ResourceLocation sound;
     final boolean loop;
@@ -35,7 +31,7 @@ public class LoopSoundMessage implements CustomPacketPayload {
         this.id = id;
     }
 
-    private static void toBuf(RegistryFriendlyByteBuf buf, LoopSoundMessage loopSoundMessage) {
+    public static void toBuf(LoopSoundMessage loopSoundMessage, FriendlyByteBuf buf) {
         buf.writeResourceLocation(loopSoundMessage.sound);
         buf.writeBoolean(loopSoundMessage.loop);
         buf.writeInt(loopSoundMessage.range);
@@ -43,7 +39,7 @@ public class LoopSoundMessage implements CustomPacketPayload {
         buf.writeInt(loopSoundMessage.id);
     }
 
-    private static LoopSoundMessage fromBuf(RegistryFriendlyByteBuf buf) {
+    public static LoopSoundMessage fromBuf(FriendlyByteBuf buf) {
         final ResourceLocation sound = buf.readResourceLocation();
         final boolean loop = buf.readBoolean();
         final int range = buf.readInt();
@@ -52,13 +48,9 @@ public class LoopSoundMessage implements CustomPacketPayload {
         return new LoopSoundMessage(sound, loop, range, type, id);
     }
 
-    @Override
-    public @NotNull Type<LoopSoundMessage> type() {
-        return TYPE;
-    }
-
-    public void handle(IPayloadContext ctx) {
-        ctx.enqueueWork(() -> PlayLoopSound.playLoopSound(Minecraft.getInstance(), new LoopSound(ctx.player().level().getEntity(id), sound, getSoundSource(type), loop, range)));
+    public static void handle(LoopSoundMessage message, Supplier<NetworkEvent.Context> supplier) {
+        NetworkEvent.Context context = supplier.get();
+        context.enqueueWork(() -> PlayLoopSound.playLoopSound(Minecraft.getInstance(), new LoopSound(context.getSender().serverLevel().getEntity(message.id), message.sound, getSoundSource(message.type), message.loop, message.range)));
     }
 
     public ResourceLocation getSound() {

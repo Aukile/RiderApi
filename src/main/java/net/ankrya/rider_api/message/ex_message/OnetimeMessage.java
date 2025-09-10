@@ -4,7 +4,7 @@ import net.ankrya.rider_api.help.GJ;
 import net.ankrya.rider_api.interfaces.message.INMessage;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.entity.player.Player;
-import net.neoforged.neoforge.network.handling.IPayloadContext;
+import net.minecraftforge.network.NetworkEvent;
 
 public class OnetimeMessage implements INMessage {
     final String name;
@@ -24,9 +24,9 @@ public class OnetimeMessage implements INMessage {
     }
 
     @Override
-    public void run(IPayloadContext ctx) {
+    public void run(NetworkEvent.Context ctx) {
         ctx.enqueueWork(() -> {
-            GJ onetime = getOnetime(name, ctx.player());
+            GJ onetime = getOnetime(name, ctx.getSender());
             onetime.use();
         });
     }

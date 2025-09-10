@@ -1,12 +1,11 @@
 package net.ankrya.rider_api.mixin.timer.client;
 
-import com.google.common.collect.EvictingQueue;
+import net.ankrya.rider_api.data.ModVariable;
+import net.ankrya.rider_api.data.Variables;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.client.particle.ParticleEngine;
 import net.minecraft.client.particle.ParticleRenderType;
-import net.ankrya.rider_api.data.ModVariable;
-import net.ankrya.rider_api.data.Variables;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -29,7 +28,7 @@ public class ParticleEngineMixin {
 //    @Inject(method = "tick",at = @At("HEAD"),cancellable = true)
 //    public void tick(CallbackInfo ci) {
 //        if (this.level != null){
-//            int timer_state = Variables.getVariable(this.level, ModVariable.TIME_STATUS);
+//            int timer_state = (int) Variables.getVariable(this.level, ModVariable.TIME_STATUS);
 //            if (timer_state == 2){
 //                Particle particle;
 //                if (!this.particlesToAdd.isEmpty()) {
@@ -47,7 +46,7 @@ public class ParticleEngineMixin {
     @Inject(method = {"tickParticleList"}, at = {@At("HEAD")}, cancellable = true)
     private void pauseTickParticle(CallbackInfo ci) {
         if (this.level != null){
-            int timer_state = Variables.getVariable(this.level, ModVariable.TIME_STATUS);
+            int timer_state = (int) Variables.getVariable(this.level, ModVariable.TIME_STATUS);
             if (timer_state == 2){
                 ci.cancel();
             }
@@ -57,7 +56,7 @@ public class ParticleEngineMixin {
     @Inject(method = {"close"}, at = {@At("HEAD")}, cancellable = true)
     public void close(CallbackInfo ci){
         if (this.level != null){
-            int timer_state = Variables.getVariable(this.level, ModVariable.TIME_STATUS);
+            int timer_state = (int) Variables.getVariable(this.level, ModVariable.TIME_STATUS);
             if (timer_state == 2){
                 ci.cancel();
             }

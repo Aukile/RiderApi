@@ -11,12 +11,12 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.client.extensions.common.IClientItemExtensions;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import software.bernie.geckolib.animatable.GeoItem;
-import software.bernie.geckolib.animatable.client.GeoRenderProvider;
-import software.bernie.geckolib.animation.*;
 import software.bernie.geckolib.constant.DataTickets;
+import software.bernie.geckolib.core.animation.*;
+import software.bernie.geckolib.core.object.PlayState;
 import software.bernie.geckolib.renderer.GeoRenderer;
 import software.bernie.geckolib.renderer.layer.GeoRenderLayer;
 
@@ -31,21 +31,20 @@ public interface IGeoItem extends GeoItem {
     /**nbt重置动画使用，使用{@link IGeoItem#playAnimationAndReset}即可*/
     String ANIMATION_STOP = "animation_stop";
 
-    @Override
-    default void createGeoRenderer(Consumer<GeoRenderProvider> consumer) {
-        consumer.accept(new GeoRenderProvider() {
+    default void createGeoRenderer(Consumer<IClientItemExtensions> consumer) {
+        consumer.accept(new IClientItemExtensions() {
             final boolean isArmor = IGeoItem.this instanceof ArmorItem;
             private BaseGeoItemRenderer<?> itemRenderer;
             private BaseGeoArmorRenderer<?> armorRenderer;
 
             @Override
-            public @NotNull BlockEntityWithoutLevelRenderer getGeoItemRenderer() {
+            public BlockEntityWithoutLevelRenderer getCustomRenderer() {
                 if (!isArmor && itemRenderer == null) itemRenderer = new BaseGeoItemRenderer<>(IGeoItem.this);
                 return itemRenderer;
             }
 
             @Override
-            public <T extends LivingEntity> @NotNull HumanoidModel<?> getGeoArmorRenderer(@Nullable T livingEntity, ItemStack itemStack, @Nullable EquipmentSlot equipmentSlot, @Nullable HumanoidModel<T> original) {
+            public @NotNull HumanoidModel<?> getHumanoidArmorModel(LivingEntity livingEntity, ItemStack itemStack, EquipmentSlot equipmentSlot, HumanoidModel<?> original) {
                 if (isArmor && armorRenderer == null) armorRenderer = new BaseGeoArmorRenderer<>(IGeoItem.this);
                 return armorRenderer;
             }
@@ -111,9 +110,9 @@ public interface IGeoItem extends GeoItem {
         return new GeoRenderLayer[0];
     }
 
-    /**默认模型名*/
+    /**默认模型完整路径*/
     String getModel();
 
-    /**默认贴图名*/
+    /**默认贴图完整路径*/
     String getTexture();
 }

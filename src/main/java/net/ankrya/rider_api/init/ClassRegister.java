@@ -7,9 +7,8 @@ import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
-import net.neoforged.bus.api.IEventBus;
-import net.neoforged.neoforge.registries.DeferredHolder;
-import net.neoforged.neoforge.registries.DeferredRegister;
+import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.registries.DeferredRegister;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -22,7 +21,7 @@ import java.util.function.Supplier;
  */
 public abstract class ClassRegister {
     abstract String modid();
-    public Map<Class<?>,  DeferredRegister<?>> registers = new HashMap<>();
+    public Map<Class<?>, DeferredRegister<?>> registers = new HashMap<>();
     public Map<Class<?>, Map<String, Supplier<?>>> registerObjects = new HashMap<>();
 
     public <T> DeferredRegister<T> registerSource(Class<T> type, String registerName) {
@@ -80,15 +79,6 @@ public abstract class ClassRegister {
     public <T> Supplier<T> register(Class<? extends T> type, final String name, final Supplier<? extends T> sup){
         DeferredRegister<T> r = (DeferredRegister<T>) getRegisterSource(type);
         Supplier<T> object = r.register(name, sup);
-        updateRegisters(type, name, object);
-        return object;
-    }
-
-    /**大概没什么用*/
-    @SuppressWarnings("unchecked")
-    public <T> DeferredHolder<T, T> registerAsHolder(Class<? extends T> type, final String name, final Supplier<? extends T> sup){
-        DeferredRegister<T> r = (DeferredRegister<T>) getRegisterSource(type);
-        DeferredHolder<T, T> object = r.register(name, sup);
         updateRegisters(type, name, object);
         return object;
     }

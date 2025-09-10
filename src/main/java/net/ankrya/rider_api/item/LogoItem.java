@@ -1,20 +1,12 @@
 package net.ankrya.rider_api.item;
 
-import net.ankrya.rider_api.client.particle.base.SpreadBase;
-import net.ankrya.rider_api.client.particle.base.advanced.AdvancedParticleData;
-import net.ankrya.rider_api.client.particle.base.advanced.RibbonParticleData;
 import net.ankrya.rider_api.help.GJ;
-import net.ankrya.rider_api.help.runnable.WaitToRun;
-import net.minecraft.core.particles.SimpleParticleType;
-import net.minecraft.server.level.ServerLevel;
-import net.ankrya.rider_api.help.GJ.TimerControl;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.phys.Vec3;
 
 /**
  * 图标物品真的是图标物品吗<br>
@@ -39,12 +31,12 @@ public class LogoItem extends Item {
 //                , AdvancedParticleData.getParticleType(), RibbonParticleData.getRibbonParticleType()
 //                , player.position().add(0, 3, 0), 2, 4, 15, 15
 //                , 40, 0.12f, 1, -3), 10);
-        if (TimerControl.getWorldTime(level) == 0)
-            TimerControl.timerStartUp(level, player, 2);
-        else if (TimerControl.getWorldTime(level) == 2)
-            TimerControl.timerStartUp(level, player, 1);
-        else if (TimerControl.getWorldTime(level) == 1)
-            TimerControl.timerStartUp(level, player, 0);
+        if (GJ.TimerControl.getWorldTime(level) == 0)
+            GJ.TimerControl.timerStartUp(level, player, 2);
+        else if (GJ.TimerControl.getWorldTime(level) == 2)
+            GJ.TimerControl.timerStartUp(level, player, 1);
+        else if (GJ.TimerControl.getWorldTime(level) == 1)
+            GJ.TimerControl.timerStartUp(level, player, 0);
         player.getCooldowns().addCooldown(this, 10);
         return use;
     }
