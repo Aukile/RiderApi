@@ -40,7 +40,7 @@ public class AllPacktForIEX implements IEXMessage {
         ctx.enqueueWork(()->{
             if (!(message instanceof AllPackt)) {
                 if (ctx.getDirection().getReceptionSide().isClient())
-                    MessageLoader.getLoader().sendToPlayersNearby(new EXMessageCreater(message), ctx.getSender());
+                    MessageLoader.getApiLoader().sendToPlayersNearby(new EXMessageCreater(message), ctx.getSender());
                 else message.run(ctx);
             }
         });

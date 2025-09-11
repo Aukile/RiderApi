@@ -3,8 +3,8 @@ package net.ankrya.rider_api.interfaces.timer;
 import org.spongepowered.asm.mixin.Unique;
 
 public interface ITimer {
-    int timeStop = 1;
-    int timeSlow = 2;
+    int timeStop = 2;
+    int timeSlow = 1;
     int rider_api$advanceTime(long p_92526_);
 
     float rider_api$partialTick();

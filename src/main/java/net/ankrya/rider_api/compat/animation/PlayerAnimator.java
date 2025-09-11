@@ -88,8 +88,8 @@ public class PlayerAnimator {
     public void playerAnimation(Player player, ResourceLocation dataId, String animation, boolean showRightArm, boolean showLeftArm, boolean override){
         INMessage animationMessage = new PlayerAnimationMessage(player.getUUID(), dataId, animation, showRightArm, showLeftArm, override);
         if (player.level() instanceof ServerLevel serverLevel)
-            MessageLoader.getLoader().sendToPlayersInDimension(new NMessageCreater(animationMessage), serverLevel);
-        else MessageLoader.getLoader().sendToServer(new NMessageCreater(animationMessage));
+            MessageLoader.getApiLoader().sendToPlayersInDimension(new NMessageCreater(animationMessage), serverLevel);
+        else MessageLoader.getApiLoader().sendToServer(new NMessageCreater(animationMessage));
     }
 
     @SuppressWarnings("unchecked")
@@ -125,7 +125,7 @@ public class PlayerAnimator {
     public void stopAnimation(Player player, ResourceLocation dataId, int fadeTime){
         PlayerAnimationStopMessage stopMessage = new PlayerAnimationStopMessage(player.getUUID(), dataId, fadeTime);
         if (player.level() instanceof ServerLevel serverLevel)
-            MessageLoader.getLoader().sendToPlayersInDimension(new NMessageCreater(stopMessage), serverLevel);
+            MessageLoader.getApiLoader().sendToPlayersInDimension(new NMessageCreater(stopMessage), serverLevel);
     }
 
     @SuppressWarnings("unchecked")

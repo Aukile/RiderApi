@@ -149,7 +149,7 @@ public abstract class GJ {
 
         public static void playSound(Player player, String name, boolean loop) {
             if (player instanceof ServerPlayer serverPlayer) {
-                MessageLoader.getLoader().sendToPlayersNearby(createLoopSoundMessage(player, name, loop), serverPlayer);
+                MessageLoader.getApiLoader().sendToPlayersNearby(createLoopSoundMessage(player, name, loop), serverPlayer);
             }
         }
 
@@ -171,7 +171,7 @@ public abstract class GJ {
 
         public static void stopSound(Player player, String name) {
             if (player instanceof ServerPlayer serverPlayer) {
-                MessageLoader.getLoader().sendToPlayersNearby(
+                MessageLoader.getApiLoader().sendToPlayersNearby(
                         new NMessageCreater(new StopLoopSound(player.getId(), PlayLoopSound.PLAYERS
                                 , GJ.Easy.getApiResource(name))), serverPlayer);
             }
@@ -437,7 +437,7 @@ public abstract class GJ {
         //使用例
         @Deprecated
         private static RibbonComponent creatRibbon(ParticleType<? extends RibbonParticleData> particle, int length, float scale) {
-            return creatRibbon(particle, length, 0.0, 0.0, 0.0, scale, (double) 236, (double) 204, 255, 1, true, true);
+            return creatRibbon(particle, length, 0.0, 0.0, 0.0, scale, 236, 204, 255, 1, true, true);
         }
 
         /**

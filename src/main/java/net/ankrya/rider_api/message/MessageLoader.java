@@ -1,8 +1,10 @@
 package net.ankrya.rider_api.message;
 
-import net.ankrya.rider_api.help.GJ;
+import net.ankrya.rider_api.RiderApi;
 import net.ankrya.rider_api.message.common.LoopSoundMessage;
+import net.ankrya.rider_api.message.common.SyncVariableMessage;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
@@ -16,12 +18,12 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-public final class MessageLoader {
-    private static MessageLoader loader;
+public class MessageLoader {
+    private static MessageLoader apiLoader;
 
-    public static MessageLoader getLoader() {
-        if (loader == null) loader = new MessageLoader();
-        return loader;
+    public static MessageLoader getApiLoader() {
+        if (apiLoader == null) apiLoader = new MessageLoader(RiderApi.MODID);
+        return apiLoader;
     }
 
     public final SimpleChannel instance;
@@ -29,8 +31,8 @@ public final class MessageLoader {
 
     public int id = 0;
 
-    private MessageLoader() {
-        instance = NetworkRegistry.newSimpleChannel(GJ.Easy.getApiResource("main")
+    private MessageLoader(String modid) {
+        instance = NetworkRegistry.newSimpleChannel(ResourceLocation.fromNamespaceAndPath(modid, "main")
                 , () -> PROTOCOL_VERSION, PROTOCOL_VERSION::equals, PROTOCOL_VERSION::equals);
     }
 
@@ -39,6 +41,7 @@ public final class MessageLoader {
         registerMessage(MessageCreater.class, MessageCreater::toBuf, MessageCreater::fromBuf, MessageCreater::run);
         registerMessage(EXMessageCreater.class, EXMessageCreater::toBuf, EXMessageCreater::fromBuf, EXMessageCreater::run);
         registerMessage(NMessageCreater.class, NMessageCreater::toBuf, NMessageCreater::fromBuf, NMessageCreater::run);
+        registerMessage(SyncVariableMessage.class, SyncVariableMessage::encode, SyncVariableMessage::decode, SyncVariableMessage::handle);
     }
 
     private <MSG> void registerMessage(Class<MSG> messageType, BiConsumer<MSG, FriendlyByteBuf> encoder, Function<FriendlyByteBuf, MSG> decoder, BiConsumer<MSG, Supplier<NetworkEvent.Context>> messageConsumer) {
@@ -74,7 +77,9 @@ public final class MessageLoader {
     }
 
     public <MSG>  void sendToEntityAndSelf(MSG message, Entity entity) {
-        instance.send(PacketDistributor.TRACKING_ENTITY_AND_SELF.with(() -> entity), message);
+        if (!entity.level().isClientSide) {
+            instance.send(PacketDistributor.TRACKING_ENTITY_AND_SELF.with(() -> entity), message);
+        }
     }
     public <ITEM> void sendToAny(ITEM message) {
         if (ServerLifecycleHooks.getCurrentServer() != null) {

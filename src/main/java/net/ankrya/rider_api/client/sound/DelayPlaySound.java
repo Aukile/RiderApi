@@ -39,7 +39,7 @@ public class DelayPlaySound {
                     if (delaySound.delay > 0) {
                         delaySound.tick();
                     } else {
-                        MessageLoader.getLoader().sendToPlayersNearby(delaySound.sound, delaySound.player);
+                        MessageLoader.getApiLoader().sendToPlayersNearby(delaySound.sound, delaySound.player);
                         DelayPlaySound.cancel(player, delaySound.sound.getSound());
                     }
                 }

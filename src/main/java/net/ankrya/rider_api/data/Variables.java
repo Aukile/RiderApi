@@ -27,13 +27,16 @@ import java.util.concurrent.atomic.AtomicInteger;
 public final class Variables implements ICapabilitySerializable<ListTag> {
     public static final Capability<Variables> VARIABLES = CapabilityManager.get(new CapabilityToken<>() {});
     public static final Map<String, Data<?>> variablesDefault = new HashMap<>();
-    private final Variables holder = new Variables();
-    private final LazyOptional<Variables> optional = LazyOptional.of(() -> this.holder);
+    private final LazyOptional<Variables> optional = LazyOptional.of(() -> this);
     Map<String, Data<?>> variables = new HashMap<>();
     AtomicInteger idPool = new AtomicInteger();
     private boolean dirty = false;
 
-    public Variables(){
+    public void invalidate() {
+        this.optional.invalidate();
+    }
+
+    public void init(){
         ModVariable.init(this);
     }
 
@@ -167,14 +170,14 @@ public final class Variables implements ICapabilitySerializable<ListTag> {
     /**同步实体的同步数据*/
     public void syncVariables(Entity entity){
         if (entity instanceof ServerPlayer player)
-            MessageLoader.getLoader().sendToPlayersInDimension(new SyncVariableMessage(entity.getId(), this), player);
-        else MessageLoader.getLoader().sendToEntityAndSelf(new SyncVariableMessage(entity.getId(), this), entity);
+            MessageLoader.getApiLoader().sendToPlayersInDimension(new SyncVariableMessage(entity.getId(), this), player);
+        else MessageLoader.getApiLoader().sendToServer(new SyncVariableMessage(entity.getId(), this));
     }
 
     /**同步世界的同步数据*/
     public void syncVariables(Level level){
         if (level instanceof ServerLevel serverLevel)
-            MessageLoader.getLoader().sendToPlayersInDimension(new SyncVariableMessage(-1, this), serverLevel);
+            MessageLoader.getApiLoader().sendToPlayersInDimension(new SyncVariableMessage(-1, this), serverLevel);
     }
 
     /**设置实体的同步数据*/
