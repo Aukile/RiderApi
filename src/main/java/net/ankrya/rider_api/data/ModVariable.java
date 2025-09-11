@@ -21,6 +21,7 @@ public class ModVariable {
         variables.registerVariable(int.class, HIT_COOLING, 0, false);
         variables.registerVariable(int.class, TIME_STATUS, 0, false);
         variables.registerVariable(boolean.class, DISABLE_CONTROL, false, false);
+        variables.registerVariable(boolean.class, DISABLE_MOVE, false, false);
         MinecraftForge.EVENT_BUS.post(new DataInitEvent(variables));
     }
 }

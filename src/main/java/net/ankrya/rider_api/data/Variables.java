@@ -1,6 +1,7 @@
 package net.ankrya.rider_api.data;
 
 import com.google.common.primitives.Primitives;
+import net.ankrya.rider_api.RiderApi;
 import net.ankrya.rider_api.interfaces.inside_use.IVariable;
 import net.ankrya.rider_api.message.MessageLoader;
 import net.ankrya.rider_api.message.common.SyncVariableMessage;
@@ -155,7 +156,7 @@ public final class Variables implements ICapabilitySerializable<ListTag> {
     @SuppressWarnings("unchecked")
     public <T> T getVariable(String name){
         if (!variables.containsKey(name))
-            throw new RuntimeException("Variable does not exist");
+            return (T) variablesDefault.get(name).value;
         return (T) variables.get(name).value;
     }
 

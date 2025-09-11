@@ -13,7 +13,7 @@ import org.slf4j.Logger;
 public class RiderApi {
     public static final String MODID = "rider_api";
     public static MessageLoader messageLoader = MessageLoader.getApiLoader();
-    private static final Logger LOGGER = LogUtils.getLogger();
+    public static final Logger LOGGER = LogUtils.getLogger();
     public RiderApi() {
         IEventBus bus = FMLJavaModLoadingContext.get().getModEventBus();
         ApiRegister.init(bus);

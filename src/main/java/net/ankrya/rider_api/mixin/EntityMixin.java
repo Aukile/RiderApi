@@ -22,6 +22,8 @@ import java.util.Map;
 public abstract class EntityMixin implements ISoundMap {
     @Shadow public abstract void setDeltaMovement(Vec3 vec3);
 
+    @Shadow public abstract boolean isAlive();
+
     @Unique
     public Map<ResourceLocation, LoopSound> rider$loopSounds = new HashMap<>();
 
@@ -50,21 +52,21 @@ public abstract class EntityMixin implements ISoundMap {
 
     @Inject(method = "move", at = @At("HEAD"), cancellable = true)
     public void move(MoverType moverType, Vec3 vec3, CallbackInfo ci) {
-        if (Variables.getVariable((Entity) (Object) this, ModVariable.DISABLE_MOVE)){
+        if ((boolean) Variables.getVariable((Entity) (Object) this, ModVariable.DISABLE_MOVE)){
             ci.cancel();
         }
     }
 
     @Inject(method = "turn", at = @At("HEAD"), cancellable = true)
     public void turn(double xRot, double yRot, CallbackInfo ci) {
-        if (Variables.getVariable((Entity) (Object) this, ModVariable.DISABLE_MOVE)){
+        if ((boolean) Variables.getVariable((Entity) (Object) this, ModVariable.DISABLE_MOVE)){
             ci.cancel();
         }
     }
 
     @Inject(method = "tick", at = @At("HEAD"))
     public void tick(CallbackInfo ci) {
-        if (Variables.getVariable((Entity) (Object) this, ModVariable.DISABLE_MOVE)){
+        if ((boolean) Variables.getVariable((Entity) (Object) this, ModVariable.DISABLE_MOVE)){
             this.setDeltaMovement(Vec3.ZERO);
         }
     }

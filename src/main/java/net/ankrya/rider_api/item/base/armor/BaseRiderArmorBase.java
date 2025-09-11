@@ -14,8 +14,7 @@ import java.util.Map;
  * 这里主要是识别变身状态的方法
  */
 public abstract class BaseRiderArmorBase extends BaseGeoArmor {
-    protected Class<? extends BaseDriver> driverClass = BaseDriver.class;
-    protected Map<EquipmentSlot, Class<? extends BaseRiderArmor>> armorClass = Map.of(EquipmentSlot.HEAD, BaseRiderArmor.class, EquipmentSlot.CHEST, BaseRiderArmor.class, EquipmentSlot.FEET, BaseRiderArmor.class);
+    protected Map<EquipmentSlot, Class<? extends BaseRiderArmorBase>> armorClass = Map.of(EquipmentSlot.HEAD, BaseRiderArmor.class, EquipmentSlot.CHEST, BaseRiderArmor.class, EquipmentSlot.LEGS, BaseDriver.class, EquipmentSlot.FEET, BaseRiderArmor.class);
     public BaseRiderArmorBase(Holder<ArmorMaterial> material, Type type, Properties properties) {
         super(material, type, properties);
     }
@@ -32,19 +31,11 @@ public abstract class BaseRiderArmorBase extends BaseGeoArmor {
         return entity.getItemBySlot(slot).getItem().getClass();
     }
 
-    private boolean driverEquip(LivingEntity entity){
-        return getDriverClass().isAssignableFrom(slotToClass(entity, getDriverSlot()));
-    }
-
     public boolean armorEquip(LivingEntity entity, EquipmentSlot slot){
-        if (slot == getDriverSlot()) return driverEquip(entity);
-        else {
-            boolean equip = true;
-            if (getArmorClass().containsKey(slot)){
-                equip = getArmorClass().get(slot).isAssignableFrom(slotToClass(entity, slot));
-            }
-            return equip;
-        }
+        boolean equip = true;
+        if (getArmorClass().containsKey(slot))
+            equip = getArmorClass().get(slot).isAssignableFrom(slotToClass(entity, slot));
+        return equip;
     }
 
     public boolean allArmorEquip(LivingEntity entity){
@@ -66,15 +57,7 @@ public abstract class BaseRiderArmorBase extends BaseGeoArmor {
         return isAllEquip(entity, entity.getItemBySlot(EquipmentSlot.LEGS));
     }
 
-    public Class<? extends BaseDriver> getDriverClass() {
-        return driverClass;
-    }
-
-    public Map<EquipmentSlot, Class<? extends BaseRiderArmor>> getArmorClass() {
+    public Map<EquipmentSlot, Class<? extends BaseRiderArmorBase>> getArmorClass() {
         return armorClass;
-    }
-
-    public EquipmentSlot getDriverSlot() {
-        return EquipmentSlot.LEGS;
     }
 }
