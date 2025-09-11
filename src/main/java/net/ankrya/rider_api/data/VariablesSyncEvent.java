@@ -3,6 +3,7 @@ package net.ankrya.rider_api.data;
 import net.ankrya.rider_api.message.MessageLoader;
 import net.ankrya.rider_api.message.common.SyncVariableMessage;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -23,10 +24,11 @@ public final class VariablesSyncEvent {
 
     @SubscribeEvent
     public static void onPlayerRespawned(PlayerEvent.PlayerRespawnEvent event) {
-        if (event.getEntity() instanceof ServerPlayer player) {
-            player.getData(Variables.VARIABLES).syncVariables(event.getEntity());
+        Player entity = event.getEntity();
+        if (entity instanceof ServerPlayer player) {
+            player.getData(Variables.VARIABLES).syncVariables(entity);
 
-            Variables world_data = get(event.getEntity().level());
+            Variables world_data = get(entity.level());
             MessageLoader.sendToPlayer(new SyncVariableMessage(-1, world_data), player);
         }
     }
