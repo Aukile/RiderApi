@@ -39,7 +39,7 @@ Geo物品模板节省了制作Model类和Renderer类
 
 ### 同步数据
 提供了简单手写同步数据的方法  
-使用[DataInitEvent]()中的register即可注册数据  
+使用[DataInitEvent](https://github.com/Aukile/RiderApi/blob/master/src/main/java/net/ankrya/rider_api/api/event/DataInitEvent.java)中的register即可注册数据  
 [Variables](https://github.com/Aukile/RiderApi/blob/master/src/main/java/net/ankrya/rider_api/data/Variables.java)中的getVariable获取数据，setVariable设置数据  
 自己记好数据类型捏~dwd
 ### 玩家动画
