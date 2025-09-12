@@ -159,7 +159,7 @@ public final class Variables implements INBTSerializable<ListTag> {
     @SuppressWarnings("unchecked")
     public <T> T getVariable(String name){
         if (!variables.containsKey(name))
-            throw new RuntimeException("Variable does not exist");
+            return (T) variablesDefault.get(name).getValue();
         return (T) variables.get(name).value;
     }
 
