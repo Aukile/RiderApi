@@ -48,8 +48,8 @@ public class PlayerAnimator {
         }
     }
 
-    public static void playerAnimation(Player player, String animation, boolean override){
-        instance().playerAnimation(player, animation, true, false, override);
+    public static void playerAnimation(Player player, String modid, String animation, boolean override){
+        instance().playerAnimation(player, modid + ":" + animation, true, false, override);
     }
 
     public void playerAnimation(Player player, String animation, boolean showRightArm, boolean showLeftArm, boolean override){

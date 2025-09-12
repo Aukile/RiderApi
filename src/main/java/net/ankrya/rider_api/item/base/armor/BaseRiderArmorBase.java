@@ -50,13 +50,8 @@ public abstract class BaseRiderArmorBase extends BaseGeoArmor {
         return entity.getItemBySlot(slot).getItem().getClass();
     }
 
-    private boolean driverEquip(LivingEntity entity){
-        return getDriverClass().isAssignableFrom(slotToClass(entity, EquipmentSlot.LEGS));
-    }
-
     public boolean armorEquip(LivingEntity entity, EquipmentSlot slot){
-        if (slot == EquipmentSlot.LEGS) return driverEquip(entity);
-        else return getArmorClass().isAssignableFrom(slotToClass(entity, slot));
+        return getArmorClass().isAssignableFrom(slotToClass(entity, slot));
     }
 
     public boolean allArmorEquip(LivingEntity entity){

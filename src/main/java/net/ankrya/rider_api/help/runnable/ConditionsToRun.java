@@ -21,6 +21,11 @@ public class ConditionsToRun {
         bus.register(this);
     }
 
+    /**
+     * conditions提供的int为运行刻
+     * @param runnable 运行
+     * @param conditions 条件
+     */
     public ConditionsToRun(Runnable runnable, Predicate<Integer> conditions) {
         this(NeoForge.EVENT_BUS, runnable, conditions);
     }

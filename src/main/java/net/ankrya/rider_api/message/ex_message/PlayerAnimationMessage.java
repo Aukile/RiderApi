@@ -49,7 +49,7 @@ public class PlayerAnimationMessage implements INMessage {
     }
 
     public static void playerAnimation(AbstractClientPlayer player, ResourceLocation dataId, String animation, boolean showRightArm, boolean showLeftArm, boolean override){
-        PlayerAnimator.instance().playAnimation(player, dataId, Objects.requireNonNull(PlayerAnimationRegistry.getAnimation(GJ.Easy.getApiResource(animation))).playAnimation()
+        PlayerAnimator.instance().playAnimation(player, dataId, Objects.requireNonNull(PlayerAnimationRegistry.getAnimation(ResourceLocation.parse(animation))).playAnimation()
                 .setFirstPersonMode(FirstPersonMode.THIRD_PERSON_MODEL).setFirstPersonConfiguration(new FirstPersonConfiguration().setShowRightArm(showRightArm).setShowLeftItem(showLeftArm)), override);
     }
 }
