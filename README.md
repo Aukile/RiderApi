@@ -5,13 +5,13 @@ ps:master分支为neoforge1.21.1版本
 Geo物品模板节省了制作Model类和Renderer类  
 可使用[IGeoItem](https://github.com/Aukile/RiderApi/blob/master/src/main/java/net/ankrya/rider_api/interfaces/geo/IGeoItem.java)接口使用，模组中有[BaseGeoItem](https://github.com/Aukile/RiderApi/blob/master/src/main/java/net/ankrya/rider_api/item/base/BaseGeoItem.java)作为使用例  
 
-| 方法                                  | 用途        |
-|-------------------------------------|-----------|
-| playAnimation、playAnimationAndReset | 简易的播放动画方法 |
-| visibilityBones                     | 隐藏骨骼组的方法  |
+| 方法                                  | 用途         |
+|-------------------------------------|------------|
+| playAnimation、playAnimationAndReset | 简易的播放动画方法  |
+| visibilityBones                     | 隐藏骨骼组的方法   |
 | autoGlow                            | 添加自动发光层的方法 |
-| getRenderType                       | 修改渲染类型方法  |
-| getRenderLayers                     | 添加渲染层方法   |
+| getRenderType                       | 修改渲染类型方法   |
+| getRenderLayers                     | 添加渲染层方法    |
 * 盔甲简易化模板  
 盔甲可使用[IGeoArmor](https://github.com/Aukile/RiderApi/blob/master/src/main/java/net/ankrya/rider_api/interfaces/geo/IGeoArmor.java)其为[IGeoItem](https://github.com/Aukile/RiderApi/blob/master/src/main/java/net/ankrya/rider_api/interfaces/geo/IGeoItem.java)的子类  
 增添了更多的常用功能

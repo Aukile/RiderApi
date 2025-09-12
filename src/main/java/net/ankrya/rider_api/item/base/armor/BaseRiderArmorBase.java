@@ -11,6 +11,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import software.bernie.geckolib.animatable.client.GeoRenderProvider;
 
+import java.util.Map;
 import java.util.function.Consumer;
 
 /**
@@ -19,8 +20,7 @@ import java.util.function.Consumer;
  * 这里主要是识别变身状态的方法
  */
 public abstract class BaseRiderArmorBase extends BaseGeoArmor {
-    protected Class<? extends BaseDriver> driverClass = BaseDriver.class;
-    protected Class<? extends BaseRiderArmor> armorClass = BaseRiderArmor.class;
+    protected Map<EquipmentSlot, Class<? extends BaseRiderArmorBase>> armorClass = Map.of(EquipmentSlot.HEAD, BaseRiderArmor.class, EquipmentSlot.CHEST, BaseRiderArmor.class, EquipmentSlot.LEGS, BaseDriver.class, EquipmentSlot.FEET, BaseRiderArmor.class);
     public BaseRiderArmorBase(Holder<ArmorMaterial> material, Type type, Properties properties) {
         super(material, type, properties);
     }
@@ -51,7 +51,10 @@ public abstract class BaseRiderArmorBase extends BaseGeoArmor {
     }
 
     public boolean armorEquip(LivingEntity entity, EquipmentSlot slot){
-        return getArmorClass().isAssignableFrom(slotToClass(entity, slot));
+        boolean equip = true;
+        if (getArmorClass().containsKey(slot))
+            equip = getArmorClass().get(slot).isAssignableFrom(slotToClass(entity, slot));
+        return equip;
     }
 
     public boolean allArmorEquip(LivingEntity entity){
@@ -73,11 +76,7 @@ public abstract class BaseRiderArmorBase extends BaseGeoArmor {
         return isAllEquip(entity, entity.getItemBySlot(EquipmentSlot.LEGS));
     }
 
-    public Class<? extends BaseDriver> getDriverClass() {
-        return driverClass;
-    }
-
-    public Class<? extends BaseRiderArmor> getArmorClass() {
+    public Map<EquipmentSlot, Class<? extends BaseRiderArmorBase>> getArmorClass() {
         return armorClass;
     }
 }
