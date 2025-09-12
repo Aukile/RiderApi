@@ -29,7 +29,7 @@ Geo物品模板节省了制作Model类和Renderer类
 暂时无功能
 * [BaseRiderArmor](https://github.com/Aukile/RiderApi/blob/master/src/main/java/net/ankrya/rider_api/item/base/armor/BaseRiderArmor.java)  
 主要提供收纳变身时所穿戴物品的功能、自动清除功能、添加药水集和进行穿脱的方法（提供了[RiderArmorEquipEvent](https://github.com/Aukile/RiderApi/blob/master/src/main/java/net/ankrya/rider_api/api/event/RiderArmorEquipEvent.java)和[RiderArmorRemoveEvent](https://github.com/Aukile/RiderApi/blob/master/src/main/java/net/ankrya/rider_api/api/event/RiderArmorRemoveEvent.java)的监听事件，  
-* ps:因为是静态方法呢，还有更简易的办法嘛？）
+ps:因为是静态方法呢，还有更简易的办法嘛？）
 
 | 方法            | 用途              |
 |---------------|-----------------|
@@ -39,7 +39,7 @@ Geo物品模板节省了制作Model类和Renderer类
 
 ### 同步数据
 提供了简单手写同步数据的方法  
-使用[DataInitEvent]()中的register即可注册数据  
+使用[DataInitEvent](https://github.com/Aukile/RiderApi/blob/master/src/main/java/net/ankrya/rider_api/api/event/DataInitEvent.java)中的register即可注册数据  
 [Variables](https://github.com/Aukile/RiderApi/blob/master/src/main/java/net/ankrya/rider_api/data/Variables.java)中的getVariable获取数据，setVariable设置数据  
 自己记好数据类型捏~dwd
 ### 玩家动画
