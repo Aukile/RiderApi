@@ -11,7 +11,7 @@ import org.slf4j.Logger;
 @Mod(RiderApi.MODID)
 public class RiderApi {
     public static final String MODID = "rider_api";
-    private static final Logger LOGGER = LogUtils.getLogger();
+    public static final Logger LOGGER = LogUtils.getLogger();
     public RiderApi(IEventBus bus, ModContainer container) {
         ApiRegister.init(bus);
         Variables.ATTACHMENT_TYPES.register(bus);

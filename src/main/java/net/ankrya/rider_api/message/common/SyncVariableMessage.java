@@ -2,6 +2,7 @@ package net.ankrya.rider_api.message.common;
 
 import net.ankrya.rider_api.data.Variables;
 import net.ankrya.rider_api.help.GJ;
+import net.ankrya.rider_api.message.MessageLoader;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtAccounter;
 import net.minecraft.network.RegistryFriendlyByteBuf;
@@ -9,6 +10,9 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
@@ -69,6 +73,26 @@ public class SyncVariableMessage implements CustomPacketPayload {
             }
         }
 
+    }
+
+    public static void handleServer(final SyncVariableMessage message, final IPayloadContext context) {
+        if (context.flow() == PacketFlow.SERVERBOUND && message.variables != null) {
+            ServerPlayer sender = (ServerPlayer) context.player();
+            if (message.id >= 0) {
+                ServerLevel level = sender.serverLevel();
+                Entity entity = level.getEntity(message.id);
+                if (entity != null) {
+                    Variables entityVars = entity.getData(Variables.VARIABLES);
+                    entityVars.deserializeNBT(level.registryAccess(), message.variables.serializeNBT(level.registryAccess()));
+                    MessageLoader.sendToAllTracking(new SyncVariableMessage(message.id, entityVars), entity);
+                }
+            } else {
+                ServerLevel level = sender.serverLevel();
+                Variables levelVars = level.getData(Variables.VARIABLES);
+                levelVars.deserializeNBT(level.registryAccess(), message.variables.serializeNBT(level.registryAccess()));
+                MessageLoader.sendToPlayersInDimension(new SyncVariableMessage(message.id, levelVars), level);
+            }
+        }
     }
 
     @Override

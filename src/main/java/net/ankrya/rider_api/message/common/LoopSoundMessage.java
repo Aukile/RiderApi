@@ -2,6 +2,7 @@ package net.ankrya.rider_api.message.common;
 
 import net.ankrya.rider_api.client.sound.LoopSound;
 import net.ankrya.rider_api.help.GJ;
+import net.ankrya.rider_api.message.MessageLoader;
 import net.ankrya.rider_api.message.ex_message.PlayLoopSound;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.RegistryFriendlyByteBuf;
@@ -59,6 +60,10 @@ public class LoopSoundMessage implements CustomPacketPayload {
 
     public void handle(IPayloadContext ctx) {
         ctx.enqueueWork(() -> PlayLoopSound.playLoopSound(Minecraft.getInstance(), new LoopSound(ctx.player().level().getEntity(id), sound, getSoundSource(type), loop, range)));
+    }
+
+    public static void handleServer(LoopSoundMessage message, IPayloadContext ctx) {
+        ctx.enqueueWork(() -> MessageLoader.sendToAllTracking(message, ctx.player()));
     }
 
     public ResourceLocation getSound() {

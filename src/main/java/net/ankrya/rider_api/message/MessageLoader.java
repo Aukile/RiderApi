@@ -21,11 +21,11 @@ public final class MessageLoader {
     @SubscribeEvent
     public static void load(final RegisterPayloadHandlersEvent event) {
         final PayloadRegistrar registrar = event.registrar(RiderApi.MODID);
-        registrar.playBidirectional(SyncVariableMessage.TYPE, SyncVariableMessage.CODEC, new DirectionalPayloadHandler<>(SyncVariableMessage::handle, null));
-        registrar.playBidirectional(LoopSoundMessage.TYPE, LoopSoundMessage.CODEC, new DirectionalPayloadHandler<>(LoopSoundMessage::handle, null));
-        registrar.playBidirectional(MessageCreater.TYPE, MessageCreater.CODEC, new DirectionalPayloadHandler<>(MessageCreater::run,MessageCreater::run));
-        registrar.playBidirectional(EXMessageCreater.TYPE, EXMessageCreater.CODEC, new DirectionalPayloadHandler<>(EXMessageCreater::run, EXMessageCreater::run));
-        registrar.playBidirectional(NMessageCreater.TYPE, NMessageCreater.CODEC, new DirectionalPayloadHandler<>(NMessageCreater::run, NMessageCreater::run));
+        registrar.playBidirectional(SyncVariableMessage.TYPE, SyncVariableMessage.CODEC, new DirectionalPayloadHandler<>(SyncVariableMessage::handle, SyncVariableMessage::handleServer));
+        registrar.playBidirectional(LoopSoundMessage.TYPE, LoopSoundMessage.CODEC, new DirectionalPayloadHandler<>(LoopSoundMessage::handle, LoopSoundMessage::handleServer));
+        registrar.playBidirectional(MessageCreater.TYPE, MessageCreater.CODEC, new DirectionalPayloadHandler<>(MessageCreater::run,MessageCreater::serverRun));
+        registrar.playBidirectional(EXMessageCreater.TYPE, EXMessageCreater.CODEC, new DirectionalPayloadHandler<>(EXMessageCreater::run, EXMessageCreater::serverRun));
+        registrar.playBidirectional(NMessageCreater.TYPE, NMessageCreater.CODEC, new DirectionalPayloadHandler<>(NMessageCreater::run, NMessageCreater::serverRun));
 
     }
 
@@ -57,5 +57,9 @@ public final class MessageLoader {
     public static <MSG extends CustomPacketPayload> void sendToEntityAndSelf(MSG message, Entity entity) {
         if (!entity.level().isClientSide)
             PacketDistributor.sendToPlayersTrackingEntityAndSelf(entity, message);
+    }
+
+    public static <MSG extends CustomPacketPayload> void sendToAllTracking(MSG message, Entity entity) {
+        PacketDistributor.sendToPlayersTrackingEntity(entity, message);
     }
 }

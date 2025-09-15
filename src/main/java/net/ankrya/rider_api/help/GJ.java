@@ -44,6 +44,7 @@ import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import net.neoforged.fml.loading.FMLLoader;
 import org.jetbrains.annotations.ApiStatus;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
@@ -83,6 +84,11 @@ public abstract class GJ {
         @ApiStatus.Internal
         public static ResourceLocation getApiResource(String path){
             return ResourceLocation.fromNamespaceAndPath(RiderApi.MODID, path);
+        }
+
+        /**判定是否为开发环境*/
+        public static boolean isDevEnvironment() {
+            return !FMLLoader.isProduction();
         }
 
         /**

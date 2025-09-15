@@ -1,6 +1,7 @@
 package net.ankrya.rider_api.message.common;
 
 import net.ankrya.rider_api.help.GJ;
+import net.ankrya.rider_api.message.MessageLoader;
 import net.ankrya.rider_api.message.ex_message.PlayerAnimationMessage;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.network.RegistryFriendlyByteBuf;
@@ -63,6 +64,14 @@ public class PlayAnimation implements CustomPacketPayload {
             if (player instanceof AbstractClientPlayer clientPlayer) {
                 PlayerAnimationMessage.playerAnimation(clientPlayer, message.layer, message.animation, message.showRightArm, message.showLeftArm, message.override);
             }
+        });
+    }
+
+    public static void handleServer(final PlayAnimation message, final IPayloadContext ctx){
+        ctx.enqueueWork(() -> {
+            Level level = ctx.player().level();
+            Player player = level.getPlayerByUUID(message.uuid);
+            MessageLoader.sendToAllTracking(new PlayAnimation(message.uuid, message.layer, message.animation, message.showRightArm, message.showLeftArm, message.override), player);
         });
     }
 

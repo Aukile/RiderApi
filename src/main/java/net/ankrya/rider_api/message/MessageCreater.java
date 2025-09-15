@@ -58,6 +58,12 @@ public final class MessageCreater implements CustomPacketPayload {
         });
     }
 
+    public static void serverRun(final MessageCreater create, final IPayloadContext ctx) {
+        ctx.enqueueWork(() -> {
+            MessageLoader.sendToAllTracking(create, ctx.player());
+        });
+    }
+
     @Override
     public @NotNull Type<MessageCreater> type() {
         return TYPE;
