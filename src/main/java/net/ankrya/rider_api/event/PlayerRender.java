@@ -44,6 +44,7 @@ import java.util.Objects;
 @EventBusSubscriber(Dist.CLIENT)
 public class PlayerRender {
     @SubscribeEvent
+    @SuppressWarnings("unchecked")
     public static void renderHandEvent(RenderArmEvent event) {
         if (!ModList.get().isLoaded("geckolib")) return;
 
