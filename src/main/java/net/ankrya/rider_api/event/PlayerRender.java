@@ -28,6 +28,7 @@ import net.minecraftforge.client.event.RenderArmEvent;
 import net.minecraftforge.client.event.RenderHandEvent;
 import net.minecraftforge.client.event.RenderPlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
 import software.bernie.geckolib.animatable.GeoItem;
 import software.bernie.geckolib.cache.object.BakedGeoModel;
@@ -39,8 +40,16 @@ import java.util.Arrays;
 
 @Mod.EventBusSubscriber(Dist.CLIENT)
 public class PlayerRender {
+    private static boolean geckolib;
+
+    public static boolean isGeckolib() {
+        geckolib = ModList.get().isLoaded("geckolib");
+        return geckolib;
+    }
+
     @SubscribeEvent
     public static void renderHandEvent(RenderArmEvent event) {
+        if (!isGeckolib()) return;
 
         Minecraft mc = Minecraft.getInstance();
 
@@ -100,6 +109,7 @@ public class PlayerRender {
 
     @SubscribeEvent
     public static void renderPlayerEvent(RenderPlayerEvent.Pre event) {
+        if (!isGeckolib()) return;
         if(event.getEntity() == null) return;
         Player player = event.getEntity();
         EntityRenderDispatcher entityrenderdispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
@@ -133,6 +143,7 @@ public class PlayerRender {
 
     @SubscribeEvent
     public static void renderPlayerEvent(RenderHandEvent event) {
+        if (!isGeckolib()) return;
         if(Minecraft.getInstance().player == null) return;
         Minecraft mc = Minecraft.getInstance();
 
