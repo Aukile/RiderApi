@@ -1,6 +1,7 @@
 ## Rider Api
-### Geo物品简易化模板/骑士盔甲模板  
+我的世界模组  
 ps:master分支为neoforge1.21.1版本
+### Geo物品简易化模板/骑士盔甲模板
 * Geo物品简易化模板  
 Geo物品模板节省了制作Model类和Renderer类  
 可使用[IGeoItem](https://github.com/Aukile/RiderApi/blob/master/src/main/java/net/ankrya/rider_api/interfaces/geo/IGeoItem.java)接口使用，模组中有[BaseGeoItem](https://github.com/Aukile/RiderApi/blob/master/src/main/java/net/ankrya/rider_api/item/base/BaseGeoItem.java)作为使用例  
