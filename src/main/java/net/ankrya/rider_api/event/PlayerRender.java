@@ -25,6 +25,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.ModList;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.RenderArmEvent;
 import net.neoforged.neoforge.client.event.RenderHandEvent;
@@ -44,6 +45,7 @@ import java.util.Objects;
 public class PlayerRender {
     @SubscribeEvent
     public static void renderHandEvent(RenderArmEvent event) {
+        if (!ModList.get().isLoaded("geckolib")) return;
 
         Minecraft mc = Minecraft.getInstance();
 
@@ -105,6 +107,7 @@ public class PlayerRender {
 
     @SubscribeEvent
     public static void renderPlayerEvent(RenderPlayerEvent.Pre event) {
+        if (!ModList.get().isLoaded("geckolib")) return;
         Player player = event.getEntity();
         EntityRenderDispatcher entityrenderdispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
         EntityRenderer<?> entityrenderer = entityrenderdispatcher.getRenderer(player);
@@ -137,6 +140,7 @@ public class PlayerRender {
 
     @SubscribeEvent
     public static void renderPlayerEvent(RenderHandEvent event) {
+        if (!ModList.get().isLoaded("geckolib")) return;
         if(Minecraft.getInstance().player == null) return;
         Minecraft mc = Minecraft.getInstance();
 
