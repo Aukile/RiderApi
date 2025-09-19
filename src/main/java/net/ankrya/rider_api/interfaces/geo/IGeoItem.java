@@ -111,8 +111,11 @@ public interface IGeoItem extends GeoItem {
     }
 
     /**默认模型完整路径*/
-    String getModel();
+    ResourceLocation getModel();
+
+    /**默认动画完整路径*/
+    ResourceLocation getAnimationFile();
 
     /**默认贴图完整路径*/
-    String getTexture();
+    ResourceLocation getTexture();
 }

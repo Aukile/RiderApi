@@ -8,16 +8,16 @@ import software.bernie.geckolib.model.GeoModel;
 public class BaseGeoSwordModel extends GeoModel<BaseGeoSword> {
     @Override
     public ResourceLocation getModelResource(BaseGeoSword item) {
-        return GJ.Easy.getApiResource(item.getModel());
+        return item.getModel();
     }
 
     @Override
     public ResourceLocation getTextureResource(BaseGeoSword item) {
-        return GJ.Easy.getApiResource(item.getTexture());
+        return item.getTexture();
     }
 
     @Override
     public ResourceLocation getAnimationResource(BaseGeoSword item) {
-        return GJ.Easy.getApiResource(item.getModel());
+        return item.getAnimationFile();
     }
 }

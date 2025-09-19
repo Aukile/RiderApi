@@ -9,16 +9,16 @@ import software.bernie.geckolib.model.GeoModel;
 public class BaseGeoItemModel<T extends Item & IGeoItem> extends GeoModel<T> {
     @Override
     public ResourceLocation getModelResource(T item) {
-        return GJ.Easy.getApiResource(item.getModel());
+        return item.getModel();
     }
 
     @Override
     public ResourceLocation getTextureResource(T item) {
-        return GJ.Easy.getApiResource(item.getTexture());
+        return item.getTexture();
     }
 
     @Override
     public ResourceLocation getAnimationResource(T item) {
-        return GJ.Easy.getApiResource(item.getModel());
+        return item.getAnimationFile();
     }
 }

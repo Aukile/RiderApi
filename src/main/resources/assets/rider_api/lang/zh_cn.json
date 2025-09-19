@@ -1,5 +1,6 @@
 {
   "entity.rider_api.special_effects": "特效",
   "item.rider_api.logo": "图标",
-  "item.rider_api.render": "渲染测试"
+  "item.rider_api.render": "渲染测试",
+  "config.rider_api.recipe_txt_out": "配方生成器是否输出TXT文件"
 }

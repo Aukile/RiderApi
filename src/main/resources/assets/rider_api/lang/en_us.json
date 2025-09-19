@@ -1,5 +1,6 @@
 {
   "entity.rider_api.special_effects": "Special Effects",
   "item.rider_api.logo": "Logo",
-  "item.rider_api.render": "Render Test"
+  "item.rider_api.render": "Render Test",
+  "config.rider_api.recipe_txt_out": "Output recipes to a txt file"
 }

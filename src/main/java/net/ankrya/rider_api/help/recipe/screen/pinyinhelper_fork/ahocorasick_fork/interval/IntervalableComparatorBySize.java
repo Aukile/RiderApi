@@ -1,0 +1,18 @@
+package net.ankrya.rider_api.help.recipe.screen.pinyinhelper_fork.ahocorasick_fork.interval;
+
+import java.util.Comparator;
+
+public class IntervalableComparatorBySize implements Comparator<Intervalable> {
+
+    @Override
+    public int compare(final Intervalable intervalable, final Intervalable intervalable2) {
+        int comparison = intervalable2.size() - intervalable.size();
+
+        if (comparison == 0) {
+            comparison = intervalable.getStart() - intervalable2.getStart();
+        }
+
+        return comparison;
+    }
+
+}
