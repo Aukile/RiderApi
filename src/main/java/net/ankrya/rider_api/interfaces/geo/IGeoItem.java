@@ -111,9 +111,12 @@ public interface IGeoItem extends GeoItem {
         return new GeoRenderLayer[0];
     }
 
-    /**默认模型名*/
-    String getModel();
+    /**默认模型文件*/
+    ResourceLocation getModel();
 
-    /**默认贴图名*/
-    String getTexture();
+    /**默认动画文件*/
+    ResourceLocation getAnimationFile();
+
+    /**默认贴图文件*/
+    ResourceLocation getTexture();
 }

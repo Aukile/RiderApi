@@ -8,16 +8,16 @@ import software.bernie.geckolib.model.GeoModel;
 public class BaseGeoArmorModel<T extends BaseGeoArmor> extends GeoModel<T> {
     @Override
     public ResourceLocation getModelResource(BaseGeoArmor armor) {
-        return GJ.Easy.getApiResource("geo/" + armor.getModel() + ".geo.json");
+        return armor.getModel();
     }
 
     @Override
     public ResourceLocation getTextureResource(BaseGeoArmor armor) {
-        return GJ.Easy.getApiResource("textures/item/" + armor.getTexture() + ".png");
+        return armor.getTexture();
     }
 
     @Override
     public ResourceLocation getAnimationResource(BaseGeoArmor armor) {
-        return GJ.Easy.getApiResource("animations/" + armor.getModel() + ".animation.json");
+        return armor.getAnimationFile();
     }
 }
