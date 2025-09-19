@@ -21,7 +21,7 @@ import java.util.function.Supplier;
  * 使用例：{@link ApiRegister}
  */
 public abstract class ClassRegister {
-    abstract String modid();
+    protected abstract String modid();
     public Map<Class<?>,  DeferredRegister<?>> registers = new HashMap<>();
     public Map<Class<?>, Map<String, Supplier<?>>> registerObjects = new HashMap<>();
 

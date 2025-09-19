@@ -28,7 +28,7 @@ public class ApiRegister extends ClassRegister{
     }
 
     @Override
-    String modid() {
+    protected String modid() {
         return RiderApi.MODID;
     }
 
