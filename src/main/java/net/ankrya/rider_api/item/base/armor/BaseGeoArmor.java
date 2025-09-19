@@ -6,8 +6,12 @@ import net.minecraft.core.Holder;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ArmorMaterial;
+import net.minecraftforge.client.extensions.common.IClientItemExtensions;
+import org.jetbrains.annotations.NotNull;
 import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.util.GeckoLibUtil;
+
+import java.util.function.Consumer;
 
 public abstract class BaseGeoArmor extends ArmorItem implements IGeoItem {
     public String animation = "idle";
@@ -16,6 +20,11 @@ public abstract class BaseGeoArmor extends ArmorItem implements IGeoItem {
 
     public BaseGeoArmor(Holder<ArmorMaterial> material, Type type, Properties properties) {
         super(material.get(), type, properties);
+    }
+
+    @Override
+    public void initializeClient(@NotNull Consumer<IClientItemExtensions> consumer) {
+        this.createGeoRenderer(consumer);
     }
 
     @Override

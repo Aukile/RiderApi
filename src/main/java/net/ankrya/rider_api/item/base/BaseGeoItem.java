@@ -22,13 +22,9 @@ public abstract class BaseGeoItem extends Item implements IGeoItem {
         SingletonGeoAnimatable.registerSyncedAnimatable(this);
     }
 
-
-
     @Override
     public void initializeClient(@NotNull Consumer<IClientItemExtensions> consumer) {
-        consumer.accept(new IClientItemExtensions() {
-
-        });
+        this.createGeoRenderer(consumer);
     }
 
     @Override
