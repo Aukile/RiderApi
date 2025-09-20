@@ -26,4 +26,8 @@ public interface IGeoBase {
     default ResourceLocation modAnimations(){
         return modLocation("animations/" + path() + name() + ".animation.json");
     }
+
+    default ResourceLocation modDisplay(){
+        return modLocation("geo/" + path() + name() + ".item");
+    }
 }
