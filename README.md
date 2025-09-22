@@ -68,7 +68,7 @@ ps:因为是静态方法呢，还有更简易的办法嘛？）
 且有[AllPackt](https://github.com/Aukile/RiderApi/blob/master/src/main/java/net/ankrya/rider_api/message/ex_message/AllPackt.java)网络包自动从发送服务器再发送至客户端，套在[INMessage](https://github.com/Aukile/RiderApi/blob/master/src/main/java/net/ankrya/rider_api/message/NMessageCreater.java)外即可使用，相比于[IEXMessage](https://github.com/Aukile/RiderApi/blob/master/src/main/java/net/ankrya/rider_api/interfaces/message/IEXMessage.java)网络包没有大量读写次数的问题，缺点是网络包的参数最多不能超过9个  
 使用例：[PlayerAnimationMessage](https://github.com/Aukile/RiderApi/blob/master/src/main/java/net/ankrya/rider_api/message/ex_message/PlayerAnimationMessage.java)
 
-### 基础Geo物品创建器（具有识别json文件生成器）
+### 基础Geo物品创建器（具有json文件生成器）
 * [IGeoBase](https://github.com/Aukile/RiderApi/blob/master/src/main/java/net/ankrya/rider_api/interfaces/IGeoBase.java)配合[IGeoItem](https://github.com/Aukile/RiderApi/blob/master/src/main/java/net/ankrya/rider_api/interfaces/geo/IGeoItem.java)使用
 * 我的用法是在base类中写好path，再在子类中写name，将name写成静态固定字符串类型来注册最佳
 * 而后可以使用[JsonCreator](https://github.com/Aukile/RiderApi/blob/master/src/main/java/net/ankrya/rider_api/help/json/JsonCreator.java)中的方法createStartForIGeoBase，自动创建文件的model的json和lang中json
