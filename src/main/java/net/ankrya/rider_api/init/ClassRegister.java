@@ -3,10 +3,12 @@ package net.ankrya.rider_api.init;
 import com.mojang.serialization.MapCodec;
 import net.ankrya.rider_api.help.GJ;
 import net.ankrya.rider_api.init.assist.RegisterAssist;
+import net.ankrya.rider_api.interfaces.IGeoBase;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
+import net.minecraft.world.item.Item;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
@@ -118,9 +120,54 @@ public abstract class ClassRegister {
             register.register(bus);
         }
     }
+    /**
+     * 获取注册对象
+     * IGeoBase 体系使用，必须实现{@link IGeoBase}
+     * @see IGeoBase
+     */
+    public <T extends IGeoBase> void getIGoBaseObject(T target, Class<?> as) {{
+        registerObjects.get(as).get(target.name());
+    }
+    }
+
+    /**
+     * 获取物品类的注册对象，使用反射获取实例，仅支持构造器中仅有Properties类的情况
+     * IGeoBase 体系使用，必须实现{@link IGeoBase}
+     * @see IGeoBase
+     */
+    public <T extends IGeoBase> void getIGoBaseEasyItem(Class<T> target, Class<?> as){
+        try {
+            String name = target.getDeclaredConstructor(Item.Properties.class).newInstance(new Item.Properties()).name();
+            registerObjects.get(as).get(name);
+        } catch (Throwable e) {
+            throw new RuntimeException("getIGoBaseEasyItem only supports classes that have properties using the constructor.");
+        }
+    }
+
     private void soundRegister(String... names){
         for (String name : names)
-              register(SoundEvent.class, name, () -> SoundEvent.createVariableRangeEvent(GJ.Easy.getApiResource(name)));
+            register(SoundEvent.class, name, () -> SoundEvent.createVariableRangeEvent(GJ.Easy.getApiResource(name)));
+    }
+
+    /**是否已注册类型*/
+    public boolean isRegistered(Class<?> clazz) {
+        return registerObjects.containsKey(clazz);
+    }
+
+    /**应该用不到*/
+    public Map<Class<?>, DeferredRegister<?>> getRegisters() {
+        return registers;
+    }
+
+    /**获取模组中此类型注册的全部东西*/
+    public Map<String, Supplier<?>> getRegisterObjects(Class<?> clazz) {
+        return registerObjects.get(clazz);
+    }
+
+    /**获取注册的东西*/
+    @SuppressWarnings("unchecked")
+    public <T> Supplier<T> getRegisterObject(String name, Class<T> clazz){
+        return (Supplier<T>) getRegisterObjects(clazz).get(name);
     }
 
     public record Tectonic<T>(String name, T t) {}

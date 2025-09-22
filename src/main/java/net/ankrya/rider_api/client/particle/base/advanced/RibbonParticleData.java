@@ -91,6 +91,6 @@ public class RibbonParticleData extends AdvancedParticleData {
 
     @SuppressWarnings("unchecked")
     public static ParticleType<RibbonParticleData> getRibbonParticleType() {
-        return (ParticleType<RibbonParticleData>) ApiRegister.getRegisterObject("ribbon_particle", ParticleType.class).get();
+        return (ParticleType<RibbonParticleData>) ApiRegister.get().getRegisterObject("ribbon_particle", ParticleType.class).get();
     }
 }

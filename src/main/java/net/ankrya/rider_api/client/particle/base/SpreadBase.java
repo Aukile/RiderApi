@@ -122,7 +122,7 @@ public class SpreadBase extends TextureSheetParticle {
 
         @SuppressWarnings("unchecked")
         public static ParticleType<SimpleParticleType> getCaseSpread(){
-            return (ParticleType<SimpleParticleType>) ApiRegister.getRegisterObject("case_spread", ParticleType.class).get();
+            return (ParticleType<SimpleParticleType>) ApiRegister.get().getRegisterObject("case_spread", ParticleType.class).get();
         }
     }
 }

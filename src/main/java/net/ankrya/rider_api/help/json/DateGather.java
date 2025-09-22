@@ -1,8 +1,8 @@
 package net.ankrya.rider_api.help.json;
 
-import net.ankrya.rider_api.RiderApi;
 import net.ankrya.rider_api.help.GJ;
 import net.ankrya.rider_api.init.ApiRegister;
+import net.ankrya.rider_api.init.ClassRegister;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.data.PackOutput;
@@ -15,8 +15,6 @@ import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.model.generators.BlockModelProvider;
 import net.neoforged.neoforge.client.model.generators.BlockStateProvider;
 import net.neoforged.neoforge.client.model.generators.ItemModelProvider;
@@ -29,11 +27,11 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
-@EventBusSubscriber
-public class DateGather {
+public abstract class DateGather {
+    protected abstract String modid();
+    protected abstract ClassRegister register();
 
-    @SubscribeEvent
-    public static void gatherJson(GatherDataEvent event) {
+    public void gatherJson(GatherDataEvent event) {
         DataGenerator generator = event.getGenerator();
         PackOutput output = generator.getPackOutput();
         ExistingFileHelper helper = event.getExistingFileHelper();
@@ -43,20 +41,20 @@ public class DateGather {
         generator.addProvider(event.includeClient(), new BlockStates(output, helper));
     }
 
-    public static class ItemModels extends ItemModelProvider {
+    public class ItemModels extends ItemModelProvider {
         public ItemModels(PackOutput output, String modid, ExistingFileHelper existingFileHelper) {
             super(output, modid, existingFileHelper);
         }
 
         public ItemModels(PackOutput output, ExistingFileHelper existingFileHelper){
-            this(output, RiderApi.MODID, existingFileHelper);
+            this(output, modid(), existingFileHelper);
         }
 
         @Override
         protected void registerModels() {
             Class<?> clazz = Item.class;
-            if (ApiRegister.isRegistered(clazz)){
-                ApiRegister.getRegisterObjects(clazz).forEach((name, registerObject) -> {
+            if (ApiRegister.get().isRegistered(clazz)){
+                ApiRegister.get().getRegisterObjects(clazz).forEach((name, registerObject) -> {
                     Object object = registerObject.get();
                     if (object instanceof Item item) {
                         basicItem(item);
@@ -71,20 +69,20 @@ public class DateGather {
         }
     }
 
-    public static class BlockModels extends BlockModelProvider {
+    public class BlockModels extends BlockModelProvider {
         public BlockModels(PackOutput output, String modid, ExistingFileHelper existingFileHelper) {
             super(output, modid, existingFileHelper);
         }
 
         public BlockModels(PackOutput output, ExistingFileHelper existingFileHelper){
-            this(output, RiderApi.MODID, existingFileHelper);
+            this(output, modid(), existingFileHelper);
         }
 
         @Override
         protected void registerModels() {
             Class<?> clazz = Block.class;
-            if (ApiRegister.isRegistered(clazz)){
-                ApiRegister.getRegisterObjects(clazz).forEach((name, registerObject) -> {
+            if (ApiRegister.get().isRegistered(clazz)){
+                ApiRegister.get().getRegisterObjects(clazz).forEach((name, registerObject) -> {
                     Object object = registerObject.get();
                     if (object instanceof Block block) {
                         String blockName = block.getName().getString();
@@ -100,20 +98,20 @@ public class DateGather {
         }
     }
 
-    public static class BlockStates extends BlockStateProvider {
+    public class BlockStates extends BlockStateProvider {
         public BlockStates(PackOutput output, String modid, ExistingFileHelper existingFileHelper) {
             super(output, modid, existingFileHelper);
         }
 
         public BlockStates(PackOutput output, ExistingFileHelper existingFileHelper){
-            this(output, RiderApi.MODID, existingFileHelper);
+            this(output, modid(), existingFileHelper);
         }
 
         @Override
         protected void registerStatesAndModels() {
             Class<?> clazz = Block.class;
-            if (ApiRegister.isRegistered(clazz)){
-                ApiRegister.getRegisterObjects(clazz).forEach((name, registerObject) -> {
+            if (ApiRegister.get().isRegistered(clazz)){
+                ApiRegister.get().getRegisterObjects(clazz).forEach((name, registerObject) -> {
                     Object object = registerObject.get();
                     if (object instanceof Block block) {
                         cubeAll(block);

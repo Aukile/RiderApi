@@ -48,7 +48,7 @@ public class ParticleUtil {
                 z += (random.nextDouble() - 0.5) * 0.2;
 
                 // 生成粒子
-                level.addParticle((ParticleOptions) ApiRegister.getRegisterObject("katana_slash", ParticleType.class).get(), x, y, z, 0, 0, 0);
+                level.addParticle((ParticleOptions) ApiRegister.get().getRegisterObject("katana_slash", ParticleType.class).get(), x, y, z, 0, 0, 0);
             }
         }
     }

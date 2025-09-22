@@ -239,6 +239,6 @@ public class AdvancedParticleData implements ParticleOptions {
 
     @SuppressWarnings("unchecked")
     public static ParticleType<AdvancedParticleData> getParticleType() {
-        return (ParticleType<AdvancedParticleData>) ApiRegister.getRegisterObject("advanced_particle", ParticleType.class).get();
+        return (ParticleType<AdvancedParticleData>) ApiRegister.get().getRegisterObject("advanced_particle", ParticleType.class).get();
     }
 }
