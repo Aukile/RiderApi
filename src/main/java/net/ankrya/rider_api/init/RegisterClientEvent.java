@@ -32,7 +32,7 @@ public class RegisterClientEvent {
     public static void registerParticles(RegisterParticleProvidersEvent event) {
         event.registerSpriteSet(AdvancedParticleData.getParticleType(), AdvancedParticleBase.Factory::new);
         event.registerSpriteSet(RibbonParticleData.getRibbonParticleType(), ParticleRibbon.Factory::new);
-        event.registerSpriteSet(ApiRegister.getRegisterObject("case_spread", ParticleType.class).get(), SpreadBase.CaseSpreadProvider::new);
+        event.registerSpriteSet(ApiRegister.get().getRegisterObject("case_spread", ParticleType.class).get(), SpreadBase.CaseSpreadProvider::new);
     }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)

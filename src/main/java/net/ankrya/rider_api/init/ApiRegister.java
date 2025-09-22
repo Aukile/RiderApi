@@ -19,7 +19,6 @@ import java.util.function.Supplier;
 
 public class ApiRegister extends ClassRegister{
     private static ApiRegister register;
-    private ApiRegister(){}
 
     public static ApiRegister get(){
         if (register == null)
@@ -30,27 +29,6 @@ public class ApiRegister extends ClassRegister{
     @Override
     protected String modid() {
         return RiderApi.MODID;
-    }
-
-    /**是否已注册类型*/
-    public static boolean isRegistered(Class<?> clazz){
-        return get().registers.containsKey(clazz);
-    }
-
-    /**应该用不到*/
-    public static Map<Class<?>, DeferredRegister<?>> getRegisters() {
-        return get().registers;
-    }
-
-    /**获取模组中此类型注册的全部东西*/
-    public static Map<String, Supplier<?>> getRegisterObjects(Class<?> clazz) {
-        return get().registerObjects.get(clazz);
-    }
-
-    /**获取注册的东西*/
-    @SuppressWarnings("unchecked")
-    public static  <T> Supplier<T> getRegisterObject(String name, Class<T> clazz){
-        return (Supplier<T>) getRegisterObjects(clazz).get(name);
     }
 
     public static void init(IEventBus bus){

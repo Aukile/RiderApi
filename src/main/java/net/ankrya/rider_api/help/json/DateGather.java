@@ -1,10 +1,10 @@
 package net.ankrya.rider_api.help.json;
 
-import net.ankrya.rider_api.RiderApi;
-import net.ankrya.rider_api.help.GJ;
-import net.ankrya.rider_api.init.ApiRegister;
+import net.ankrya.rider_api.init.ClassRegister;
+import net.ankrya.rider_api.interfaces.IGeoBase;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.data.PackOutput;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraftforge.client.model.generators.BlockModelProvider;
@@ -12,40 +12,36 @@ import net.minecraftforge.client.model.generators.BlockStateProvider;
 import net.minecraftforge.client.model.generators.ItemModelProvider;
 import net.minecraftforge.common.data.ExistingFileHelper;
 import net.minecraftforge.data.event.GatherDataEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
 import org.jetbrains.annotations.NotNull;
 
-@Mod.EventBusSubscriber
-public class DateGather {
+public abstract class DateGather {
+    protected abstract String modid();
+    protected abstract ClassRegister register();
 
-    @SubscribeEvent
-    public static void gatherJson(GatherDataEvent event) {
+    public void gatherJson(GatherDataEvent event) {
         DataGenerator generator = event.getGenerator();
         PackOutput output = generator.getPackOutput();
         ExistingFileHelper helper = event.getExistingFileHelper();
 
-        generator.addProvider(event.includeClient(), new ItemModels(output, helper));
-        generator.addProvider(event.includeClient(), new BlockModels(output, helper));
-        generator.addProvider(event.includeClient(), new BlockStates(output, helper));
+        generator.addProvider(event.includeClient(), new ItemModels(output, modid(), helper));
+        generator.addProvider(event.includeClient(), new BlockModels(output, modid(), helper));
+        generator.addProvider(event.includeClient(), new BlockStates(output, modid(), helper));
     }
 
-    public static class ItemModels extends ItemModelProvider {
+    public class ItemModels extends ItemModelProvider {
         public ItemModels(PackOutput output, String modid, ExistingFileHelper existingFileHelper) {
             super(output, modid, existingFileHelper);
-        }
-
-        public ItemModels(PackOutput output, ExistingFileHelper existingFileHelper){
-            this(output, RiderApi.MODID, existingFileHelper);
         }
 
         @Override
         protected void registerModels() {
             Class<?> clazz = Item.class;
-            if (ApiRegister.isRegistered(clazz)){
-                ApiRegister.getRegisterObjects(clazz).forEach((name, registerObject) -> {
+            if (register().isRegistered(clazz)){
+                register().registerObjects.get(clazz).forEach((name, registerObject) -> {
                     Object object = registerObject.get();
-                    if (object instanceof Item item) {
+                    if (object instanceof IGeoBase item){
+                        basicItem(ResourceLocation.fromNamespaceAndPath(item.modid(), item.path() + item.name()));
+                    } else if (object instanceof Item item) {
                         basicItem(item);
                     }
                 });
@@ -54,28 +50,26 @@ public class DateGather {
 
         @Override
         public @NotNull String getName() {
-            return "Rider Jade Item Models";
+            return "Item Models";
         }
     }
 
-    public static class BlockModels extends BlockModelProvider {
+    public class BlockModels extends BlockModelProvider {
         public BlockModels(PackOutput output, String modid, ExistingFileHelper existingFileHelper) {
             super(output, modid, existingFileHelper);
-        }
-
-        public BlockModels(PackOutput output, ExistingFileHelper existingFileHelper){
-            this(output, RiderApi.MODID, existingFileHelper);
         }
 
         @Override
         protected void registerModels() {
             Class<?> clazz = Block.class;
-            if (ApiRegister.isRegistered(clazz)){
-                ApiRegister.getRegisterObjects(clazz).forEach((name, registerObject) -> {
+            if (register().isRegistered(clazz)){
+                register().getRegisterObjects(clazz).forEach((name, registerObject) -> {
                     Object object = registerObject.get();
-                    if (object instanceof Block block) {
+                    if (object instanceof IGeoBase item){
+                        cubeAll(item.name(), ResourceLocation.fromNamespaceAndPath(item.modid(), item.path() + item.name()));
+                    } else if (object instanceof Block block) {
                         String blockName = block.getName().getString();
-                        cubeAll(blockName, GJ.Easy.getApiResource(blockName));
+                        cubeAll(blockName, ResourceLocation.fromNamespaceAndPath(modid, blockName));
                     }
                 });
             }
@@ -83,24 +77,20 @@ public class DateGather {
 
         @Override
         public @NotNull String getName() {
-            return "Rider Jade Block Models";
+            return "Block Models";
         }
     }
 
-    public static class BlockStates extends BlockStateProvider {
+    public class BlockStates extends BlockStateProvider {
         public BlockStates(PackOutput output, String modid, ExistingFileHelper existingFileHelper) {
             super(output, modid, existingFileHelper);
-        }
-
-        public BlockStates(PackOutput output, ExistingFileHelper existingFileHelper){
-            this(output, RiderApi.MODID, existingFileHelper);
         }
 
         @Override
         protected void registerStatesAndModels() {
             Class<?> clazz = Block.class;
-            if (ApiRegister.isRegistered(clazz)){
-                ApiRegister.getRegisterObjects(clazz).forEach((name, registerObject) -> {
+            if (register().isRegistered(clazz)){
+                register().getRegisterObjects(clazz).forEach((name, registerObject) -> {
                     Object object = registerObject.get();
                     if (object instanceof Block block) {
                         cubeAll(block);
@@ -111,7 +101,7 @@ public class DateGather {
 
         @Override
         public @NotNull String getName() {
-            return "Rider Jade Block States";
+            return "Block States";
         }
     }
 }

@@ -13,11 +13,10 @@ import java.util.function.Consumer;
 @Mixin(Item.class)
 public class ItemMixin {
 
-    @Inject(method = "initializeClient(Ljava/util/function/Consumer;)V", at = @At("HEAD"), cancellable = true, remap = false)
+    @Inject(method = "initializeClient(Ljava/util/function/Consumer;)V", at = @At("TAIL"), remap = false)
     public void initializeClient(Consumer<IClientItemExtensions> consumer, CallbackInfo ci) {
         if (this instanceof IGeoItem item) {
             item.createGeoRenderer(consumer);
-            ci.cancel();
         }
     }
 }

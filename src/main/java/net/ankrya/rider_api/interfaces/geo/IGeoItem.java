@@ -46,6 +46,7 @@ public interface IGeoItem extends GeoItem {
             @Override
             public @NotNull HumanoidModel<?> getHumanoidArmorModel(LivingEntity livingEntity, ItemStack itemStack, EquipmentSlot equipmentSlot, HumanoidModel<?> original) {
                 if (isArmor && armorRenderer == null) armorRenderer = new BaseGeoArmorRenderer<>(IGeoItem.this);
+                this.armorRenderer.prepForRender(livingEntity, itemStack, equipmentSlot, original);
                 return armorRenderer;
             }
         });
@@ -90,7 +91,6 @@ public interface IGeoItem extends GeoItem {
 
     /**隐藏块（物品）*/
     default Map<String, Boolean> visibilityBones(BaseGeoItemRenderer<?> renderer) {return new HashMap<>();}
-
 
     /**是否自动识别 “_glowmask” 后缀发光，启用后必须保证贴图存在*/
     default boolean autoGlow() {return false;}

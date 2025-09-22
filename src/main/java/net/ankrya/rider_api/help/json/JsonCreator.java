@@ -4,18 +4,24 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import net.ankrya.rider_api.RiderApi;
 import net.ankrya.rider_api.help.GJ;
+import net.ankrya.rider_api.interfaces.IGeoBase;
+import net.ankrya.rider_api.item.base.armor.BaseRiderArmor;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.level.block.Block;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Locale;
 
 /**
  * 难说，感觉也就{@link JsonCreator#createSoundsFile}还行<br>
  * 用的话自己弄个main方法吧
  */
 public abstract class JsonCreator {
-    abstract String id();
+    protected abstract String id();
 
     /**
      * 自动创建 sounds文件<br>
@@ -32,18 +38,124 @@ public abstract class JsonCreator {
         }
     }
 
+    public enum GatherType {
+        ITEM,
+        BLOCK,
+        BLOCKSTATE,
+        SOUND,
+        PARTICLE,
+        TROPHIES,
+        LANG;
+
+        public Path getPath(JsonCreator creator){
+            return switch (this){
+                case ITEM -> Path.of("src/main/resources/assets/" + creator.id() + "/models/item");
+                case BLOCK -> Path.of("src/main/resources/assets/" + creator.id() + "/models/block");
+                case BLOCKSTATE -> Path.of("src/main/resources/assets/" + creator.id() + "/blockstate");
+                case SOUND -> Path.of("src/main/resources/assets/" + creator.id());
+                case PARTICLE -> Path.of("src/main/resources/assets/" + creator.id() + "/particles");
+                case TROPHIES -> Path.of("src/main/resources/data/" + creator.id() + "/trophies");
+                case LANG -> Path.of("src/main/resources/assets/" + creator.id() + "/lang");
+            };
+        }
+
+        public String resourcesPathString(JsonCreator creator){
+            return switch (this){
+                case ITEM -> ("/assets/" + creator.id() + "/models/item");
+                case BLOCK -> ("/assets/" + creator.id() + "/models/block");
+                case BLOCKSTATE -> ("/assets/" + creator.id() + "/blockstate");
+                case SOUND -> ("/assets/" + creator.id());
+                case PARTICLE -> ("/assets/" + creator.id() + "/particles");
+                case TROPHIES -> ("/data/" + creator.id() + "/trophies");
+                case LANG -> ("/assets/" + creator.id() + "/lang");
+            };
+        }
+
+    }
+
+    /**
+     * IGeoBase体系使用，必须实现{@link IGeoBase}
+     */
+
+    public <T extends IGeoBase> void createStartForIGeoBase(T geo, String output) {
+        if (output == null){
+            if (geo instanceof Item) {
+                if (geo instanceof BaseRiderArmor armor) {
+                    String armorSlot = armor.slot.getName();
+                    //JsonObject root = createGeoItemJson("geo/" + geo.path() + geo.name() + ".item", geo.path() + geo.name());
+                    JsonObject root = createItemJson(geo.path() + geo.name() + '_' + armorSlot);
+                    createStart(geo.name() + '_' + armorSlot, GatherType.ITEM, root);
+
+                    createLangFile(GatherType.LANG.getPath(this), "item." + id() + '.' + geo.name() + '_' + armorSlot, geo.name() + '_' + armorSlot);
+                } else {
+                    JsonObject root = createGeoItemJson("geo/" + geo.path() + geo.name() + ".item", geo.path() + geo.name());
+                    createStart(geo.name(), GatherType.ITEM, root);
+
+                    createLangFile(GatherType.LANG.getPath(this), "item." + id() + '.' + geo.name(), geo.name());
+                }
+            } else if (geo instanceof Block) {
+                JsonObject root = createBlockJson(geo.path() + geo.name(), "cutout");
+                JsonObject root2 = createBlockStateJson(geo.path() + geo.name());
+                createStart(geo.name(), GatherType.BLOCK, root);
+                createStart(geo.name(), GatherType.BLOCKSTATE, root2);
+
+                createLangFile(GatherType.LANG.getPath(this), "block." + id() + '.' + geo.name(), geo.name());
+            }
+        } else {
+            if (geo instanceof Item) {
+                if (geo instanceof BaseRiderArmor armor) {
+                    String armorSlot = armor.slot.getName();
+                    //JsonObject root = createGeoItemJson("geo/" + geo.path() + geo.name() + ".item", geo.path() + geo.name());
+                    JsonObject root = createItemJson(geo.path() + geo.name() + '_' + armorSlot);
+                    createStart(geo.name() + '_' + armorSlot, Path.of(output + GatherType.ITEM.resourcesPathString(this)) , root);
+
+                    createLangFile(Path.of(output + GatherType.LANG.resourcesPathString(this)), "item." + id() + '.' + geo.name() + '_' + armorSlot, geo.name() + '_' + armorSlot);
+                } else {
+                    JsonObject root = createGeoItemJson("geo/" + geo.path() + geo.name() + ".item", geo.path() + geo.name());
+                    createStart(geo.name(), Path.of(output + GatherType.ITEM.resourcesPathString(this)), root);
+
+                    createLangFile(Path.of(output + GatherType.LANG.resourcesPathString(this)), "item." + id() + '.' + geo.name(), geo.name());
+                }
+            } else if (geo instanceof Block) {
+                JsonObject root = createBlockJson(geo.path() + geo.name(), "cutout");
+                JsonObject root2 = createBlockStateJson(geo.path() + geo.name());
+                createStart(geo.name(), Path.of(output  + GatherType.BLOCK.resourcesPathString(this)), root);
+                createStart(geo.name(), Path.of(output  + GatherType.BLOCKSTATE.resourcesPathString(this)), root2);
+
+                createLangFile(Path.of(output + GatherType.LANG.resourcesPathString(this)), "block." + id() + '.' + geo.name(), geo.name());
+            }
+        }
+    }
+
+    public <T extends IGeoBase> void createStartForIGeoBase(T geo){
+        createStartForIGeoBase(geo, null);
+    }
+
+    /**
+     * 创建json文件
+     * @param name 文件名
+     * @param type 文件类型
+     */
+    public void createStart(String name, GatherType type, JsonObject root){
+        createStart(name, type.getPath(this), root);
+    }
+
     /**
      * 创建 json文件
      * @param name 文件路径
      * @param path 文件路径
      * @param root json对象
      */
-    public void createStart(String name, Path path, JsonObject root) throws IOException {
-        path = path.resolve(name + ".json");
-        Files.createDirectories(path.getParent());
+    public void createStart(String name, Path path, JsonObject root) {
+        try {
+            path = path.resolve(name + ".json");
+            Files.createDirectories(path.getParent());
 
-        Gson gson = new GsonBuilder().setPrettyPrinting().create();
-        Files.write(path, gson.toJson(root).getBytes());
+            Gson gson = new GsonBuilder().setPrettyPrinting().create();
+            Files.write(path, gson.toJson(root).getBytes());
+        } catch (IOException e) {
+            RiderApi.LOGGER.error("fail to create json: {} ", name, e);
+        }
     }
 
     public JsonObject createItemJson(String texture){
@@ -51,7 +163,7 @@ public abstract class JsonCreator {
         JsonObject textures = new JsonObject();
 
         root.addProperty("parent", "item/generated");
-        textures.addProperty("layer0", id() + ":items/" + texture);
+        textures.addProperty("layer0", id() + ":item/" + texture);
         root.add("textures", textures);
 
         return root;
@@ -61,14 +173,16 @@ public abstract class JsonCreator {
         JsonObject root = new JsonObject();
         JsonObject textures = new JsonObject();
 
-        root.addProperty("parent", id() + ":displaysettings/" +display);
-        textures.addProperty("layer0", id() + ":items/" + texture);
-        root.add("textures", textures);
+        root.addProperty("parent", id() + ':' + display);
+        if (!texture.isEmpty()){
+            textures.addProperty("layer0", id() + ":item/" + texture);
+            root.add("textures", textures);
+        }
 
         return root;
     }
 
-    public JsonObject createBlockStateJson(Path path, String texture){
+    public JsonObject createBlockStateJson(String texture){
         JsonObject root = new JsonObject();
         JsonObject variants = new JsonObject();
         JsonObject all = new JsonObject();
@@ -78,19 +192,7 @@ public abstract class JsonCreator {
         return root;
     }
 
-    public JsonObject createBlockJson(Path path, String texture, String renderType){
-        try {
-            Path blockstate = path.getParent().resolve("blockstate");
-            Files.createDirectories(path);
-
-            JsonObject root = new JsonObject();
-
-            Gson gson = new GsonBuilder().setPrettyPrinting().create();
-            Files.write(path, gson.toJson(root).getBytes());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
+    public JsonObject createBlockJson(String texture, String renderType){
         JsonObject root = new JsonObject();
         JsonObject textures = new JsonObject();
 
@@ -157,7 +259,50 @@ public abstract class JsonCreator {
         }
     }
 
+    public void createLangFile(Path path, String name, String lang) {
+        createStart("en_us", path, createLang(path, name, lang));
+    }
 
+    public JsonObject createLang(Path path, String name, String lang) {
+        JsonObject root;
+        try {
+            String content = Files.readString(path.resolve("en_us.json"));
+            Gson gson = new Gson();
+            root = gson.fromJson(content, JsonObject.class);
+        } catch (IOException e) {
+            root = new JsonObject();
+        }
+
+        if (root.has(name)) return root;
+        else {
+            lang = toTitleCase(lang);
+            root.addProperty(name, lang);
+            return root;
+        }
+    }
+
+    private static String toTitleCase(String input) {
+        if (input == null || input.isEmpty()) {
+            return input;
+        }
+
+        StringBuilder result = new StringBuilder();
+        boolean capitalizeNext = true;
+
+        for (char c : input.toCharArray()) {
+            if (c == '_') {
+                result.append(' ');
+                capitalizeNext = true;
+            } else if (capitalizeNext) {
+                result.append(Character.toUpperCase(c));
+                capitalizeNext = false;
+            } else {
+                result.append(Character.toLowerCase(c));
+            }
+        }
+
+        return result.toString();
+    }
 
     public JsonObject createTrophy(String name, TrophyType type, TrophyPools[] trophyPools) {
         JsonObject root = new JsonObject();
