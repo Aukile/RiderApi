@@ -146,7 +146,7 @@ public abstract class ClassRegister {
 
     private void soundRegister(String... names){
         for (String name : names)
-            register(SoundEvent.class, name, () -> SoundEvent.createVariableRangeEvent(GJ.Easy.getApiResource(name)));
+            register(SoundEvent.class, name, () -> SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath(modid(), name)));
     }
 
     /**是否已注册类型*/

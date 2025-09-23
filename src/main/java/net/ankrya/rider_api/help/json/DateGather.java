@@ -10,6 +10,7 @@ import net.minecraft.data.loot.BlockLootSubProvider;
 import net.minecraft.data.loot.EntityLootSubProvider;
 import net.minecraft.data.loot.LootTableProvider;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.flag.FeatureFlagSet;
 import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.item.Item;
@@ -86,7 +87,7 @@ public abstract class DateGather {
                     Object object = registerObject.get();
                     if (object instanceof Block block) {
                         String blockName = block.getName().getString();
-                        cubeAll(blockName, GJ.Easy.getApiResource(blockName));
+                        cubeAll(blockName, ResourceLocation.fromNamespaceAndPath(modid(), blockName));
                     }
                 });
             }
