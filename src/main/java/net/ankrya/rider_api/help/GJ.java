@@ -210,7 +210,7 @@ public abstract class GJ {
 
     /**物品相关*/
     public static abstract class ToItem {
-        public static final String REMOVE = "dooms_remove";
+        public static final String REMOVE = "api_remove";
         public static ItemStack getDriver(LivingEntity entity) {
             return entity.getItemBySlot(EquipmentSlot.LEGS);
         }
