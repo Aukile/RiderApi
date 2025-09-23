@@ -143,37 +143,36 @@ public abstract class GJ {
             Variables.setVariable(player, ModVariable.HIT_COOLING, value);
         }
 
-        public static void playSound(Player player, String name) {
-            playSound(player, name, false);
+        public static void playSound(Player player, ResourceLocation sound) {
+            playSound(player, sound, false);
         }
 
-        public static void playSound(Player player, String name, boolean loop) {
+        public static void playSound(Player player, ResourceLocation sound, boolean loop) {
             if (player instanceof ServerPlayer serverPlayer) {
-                MessageLoader.getApiLoader().sendToPlayersNearby(createLoopSoundMessage(player, name, loop), serverPlayer);
+                MessageLoader.getApiLoader().sendToPlayersNearby(createLoopSoundMessage(player, sound, loop), serverPlayer);
             }
         }
 
-        private static LoopSoundMessage createLoopSoundMessage(Player player, String name, boolean loop) {
-            return new LoopSoundMessage(GJ.Easy.getApiResource(name), loop, 16, PlayLoopSound.PLAYERS, player.getId());
+        private static LoopSoundMessage createLoopSoundMessage(Player player, ResourceLocation sound, boolean loop) {
+            return new LoopSoundMessage(sound, loop, 16, PlayLoopSound.PLAYERS, player.getId());
         }
 
-        public static void playDelaySound(Player player, String name, boolean loop, int delay) {
+        public static void playDelaySound(Player player, ResourceLocation sound, boolean loop, int delay) {
             if (player instanceof ServerPlayer serverPlayer) {
-                DelayPlaySound.add(serverPlayer, createLoopSoundMessage(player, name, loop), delay);
+                DelayPlaySound.add(serverPlayer, createLoopSoundMessage(player, sound, loop), delay);
             }
         }
 
-        public static void cancelDelaySound(Player player, String name) {
-            ResourceLocation soundId = GJ.Easy.getApiResource(name);
-            DelayPlaySound.cancel(player, soundId);
-            GJ.ToPlayer.stopSound(player, name);
+        public static void cancelDelaySound(Player player, ResourceLocation sound) {
+            DelayPlaySound.cancel(player, sound);
+            GJ.ToPlayer.stopSound(player, sound);
         }
 
-        public static void stopSound(Player player, String name) {
+        public static void stopSound(Player player, ResourceLocation sound) {
             if (player instanceof ServerPlayer serverPlayer) {
                 MessageLoader.getApiLoader().sendToPlayersNearby(
                         new NMessageCreater(new StopLoopSound(player.getId(), PlayLoopSound.PLAYERS
-                                , GJ.Easy.getApiResource(name))), serverPlayer);
+                                , sound)), serverPlayer);
             }
         }
 
