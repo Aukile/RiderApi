@@ -1,6 +1,5 @@
 package net.ankrya.rider_api.entity;
 
-import net.ankrya.rider_api.RiderApi;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
@@ -8,6 +7,9 @@ import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
@@ -25,20 +27,18 @@ public class SpecialEffectEntity extends Entity implements GeoEntity {
     public static final EntityDataAccessor<Integer> DEAD_TIME = SynchedEntityData.defineId(SpecialEffectEntity.class, EntityDataSerializers.INT);
     public static final EntityDataAccessor<Boolean> AUTO_CLEAR = SynchedEntityData.defineId(SpecialEffectEntity.class, EntityDataSerializers.BOOLEAN);
     public static final EntityDataAccessor<String> ANIMATION = SynchedEntityData.defineId(SpecialEffectEntity.class, EntityDataSerializers.STRING);
-    public static final EntityDataAccessor<String> MODID = SynchedEntityData.defineId(SpecialEffectEntity.class, EntityDataSerializers.STRING);
     public static final EntityDataAccessor<String> TEXTURE = SynchedEntityData.defineId(SpecialEffectEntity.class, EntityDataSerializers.STRING);
     public static final EntityDataAccessor<String> MODEL = SynchedEntityData.defineId(SpecialEffectEntity.class, EntityDataSerializers.STRING);
     public static final EntityDataAccessor<Optional<UUID>> OWNER_UUID = SynchedEntityData.defineId(SpecialEffectEntity.class, EntityDataSerializers.OPTIONAL_UUID);
     public Player owner;
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
     public SpecialEffectEntity(EntityType<?> type, Level level) {
-        this(type, level, null, null, null, null, 0);
+        this(type, level, null, null, null, 0);
     }
 
-    public SpecialEffectEntity(EntityType<?> type, Level level, Player owner, String modid, String model, String texture, int dead) {
+    public SpecialEffectEntity(EntityType<?> type, Level level, Player owner, String model, String texture, int dead) {
         super(type, level);
         if (dead != 0) this.entityData.set(DEAD_TIME, dead);
-        if (modid != null)this.entityData.set(MODID, modid);
         if (model != null)this.entityData.set(MODEL, model);
         if (texture != null)this.entityData.set(TEXTURE, texture);
         this.owner = owner;
@@ -52,7 +52,6 @@ public class SpecialEffectEntity extends Entity implements GeoEntity {
         builder.define(DEAD_TIME, 20);
         builder.define(AUTO_CLEAR, true);
         builder.define(ANIMATION, "idle");
-        builder.define(MODID, RiderApi.MODID);
         builder.define(TEXTURE, "null");
         builder.define(MODEL, "null");
         builder.define(OWNER_UUID, Optional.empty());
@@ -67,8 +66,6 @@ public class SpecialEffectEntity extends Entity implements GeoEntity {
             this.entityData.set(AUTO_CLEAR, tag.getBoolean("autoClear"));
         if (tag.contains("animation"))
             this.entityData.set(ANIMATION, tag.getString("animation"));
-        if (tag.contains("modid"))
-            this.entityData.set(MODID, tag.getString("modid"));
         if (tag.contains("texture"))
             this.entityData.set(TEXTURE, tag.getString("texture"));
         if (tag.contains("model"))
@@ -84,7 +81,6 @@ public class SpecialEffectEntity extends Entity implements GeoEntity {
         tag.putInt("deadTime", this.entityData.get(DEAD_TIME));
         tag.putBoolean("autoClear", this.entityData.get(AUTO_CLEAR));
         tag.putString("animation", this.entityData.get(ANIMATION));
-        tag.putString("modid", this.entityData.get(MODID));
         tag.putString("texture", this.entityData.get(TEXTURE));
         tag.putString("model", this.entityData.get(MODEL));
         tag.putUUID("owner_uuid", this.entityData.get(OWNER_UUID).get());
@@ -164,10 +160,6 @@ public class SpecialEffectEntity extends Entity implements GeoEntity {
         return this.entityData.get(ANIMATION);
     }
 
-    public String modid(){
-        return this.entityData.get(MODID);
-    }
-
     public String texture(){
         return this.entityData.get(TEXTURE);
     }
@@ -192,10 +184,6 @@ public class SpecialEffectEntity extends Entity implements GeoEntity {
         return this.entityData.get(AUTO_CLEAR);
     }
 
-    public int getDead() {
-        return this.entityData.get(DEAD_TIME);
-    }
-
     public LivingEntity getOwner() {
         UUID uuid = this.entityData.get(OWNER_UUID).orElse(null);
         if (this.owner != null)
@@ -205,16 +193,28 @@ public class SpecialEffectEntity extends Entity implements GeoEntity {
         else return null;
     }
 
-//    public static AttributeSupplier.Builder createAttributes() {
-//        AttributeSupplier.Builder builder = Mob.createMobAttributes();
-//        builder = builder.add(Attributes.MOVEMENT_SPEED, 0);
-//        builder = builder.add(Attributes.MAX_HEALTH, 2);
-//        builder = builder.add(Attributes.ARMOR, 0);
-//        builder = builder.add(Attributes.ATTACK_DAMAGE, 0);
-//        builder = builder.add(Attributes.FOLLOW_RANGE, 16);
-//        builder = builder.add(Attributes.STEP_HEIGHT, 0.6);
-//        return builder;
-//    }
+    public static AttributeSupplier.Builder createAttributes() {
+        AttributeSupplier.Builder builder = Mob.createMobAttributes();
+        builder = builder.add(Attributes.MOVEMENT_SPEED, 0);
+        builder = builder.add(Attributes.MAX_HEALTH, 2);
+        builder = builder.add(Attributes.ARMOR, 0);
+        builder = builder.add(Attributes.ATTACK_DAMAGE, 0);
+        builder = builder.add(Attributes.FOLLOW_RANGE, 16);
+        builder = builder.add(Attributes.STEP_HEIGHT, 0.6);
+        return builder;
+    }
+
+    public String getModel() {
+        return this.entityData.get(MODEL);
+    }
+
+    public String getTexture() {
+        return this.entityData.get(TEXTURE);
+    }
+
+    public int getDead() {
+        return this.entityData.get(DEAD_TIME);
+    }
 
     /**是否自动识别 “_glowmask” 后缀发光，启用后必须保证贴图存在*/
     public boolean autoGlow(){
