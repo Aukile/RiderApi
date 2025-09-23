@@ -4,6 +4,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -29,18 +30,20 @@ public class SpecialEffectEntity extends Entity implements GeoEntity {
     public static final EntityDataAccessor<String> ANIMATION = SynchedEntityData.defineId(SpecialEffectEntity.class, EntityDataSerializers.STRING);
     public static final EntityDataAccessor<String> TEXTURE = SynchedEntityData.defineId(SpecialEffectEntity.class, EntityDataSerializers.STRING);
     public static final EntityDataAccessor<String> MODEL = SynchedEntityData.defineId(SpecialEffectEntity.class, EntityDataSerializers.STRING);
+    public static final EntityDataAccessor<String> ANIMATION_FILE = SynchedEntityData.defineId(SpecialEffectEntity.class, EntityDataSerializers.STRING);
     public static final EntityDataAccessor<Optional<UUID>> OWNER_UUID = SynchedEntityData.defineId(SpecialEffectEntity.class, EntityDataSerializers.OPTIONAL_UUID);
     public Player owner;
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
     public SpecialEffectEntity(EntityType<?> type, Level level) {
-        this(type, level, null, null, null, 0);
+        this(type, level, null, null, null, null, 0);
     }
 
-    public SpecialEffectEntity(EntityType<?> type, Level level, Player owner, String model, String texture, int dead) {
+    public SpecialEffectEntity(EntityType<?> type, Level level, Player owner, ResourceLocation model, ResourceLocation animationFile, ResourceLocation texture, int dead) {
         super(type, level);
         if (dead != 0) this.entityData.set(DEAD_TIME, dead);
-        if (model != null)this.entityData.set(MODEL, model);
-        if (texture != null)this.entityData.set(TEXTURE, texture);
+        if (model != null)this.entityData.set(MODEL, model.toString());
+        if (animationFile != null)this.entityData.set(ANIMATION_FILE, animationFile.toString());
+        if (texture != null)this.entityData.set(TEXTURE, texture.toString());
         this.owner = owner;
         if (owner != null){
             this.setOwnerUUID(owner.getUUID());
@@ -54,6 +57,7 @@ public class SpecialEffectEntity extends Entity implements GeoEntity {
         builder.define(ANIMATION, "idle");
         builder.define(TEXTURE, "null");
         builder.define(MODEL, "null");
+        builder.define(ANIMATION_FILE, "null");
         builder.define(OWNER_UUID, Optional.empty());
     }
 
@@ -70,6 +74,8 @@ public class SpecialEffectEntity extends Entity implements GeoEntity {
             this.entityData.set(TEXTURE, tag.getString("texture"));
         if (tag.contains("model"))
             this.entityData.set(MODEL, tag.getString("model"));
+        if (tag.contains("animation_file"))
+            this.entityData.set(ANIMATION_FILE, tag.getString("animation_file"));
         if (tag.contains("owner_uuid")) {
             this.entityData.set(OWNER_UUID, Optional.of(tag.getUUID("owner_uuid")));
             this.owner = null;
@@ -83,6 +89,7 @@ public class SpecialEffectEntity extends Entity implements GeoEntity {
         tag.putString("animation", this.entityData.get(ANIMATION));
         tag.putString("texture", this.entityData.get(TEXTURE));
         tag.putString("model", this.entityData.get(MODEL));
+        tag.putString("animation_file", this.entityData.get(ANIMATION_FILE));
         tag.putUUID("owner_uuid", this.entityData.get(OWNER_UUID).get());
     }
 
@@ -152,24 +159,28 @@ public class SpecialEffectEntity extends Entity implements GeoEntity {
         this.entityData.set(DEAD_TIME,num);
     }
 
-    public String model(){
-        return this.entityData.get(MODEL);
+    public ResourceLocation model(){
+        return ResourceLocation.parse(this.entityData.get(MODEL));
+    }
+
+    public ResourceLocation animationFile(){
+        return ResourceLocation.parse(this.entityData.get(ANIMATION_FILE));
     }
 
     public String animationName(){
         return this.entityData.get(ANIMATION);
     }
 
-    public String texture(){
-        return this.entityData.get(TEXTURE);
+    public ResourceLocation texture(){
+        return ResourceLocation.parse(this.entityData.get(TEXTURE));
     }
 
     public void setAnimationName(String animation){
         this.entityData.set(ANIMATION,animation);
     }
 
-    public void setTexture(String texture){
-        this.entityData.set(TEXTURE,texture);
+    public void setTexture(ResourceLocation texture){
+        this.entityData.set(TEXTURE,texture.toString());
     }
 
     public void setAutoClear(boolean flag){
@@ -182,6 +193,10 @@ public class SpecialEffectEntity extends Entity implements GeoEntity {
 
     public boolean AutoClear(){
         return this.entityData.get(AUTO_CLEAR);
+    }
+
+    public int getDead() {
+        return this.entityData.get(DEAD_TIME);
     }
 
     public LivingEntity getOwner() {
@@ -202,18 +217,6 @@ public class SpecialEffectEntity extends Entity implements GeoEntity {
         builder = builder.add(Attributes.FOLLOW_RANGE, 16);
         builder = builder.add(Attributes.STEP_HEIGHT, 0.6);
         return builder;
-    }
-
-    public String getModel() {
-        return this.entityData.get(MODEL);
-    }
-
-    public String getTexture() {
-        return this.entityData.get(TEXTURE);
-    }
-
-    public int getDead() {
-        return this.entityData.get(DEAD_TIME);
     }
 
     /**是否自动识别 “_glowmask” 后缀发光，启用后必须保证贴图存在*/
