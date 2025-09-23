@@ -13,6 +13,7 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EquipmentSlot;
 import org.jetbrains.annotations.Nullable;
+import software.bernie.geckolib.cache.object.BakedGeoModel;
 import software.bernie.geckolib.cache.object.GeoBone;
 import software.bernie.geckolib.renderer.GeoArmorRenderer;
 import software.bernie.geckolib.renderer.layer.AutoGlowingGeoLayer;
@@ -42,11 +43,15 @@ public class BaseGeoArmorRenderer<T extends BaseGeoArmor> extends GeoArmorRender
     }
 
     @Override
+    public void actuallyRender(PoseStack poseStack, T animatable, BakedGeoModel model, @Nullable RenderType renderType, MultiBufferSource bufferSource, @Nullable VertexConsumer buffer, boolean isReRender, float partialTick, int packedLight, int packedOverlay, int colour) {
+        if (getGeoArmorInterface() != null)
+            getGeoArmorInterface().withRender(this, poseStack, animatable, model, renderType, bufferSource, buffer, isReRender, partialTick, packedLight, packedOverlay, colour);
+        super.actuallyRender(poseStack, animatable, model, renderType, bufferSource, buffer, isReRender, partialTick, packedLight, packedOverlay, colour);
+    }
+
+    @Override
     protected void applyBoneVisibilityBySlot(EquipmentSlot currentSlot) {
         super.applyBoneVisibilityBySlot(currentSlot);
-        if (getGeoArmorInterface()!= null) {
-            getGeoArmorInterface().visibilityBones(this, currentSlot);
-        }
         if (getGeoArmorInterface() != null){
             Map<String, Boolean> set = getGeoArmorInterface().visibilityBones(this);
             if (!set.isEmpty()) set.forEach((boneName, visible) -> this.model.getBone(boneName).ifPresent(bone -> bone.setHidden(visible)));
