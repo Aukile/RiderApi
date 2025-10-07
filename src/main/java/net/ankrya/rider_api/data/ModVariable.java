@@ -1,6 +1,7 @@
 package net.ankrya.rider_api.data;
 
 import net.ankrya.rider_api.api.event.DataInitEvent;
+import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.common.MinecraftForge;
 
 public class ModVariable {

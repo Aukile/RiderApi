@@ -3,6 +3,7 @@ package net.ankrya.rider_api.compat.animation;
 import net.ankrya.rider_api.help.GJ;
 import net.ankrya.rider_api.interfaces.message.INMessage;
 import net.ankrya.rider_api.message.*;
+import net.ankrya.rider_api.message.ex_message.AllPackt;
 import net.ankrya.rider_api.message.ex_message.PlayerAnimationMessage;
 import net.ankrya.rider_api.message.ex_message.PlayerAnimationStopMessage;
 import dev.kosmx.playerAnim.api.layered.IAnimation;
@@ -12,10 +13,20 @@ import dev.kosmx.playerAnim.core.util.Ease;
 import dev.kosmx.playerAnim.minecraftApi.PlayerAnimationAccess;
 import dev.kosmx.playerAnim.minecraftApi.PlayerAnimationFactory;
 import net.minecraft.client.player.AbstractClientPlayer;
+import net.minecraft.network.Connection;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.fml.ModList;
+import net.minecraftforge.network.NetworkDirection;
+
+import java.util.Iterator;
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
 
 /**
  * 玩家动画的东东<br>
@@ -47,16 +58,12 @@ public class PlayerAnimator {
         }
     }
 
-    public static void playerAnimation(Player player, String modid, String animation, boolean override){
-        instance().playerAnimation(player, modid + ":" + animation, true, false, override);
+    public static void playerAnimation(Player player, String modid, String animation, boolean showRightArm, boolean showLeftArm, boolean override){
+        instance().playerAnimation(player, modid + ":" + animation, showRightArm, showLeftArm, override);
     }
 
     public void playerAnimation(Player player, String animation, boolean showRightArm, boolean showLeftArm, boolean override){
         playerAnimation(player, ANIMATION, animation, showRightArm, showLeftArm, override);
-    }
-
-    public void playerRiderAnimation(Player player, String animation, boolean override){
-        playerRiderAnimation(player, animation, true, true, override);
     }
 
     public void playerRiderAnimation(Player player, String animation, boolean showRightArm, boolean showLeftArm, boolean override){
@@ -87,9 +94,11 @@ public class PlayerAnimator {
 
     public void playerAnimation(Player player, ResourceLocation dataId, String animation, boolean showRightArm, boolean showLeftArm, boolean override){
         INMessage animationMessage = new PlayerAnimationMessage(player.getUUID(), dataId, animation, showRightArm, showLeftArm, override);
-        if (player.level() instanceof ServerLevel serverLevel)
+        Level level = player.level();
+        if (level instanceof ServerLevel serverLevel)
             MessageLoader.getApiLoader().sendToPlayersInDimension(new NMessageCreater(animationMessage), serverLevel);
-        else MessageLoader.getApiLoader().sendToServer(new NMessageCreater(animationMessage));
+        if (player instanceof AbstractClientPlayer clientPlayer)
+            PlayerAnimationMessage.playerAnimation(clientPlayer, dataId, animation, showRightArm, showLeftArm, override);
     }
 
     @SuppressWarnings("unchecked")

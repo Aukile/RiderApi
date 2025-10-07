@@ -10,6 +10,7 @@ import net.ankrya.rider_api.client.particle.base.advanced.RibbonParticleData;
 import net.ankrya.rider_api.client.sound.DelayPlaySound;
 import net.ankrya.rider_api.data.ModVariable;
 import net.ankrya.rider_api.data.Variables;
+import net.ankrya.rider_api.entity.SpecialEffectEntity;
 import net.ankrya.rider_api.interfaces.timer.ITimer;
 import net.ankrya.rider_api.message.MessageLoader;
 import net.ankrya.rider_api.message.NMessageCreater;
@@ -148,9 +149,8 @@ public abstract class GJ {
         }
 
         public static void playSound(Player player, ResourceLocation sound, boolean loop) {
-            if (player instanceof ServerPlayer serverPlayer) {
-                MessageLoader.getApiLoader().sendToPlayersNearby(createLoopSoundMessage(player, sound, loop), serverPlayer);
-            }
+            if (player instanceof ServerPlayer serverPlayer)
+                MessageLoader.getApiLoader().sendToAny(createLoopSoundMessage(player, sound, loop), serverPlayer);
         }
 
         private static LoopSoundMessage createLoopSoundMessage(Player player, ResourceLocation sound, boolean loop) {
@@ -170,9 +170,7 @@ public abstract class GJ {
 
         public static void stopSound(Player player, ResourceLocation sound) {
             if (player instanceof ServerPlayer serverPlayer) {
-                MessageLoader.getApiLoader().sendToPlayersNearby(
-                        new NMessageCreater(new StopLoopSound(player.getId(), PlayLoopSound.PLAYERS
-                                , sound)), serverPlayer);
+                MessageLoader.getApiLoader().sendToAny(new NMessageCreater(new StopLoopSound(player.getId(), PlayLoopSound.PLAYERS, sound)), serverPlayer);
             }
         }
 
@@ -197,6 +195,22 @@ public abstract class GJ {
 
     /**实体相关*/
     public static abstract class ToEntity {
+        /**
+         * 创建特效实体，路径填写需参考：{@link net.ankrya.rider_api.entity.model.SpecialEffectModel}
+         * @param level 世界
+         * @param player 主体玩家
+         * @param modelPath 模型路径
+         * @param texturePath 材质路径
+         * @param dead 特效实体时长（刻）
+         * @param ride 是否骑乘玩家
+         */
+        public static SpecialEffectEntity createSpecialEffect(Level level, Player player,String modid, String modelPath, String texturePath, int dead, boolean ride) {
+            SpecialEffectEntity effect = new SpecialEffectEntity(level, player, modid, modelPath, texturePath, dead);
+            if (ride) effect.startRiding(player);
+            effect.setPos(player.getX(), player.getY(), player.getZ());
+            level.addFreshEntity(effect);
+            return effect;
+        }
         public static void fixHealth(LivingEntity entity) {
             if (entity.getMaxHealth() < entity.getHealth())
                 entity.setHealth(entity.getMaxHealth());

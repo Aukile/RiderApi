@@ -30,9 +30,24 @@ public class RiderArmorRemoveEvent extends Event {
      * @see net.ankrya.rider_api.item.base.armor.BaseRiderArmor#unequip
      */
     public static class Pre extends RiderArmorRemoveEvent {
+        boolean result = true;
 
         public Pre(LivingEntity entity, EquipmentSlot slot) {
             super(entity, slot);
+        }
+
+        public void setResult(boolean result) {
+            this.result = result;
+        }
+
+        @Override
+        public boolean isCancelable() {
+            return true;
+        }
+
+        @Override
+        public boolean isCanceled() {
+            return result;
         }
     }
 

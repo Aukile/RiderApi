@@ -5,6 +5,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.network.NetworkEvent;
@@ -48,19 +49,18 @@ public class SyncVariableMessage {
 
         if (context.getDirection().getReceptionSide().isClient()) {
             context.enqueueWork(() -> {
-                Minecraft minecraft = Minecraft.getInstance();
+                ServerPlayer sender = context.getSender();
+                Level level = sender == null ? Minecraft.getInstance().level : sender.level();
+                if (level == null) return;
                 if (message.id >= 0) {
-                    Entity entity = minecraft.level.getEntity(message.id);
+                    Entity entity = level.getEntity(message.id);
                     if (entity != null) {
                         entity.getCapability(Variables.VARIABLES).ifPresent(cap ->
                                 cap.deserializeNBT(message.variables.serializeNBT()));
                     }
                 } else {
-                    Level level = minecraft.level;
-                    if (level != null) {
-                        level.getCapability(Variables.VARIABLES).ifPresent(cap ->
-                                cap.deserializeNBT(message.variables.serializeNBT()));
-                    }
+                    level.getCapability(Variables.VARIABLES).ifPresent(cap ->
+                            cap.deserializeNBT(message.variables.serializeNBT()));
                 }
             });
         }

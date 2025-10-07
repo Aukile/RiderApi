@@ -37,9 +37,10 @@ public class BaseGeoItemRenderer<T extends Item & IGeoItem> extends GeoItemRende
         if (getGeoItemInterface() != null) {
             Map<String, Boolean> set = getGeoItemInterface().visibilityBones(this);
             if (!set.isEmpty()) set.forEach((boneName, visible) -> this.model.getBone(boneName).ifPresent(bone -> bone.setHidden(visible)));
-            getGeoItemInterface().withRender(this, poseStack, animatable, model, renderType, bufferSource, buffer, isReRender, partialTick, packedLight, packedOverlay, red, green, blue, alpha);
         }
         super.actuallyRender(poseStack, animatable, model, renderType, bufferSource, buffer, isReRender, partialTick, packedLight, packedOverlay, red, green, blue, alpha);
+        if (getGeoItemInterface() != null)
+            getGeoItemInterface().withRender(this, poseStack, animatable, model, renderType, bufferSource, buffer, isReRender, partialTick, packedLight, packedOverlay, red, green, blue, alpha);
     }
 
     @Override

@@ -47,6 +47,8 @@ public final class VariableSerializer {
             return (IVariable<T>) RESOURCE_LOCATION;
         if (type == Vec3.class)
             return (IVariable<T>) VECTOR_3D;
+        if (type == long.class)
+            return (IVariable<T>) LONG;
         else throw new IllegalArgumentException("Can't find DataSource for " + type);
     }
 
@@ -64,6 +66,7 @@ public final class VariableSerializer {
             case 8 -> ITEM_STACK;
             case 9 -> RESOURCE_LOCATION;
             case 10 -> VECTOR_3D;
+            case 11 -> LONG;
             default -> throw new IllegalArgumentException("Can't find DataSource for " + typeId);
         };
     }
@@ -146,6 +149,33 @@ public final class VariableSerializer {
         @Override
         public Integer read(Tag tag) {
             return ((IntTag) tag).getAsInt();
+        }
+    };
+
+    public static final IVariable<Long> LONG = new IVariable<>() {
+        @Override
+        public int typeId() {
+            return 11;
+        }
+
+        @Override
+        public void write(FriendlyByteBuf buf, Long value) {
+            buf.writeLong(value);
+        }
+
+        @Override
+        public Long read(FriendlyByteBuf buf) {
+            return buf.readLong();
+        }
+
+        @Override
+        public Tag write(Long value) {
+            return LongTag.valueOf(value);
+        }
+
+        @Override
+        public Long read(Tag nbt) {
+            return ((LongTag) nbt).getAsLong();
         }
     };
 

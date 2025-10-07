@@ -39,7 +39,7 @@ public class ApiRegister extends ClassRegister{
         apiRegister.register(particleTypeClass, "advanced_particle", AdvancedParticleData::createParticleType);
         apiRegister.register(particleTypeClass, "ribbon_particle", RibbonParticleData::createRibbonParticleType);
 
-        apiRegister.onceRegister(EntityType.class, "special_effects", () -> EntityType.Builder.of(SpecialEffectEntity::new, MobCategory.MISC).sized(0.1F, 0.5F).setShouldReceiveVelocityUpdates(true).updateInterval(3).build("special_effects"));
+        apiRegister.onceRegister(EntityType.class, SpecialEffectEntity.NAME, () -> EntityType.Builder.of(SpecialEffectEntity::new, MobCategory.MISC).sized(0.1F, 0.5F).setShouldReceiveVelocityUpdates(true).updateInterval(3).build("special_effects"));
 
         Class<?> itemClass = Item.class;
         apiRegister.registerSource(itemClass);

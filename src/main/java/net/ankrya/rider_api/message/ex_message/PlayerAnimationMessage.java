@@ -7,13 +7,22 @@ import dev.kosmx.playerAnim.minecraftApi.PlayerAnimationRegistry;
 import net.ankrya.rider_api.compat.animation.PlayerAnimator;
 import net.ankrya.rider_api.help.GJ;
 import net.ankrya.rider_api.interfaces.message.INMessage;
+import net.ankrya.rider_api.message.MessageLoader;
+import net.ankrya.rider_api.message.NMessageCreater;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.AbstractClientPlayer;
+import net.minecraft.network.Connection;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
+import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkEvent;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -41,12 +50,15 @@ public class PlayerAnimationMessage implements INMessage {
 
     @Override
     public void run(NetworkEvent.Context ctx) {
-        ctx.enqueueWork(() ->{
-            Player player = ctx.getSender().serverLevel().getPlayerByUUID(uuid);
-            if (ctx.getDirection().getReceptionSide().isClient() && player instanceof AbstractClientPlayer clientPlayer) {
-                playerAnimation(clientPlayer, layer, animation, showRightArm, showLeftArm, override);
-            }
-        });
+        if (ctx.getDirection().getReceptionSide().isClient()){
+            ctx.enqueueWork(() -> {
+                Player player = Minecraft.getInstance().level.getPlayerByUUID(uuid);
+                if (player instanceof AbstractClientPlayer clientPlayer) {
+                    playerAnimation(clientPlayer, layer, animation, showRightArm, showLeftArm, override);
+                }
+            });
+        }
+        ctx.setPacketHandled(true);
     }
 
     public static void playerAnimation(AbstractClientPlayer player, ResourceLocation dataId, String animation, boolean showRightArm, boolean showLeftArm, boolean override){

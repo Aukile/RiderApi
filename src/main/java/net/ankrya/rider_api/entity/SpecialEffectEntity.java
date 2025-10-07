@@ -1,6 +1,7 @@
 package net.ankrya.rider_api.entity;
 
 import net.ankrya.rider_api.RiderApi;
+import net.ankrya.rider_api.init.ApiRegister;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
@@ -28,14 +29,16 @@ public class SpecialEffectEntity extends Entity implements GeoEntity {
     public static final EntityDataAccessor<String> MODEL = SynchedEntityData.defineId(SpecialEffectEntity.class, EntityDataSerializers.STRING);
     public static final EntityDataAccessor<String> MODID = SynchedEntityData.defineId(SpecialEffectEntity.class, EntityDataSerializers.STRING);
     public static final EntityDataAccessor<Optional<UUID>> OWNER_UUID = SynchedEntityData.defineId(SpecialEffectEntity.class, EntityDataSerializers.OPTIONAL_UUID);
+    public static final String NAME = "special_effect";
     public Player owner;
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
     public SpecialEffectEntity(EntityType<?> type, Level level) {
-        this(type, level, null, null, null, 0);
+        this(type, level, null, null, null, null, 0);
     }
 
-    public SpecialEffectEntity(EntityType<?> type, Level level, Player owner, String model, String texture, int dead) {
+    public SpecialEffectEntity(EntityType<?> type, Level level, Player owner, String modid, String model, String texture, int dead) {
         super(type, level);
+        if (modid != null)this.entityData.set(MODID, modid);
         if (dead != 0) this.entityData.set(DEAD_TIME, dead);
         if (model != null)this.entityData.set(MODEL, model);
         if (texture != null)this.entityData.set(TEXTURE, texture);
@@ -43,6 +46,10 @@ public class SpecialEffectEntity extends Entity implements GeoEntity {
         if (owner != null){
             this.setOwnerUUID(owner.getUUID());
         }
+    }
+
+    public SpecialEffectEntity(Level level, Player owner, String modid, String model, String texture, int dead){
+        this(ApiRegister.get().getRegisterObject(NAME, EntityType.class).get(), level, owner, modid, model, texture, dead);
     }
 
     @Override

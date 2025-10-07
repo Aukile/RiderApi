@@ -40,7 +40,7 @@ public class AllPackt implements INMessage {
         ctx.enqueueWork(()->{
             if (!(message instanceof AllPackt)) {
                 if (ctx.getDirection().getReceptionSide().isClient())
-                    MessageLoader.getApiLoader().sendToPlayersNearby(new NMessageCreater(message), ctx.getSender());
+                    MessageLoader.getApiLoader().sendToAllTracking(new NMessageCreater(message), ctx.getSender());
                 else message.run(ctx);
             }
         });

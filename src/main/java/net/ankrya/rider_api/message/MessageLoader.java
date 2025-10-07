@@ -1,6 +1,7 @@
 package net.ankrya.rider_api.message;
 
 import net.ankrya.rider_api.RiderApi;
+import net.ankrya.rider_api.message.common.GeoItemIdAnimation;
 import net.ankrya.rider_api.message.common.LoopSoundMessage;
 import net.ankrya.rider_api.message.common.SyncVariableMessage;
 import net.minecraft.network.FriendlyByteBuf;
@@ -8,6 +9,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.network.NetworkEvent;
 import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.PacketDistributor;
@@ -42,6 +44,7 @@ public class MessageLoader {
         registerMessage(EXMessageCreater.class, EXMessageCreater::toBuf, EXMessageCreater::fromBuf, EXMessageCreater::run);
         registerMessage(NMessageCreater.class, NMessageCreater::toBuf, NMessageCreater::fromBuf, NMessageCreater::run);
         registerMessage(SyncVariableMessage.class, SyncVariableMessage::encode, SyncVariableMessage::decode, SyncVariableMessage::handle);
+        registerMessage(GeoItemIdAnimation.class, GeoItemIdAnimation::toBuf, GeoItemIdAnimation::fromBuf, GeoItemIdAnimation::handle);
     }
 
     private <MSG> void registerMessage(Class<MSG> messageType, BiConsumer<MSG, FriendlyByteBuf> encoder, Function<FriendlyByteBuf, MSG> decoder, BiConsumer<MSG, Supplier<NetworkEvent.Context>> messageConsumer) {
@@ -56,11 +59,15 @@ public class MessageLoader {
         instance.send(PacketDistributor.PLAYER.with(() -> player), message);
     }
 
-    public <MSG> void sendToPlayersNearby(MSG message, ServerPlayer player) {
+    public <MSG> void sendToAllTracking(MSG message, Entity entity) {
+        instance.send(PacketDistributor.TRACKING_ENTITY.with(() -> entity), message);
+    }
+
+    public <MSG> void sendToPlayersNearby(MSG message, Player player) {
         instance.send(PacketDistributor.TRACKING_ENTITY.with(() -> player), message);
     }
 
-    public <MSG> void sendToPlayersNearbyAndSelf(MSG message, ServerPlayer player) {
+    public <MSG> void sendToPlayersNearbyAndSelf(MSG message, Player player) {
         instance.send(PacketDistributor.TRACKING_ENTITY_AND_SELF.with(() -> player), message);
     }
 
@@ -68,7 +75,7 @@ public class MessageLoader {
         instance.send(PacketDistributor.ALL.noArg(), message);
     }
 
-    public <MSG> void sendToPlayersInDimension(MSG message, ServerPlayer player) {
+    public <MSG> void sendToPlayersInDimension(MSG message, Player player) {
         instance.send(PacketDistributor.DIMENSION.with(() -> player.level().dimension()), message);
     }
 

@@ -16,7 +16,7 @@ import java.util.Map;
 public class DelayPlaySound {
     public static final Map<Player, Map<ResourceLocation, DelaySound>> sounds;
 
-    public static void add(ServerPlayer player, LoopSoundMessage sound, int delay) {
+    public static void add(Player player, LoopSoundMessage sound, int delay) {
         if (sounds.containsKey(player))
             sounds.get(player).put(sound.getSound(), new DelaySound(player, sound, delay));
         else {
@@ -39,7 +39,7 @@ public class DelayPlaySound {
                     if (delaySound.delay > 0) {
                         delaySound.tick();
                     } else {
-                        MessageLoader.getApiLoader().sendToPlayersNearby(delaySound.sound, delaySound.player);
+                        MessageLoader.getApiLoader().sendToPlayersNearbyAndSelf(delaySound.sound, delaySound.player);
                         DelayPlaySound.cancel(player, delaySound.sound.getSound());
                     }
                 }
@@ -52,11 +52,11 @@ public class DelayPlaySound {
     }
 
     public static class DelaySound{
-        final ServerPlayer player;
+        final Player player;
         final LoopSoundMessage sound;
         int delay;
 
-        public DelaySound(ServerPlayer player, LoopSoundMessage sound, int delay) {
+        public DelaySound(Player player, LoopSoundMessage sound, int delay) {
             this.player = player;
             this.sound = sound;
             this.delay = delay;

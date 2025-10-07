@@ -67,7 +67,7 @@ public abstract class BaseRiderArmor extends BaseRiderArmorBase {
                         ItemStack backupArmor = BaseRiderArmor.getBackupArmor(stack);
                         GJ.ToItem.playerRemoveItem(player, this, 1);
                         if (player.getItemBySlot(slot).isEmpty()) GJ.ToItem.equipBySlot(player, slot, backupArmor);
-                        else ItemHandlerHelper.giveItemToPlayer(player, backupArmor);
+                        else if (!level.isClientSide()) ItemHandlerHelper.giveItemToPlayer(player, backupArmor);
                     }
                 } else unequip(livingEntity, slot);
                 for (Holder<MobEffect> effect : getEffects().keySet()){

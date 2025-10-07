@@ -32,7 +32,7 @@ public class StopLoopSound implements INMessage {
     @Override
     public void run(NetworkEvent.Context ctx) {
         ctx.enqueueWork(() ->{
-            Level level = ctx.getSender().serverLevel();
+            Level level = ctx.getSender() == null ? Minecraft.getInstance().level : ctx.getSender().level();
             Entity entity = level.getEntity(id);
             if (entity instanceof ISoundMap soundMap && soundMap.rider$containsLoopSound(location))
                 soundMap.rider$removeLoopSound(location);

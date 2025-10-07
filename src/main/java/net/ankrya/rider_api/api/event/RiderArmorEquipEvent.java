@@ -36,17 +36,23 @@ public class RiderArmorEquipEvent extends Event {
      * @see net.ankrya.rider_api.item.base.armor.BaseRiderArmor#equip
      */
     public static class Pre extends RiderArmorEquipEvent {
-        boolean isCanceled = false;
+        boolean result = true;
         public Pre(LivingEntity entity, EquipmentSlot slot, ItemStack stack) {
             super(entity, slot, stack);
         }
 
-        public boolean canRun() {
-            return !isCanceled;
+        public void setResult(boolean result) {
+            this.result = result;
         }
 
-        public void setCanceled(boolean cancel){
-            this.isCanceled = cancel;
+        @Override
+        public boolean isCancelable() {
+            return true;
+        }
+
+        @Override
+        public boolean isCanceled() {
+            return result;
         }
     }
 

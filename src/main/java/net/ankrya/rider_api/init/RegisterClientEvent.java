@@ -9,8 +9,12 @@ import net.ankrya.rider_api.client.particle.base.advanced.RibbonParticleData;
 import net.ankrya.rider_api.client.shaber.ModShaders;
 import net.ankrya.rider_api.client.shaber.model.base.CosmicModelLoader;
 import net.ankrya.rider_api.compat.animation.PlayerAnimator;
+import net.ankrya.rider_api.entity.SpecialEffectEntity;
+import net.ankrya.rider_api.entity.renderer.SpecialEffectEntityRenderer;
 import net.minecraft.core.particles.ParticleType;
+import net.minecraft.world.entity.EntityType;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.EntityRenderersEvent;
 import net.minecraftforge.client.event.ModelEvent;
 import net.minecraftforge.client.event.RegisterParticleProvidersEvent;
 import net.minecraftforge.client.event.RegisterShadersEvent;
@@ -33,6 +37,12 @@ public class RegisterClientEvent {
         event.registerSpriteSet(AdvancedParticleData.getParticleType(), AdvancedParticleBase.Factory::new);
         event.registerSpriteSet(RibbonParticleData.getRibbonParticleType(), ParticleRibbon.Factory::new);
         event.registerSpriteSet(ApiRegister.get().getRegisterObject("case_spread", ParticleType.class).get(), SpreadBase.CaseSpreadProvider::new);
+    }
+
+    @SubscribeEvent
+    @SuppressWarnings("unchecked")
+    public static void registerEntityRenderers(EntityRenderersEvent.RegisterRenderers event) {
+        event.registerEntityRenderer(ApiRegister.get().getRegisterObject(SpecialEffectEntity.NAME, EntityType.class).get(), context -> new SpecialEffectEntityRenderer<>(context));
     }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)

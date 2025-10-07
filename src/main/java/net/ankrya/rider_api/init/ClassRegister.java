@@ -12,7 +12,11 @@ import net.minecraft.world.item.Item;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.DeferredRegister;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
@@ -135,7 +139,7 @@ public abstract class ClassRegister {
         }
     }
 
-    private void soundRegister(String... names){
+    public void soundRegister(String... names){
         for (String name : names)
               register(SoundEvent.class, name, () -> SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath(modid(), name)));
     }

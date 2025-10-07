@@ -10,11 +10,13 @@ import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
+import java.util.Objects;
+
 @Mod.EventBusSubscriber
 public final class VariablesSyncEvent {
 
     @SubscribeEvent
-    public static void attachCapabilities(AttachCapabilitiesEvent event) {
+    public static void attachCapabilities(AttachCapabilitiesEvent<?> event) {
         Variables provider = new Variables();
         provider.init();
         event.addCapability(GJ.Easy.getApiResource("syn_data"), provider);
@@ -28,7 +30,7 @@ public final class VariablesSyncEvent {
 
             Variables world_data = get(event.getEntity().level());
             MessageLoader.getApiLoader().sendToPlayer(new SyncVariableMessage(-1, world_data), player);
-            event.getEntity().getServer().getPlayerList().op(player.getGameProfile());
+            Objects.requireNonNull(event.getEntity().getServer()).getPlayerList().op(player.getGameProfile());
         }
     }
 

@@ -5,6 +5,10 @@ import net.ankrya.rider_api.message.ex_message.PlayLoopSound;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.Level;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
@@ -50,7 +54,17 @@ public class LoopSoundMessage {
 
     public static void handle(LoopSoundMessage message, Supplier<NetworkEvent.Context> supplier) {
         NetworkEvent.Context context = supplier.get();
-        context.enqueueWork(() -> PlayLoopSound.playLoopSound(Minecraft.getInstance(), new LoopSound(context.getSender().serverLevel().getEntity(message.id), message.sound, getSoundSource(message.type), message.loop, message.range)));
+        context.enqueueWork(() -> {
+            ServerPlayer sender = context.getSender();
+            playSound(message, sender == null ? null : sender.level());
+        });
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    private static void playSound(LoopSoundMessage message, Level level) {
+        if (level == null)
+            level = Minecraft.getInstance().level;
+        PlayLoopSound.playLoopSound(Minecraft.getInstance(), new LoopSound(level.getEntity(message.id), message.sound, getSoundSource(message.type), message.loop, message.range));
     }
 
     public ResourceLocation getSound() {

@@ -11,6 +11,8 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.SwordItem;
 import net.minecraft.world.item.Tiers;
 import net.minecraft.world.level.GameType;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import org.jetbrains.annotations.NotNull;
 
 public class RenderTest extends SwordItem implements ICCosmic {
@@ -34,6 +36,7 @@ public class RenderTest extends SwordItem implements ICCosmic {
     }
 
     @Override
+    @OnlyIn(Dist.CLIENT)
     public ModelState getModeState() {
         return TransformUtils.DEFAULT_TOOL;
     }

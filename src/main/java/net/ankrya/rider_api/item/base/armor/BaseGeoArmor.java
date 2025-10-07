@@ -20,7 +20,7 @@ public abstract class BaseGeoArmor extends ArmorItem implements IGeoArmor {
 
     @Override
     public AnimatableInstanceCache getAnimatableInstanceCache() {
-        return null;
+        return cache;
     }
 
     public void setAnimation(String animation) {
