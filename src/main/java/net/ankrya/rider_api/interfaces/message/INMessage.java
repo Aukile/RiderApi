@@ -25,14 +25,14 @@ public interface INMessage {
     void run(IPayloadContext ctx);
 
     /**自动解析,一行解决*/
-    static void autoWriteAll(FriendlyByteBuf buf, Comparable<?>... values){
+    static void autoWriteAll(FriendlyByteBuf buf, Object... values){
         if (values.length == 0){
             buf.writeInt(0);
             return;
         }
 
         List<Integer> types = new ArrayList<>();
-        List<Comparable<?>> valueList = new ArrayList<>();
+        List<Object> valueList = new ArrayList<>();
         for (var value : values) autoAnalysis(value, types, valueList);
 
         int time = 0;
@@ -58,7 +58,7 @@ public interface INMessage {
     }
 
     /**自动解析的协助方法，请勿调用*/
-    static void autoAnalysis(Comparable<?> value, List<Integer> types, List<Comparable<?>>  values){
+    static <T> void autoAnalysis(Object value, List<Integer> types, List<Object>  values){
         Class<?> aClass = value.getClass();
         values.add(value);
         if (aClass.isAssignableFrom(Integer.class)) types.add(1);

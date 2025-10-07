@@ -48,8 +48,8 @@ public class PlayerAnimator {
         }
     }
 
-    public static void playerAnimation(Player player, String modid, String animation, boolean override){
-        instance().playerAnimation(player, modid + ":" + animation, true, false, override);
+    public static void playerAnimation(Player player, String modid, String animation, boolean showRightArm, boolean showLeftArm, boolean override){
+        instance().playerAnimation(player, modid + ":" + animation, showRightArm, showLeftArm, override);
     }
 
     public void playerAnimation(Player player, String animation, boolean showRightArm, boolean showLeftArm, boolean override){
@@ -90,7 +90,7 @@ public class PlayerAnimator {
         INMessage animationMessage = new PlayerAnimationMessage(player.getUUID(), dataId, animation, showRightArm, showLeftArm, override);
         if (player.level() instanceof ServerLevel serverLevel)
             PacketDistributor.sendToPlayersInDimension(serverLevel, new NMessageCreater(animationMessage));
-        else MessageLoader.sendToServer(new NMessageCreater(animationMessage));
+        else if (player instanceof AbstractClientPlayer clientPlayer)PlayerAnimationMessage.playerAnimation(clientPlayer, dataId, animation, showRightArm, showLeftArm, override);
     }
 
     @SuppressWarnings("unchecked")
