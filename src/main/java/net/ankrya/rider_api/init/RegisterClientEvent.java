@@ -9,13 +9,21 @@ import net.ankrya.rider_api.client.particle.base.advanced.RibbonParticleData;
 import net.ankrya.rider_api.client.shaber.ModShaders;
 import net.ankrya.rider_api.client.shaber.model.base.CosmicModelLoader;
 import net.ankrya.rider_api.compat.animation.PlayerAnimator;
+import net.ankrya.rider_api.entity.ArrowSource;
+import net.ankrya.rider_api.entity.SpecialArrow;
+import net.ankrya.rider_api.entity.SpecialEffectEntity;
+import net.ankrya.rider_api.entity.renderer.ArrowSourceRenderer;
+import net.ankrya.rider_api.entity.renderer.SpecialArrowRenderer;
+import net.ankrya.rider_api.entity.renderer.SpecialEffectEntityRenderer;
 import net.ankrya.rider_api.help.GJ;
 import net.minecraft.core.particles.ParticleType;
+import net.minecraft.world.entity.EntityType;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
+import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.client.event.ModelEvent;
 import net.neoforged.neoforge.client.event.RegisterParticleProvidersEvent;
 import net.neoforged.neoforge.client.event.RegisterShadersEvent;
@@ -34,6 +42,14 @@ public class RegisterClientEvent {
         event.registerSpriteSet(AdvancedParticleData.getParticleType(), AdvancedParticleBase.Factory::new);
         event.registerSpriteSet(RibbonParticleData.getRibbonParticleType(), ParticleRibbon.Factory::new);
         event.registerSpriteSet(ApiRegister.get().getRegisterObject("case_spread", ParticleType.class).get(), SpreadBase.CaseSpreadProvider::new);
+    }
+
+    @SubscribeEvent
+    @SuppressWarnings("unchecked")
+    public static void registerEntityRenderers(EntityRenderersEvent.RegisterRenderers event) {
+        event.registerEntityRenderer(ApiRegister.get().getRegisterObject(SpecialEffectEntity.NAME, EntityType.class).get(), context -> new SpecialEffectEntityRenderer<>(context));
+        event.registerEntityRenderer(SpecialArrow.getInstance(), SpecialArrowRenderer::new);
+        event.registerEntityRenderer(ArrowSource.getInstance(), ArrowSourceRenderer::new);
     }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)

@@ -10,6 +10,7 @@ import net.ankrya.rider_api.client.particle.base.advanced.RibbonParticleData;
 import net.ankrya.rider_api.client.sound.DelayPlaySound;
 import net.ankrya.rider_api.data.ModVariable;
 import net.ankrya.rider_api.data.Variables;
+import net.ankrya.rider_api.entity.SpecialEffectEntity;
 import net.ankrya.rider_api.message.MessageLoader;
 import net.ankrya.rider_api.message.NMessageCreater;
 import net.ankrya.rider_api.message.common.LoopSoundMessage;
@@ -39,6 +40,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
@@ -206,6 +208,22 @@ public abstract class GJ {
 
     /**实体相关*/
     public static abstract class ToEntity {
+        /**
+         * 创建特效实体，路径填写需参考：{@link net.ankrya.rider_api.entity.model.SpecialEffectModel}
+         * @param level 世界
+         * @param player 主体玩家
+         * @param modelPath 模型路径
+         * @param texturePath 材质路径
+         * @param dead 特效实体时长（刻）
+         * @param ride 是否骑乘玩家
+         */
+        public static SpecialEffectEntity createSpecialEffect(Level level, Player player, String modid, String modelPath, String texturePath, int dead, boolean ride) {
+            SpecialEffectEntity effect = new SpecialEffectEntity(level, player, modid, modelPath, texturePath, dead);
+            if (ride) effect.startRiding(player);
+            effect.setPos(player.getX(), player.getY(), player.getZ());
+            level.addFreshEntity(effect);
+            return effect;
+        }
         public static void fixHealth(LivingEntity entity) {
             if (entity.getMaxHealth() < entity.getHealth())
                 entity.setHealth(entity.getMaxHealth());
@@ -213,6 +231,19 @@ public abstract class GJ {
 
         public static void playExplosionSound(Entity entity) {
             ToWorld.playMSound(entity.level(), entity.getX(), entity.getY() + 1, entity.getZ(), "entity.generic.explode");
+        }
+
+        public static void turnTo(Entity entity, Entity target){
+            entity.setYRot(target.getYRot());
+            entity.setXRot(target.getXRot());
+            entity.setYBodyRot(entity.getYRot());
+            entity.setYHeadRot(entity.getYRot());
+            entity.yRotO = entity.getYRot();
+            entity.xRotO = entity.getXRot();
+            if (entity instanceof LivingEntity livingEntity) {
+                livingEntity.yBodyRotO = livingEntity.getYRot();
+                livingEntity.yHeadRotO = livingEntity.getYRot();
+            }
         }
     }
 

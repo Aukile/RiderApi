@@ -60,8 +60,11 @@ public abstract class BaseRiderArmor extends BaseRiderArmorBase {
             if (allArmorEquip(livingEntity)){
                 livingEntity.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, 10, 0, false, false));
                 for (Map.Entry<Holder<MobEffect>, Integer> entry : getEffects().entrySet()){
-                    if (entry.getKey() == MobEffects.NIGHT_VISION) livingEntity.addEffect(new MobEffectInstance(entry.getKey(), 240, entry.getValue(), false, false));
-                    else livingEntity.addEffect(new MobEffectInstance(entry.getKey(), 10, entry.getValue(), false, false));
+                    if (entry.getValue() > 0){
+                        if (entry.getKey().value() == MobEffects.NIGHT_VISION)
+                            livingEntity.addEffect(new MobEffectInstance(entry.getKey(), 240, entry.getValue() - 1, false, false));
+                        else if (!livingEntity.hasEffect(entry.getKey())) livingEntity.addEffect(new MobEffectInstance(entry.getKey(), 25, entry.getValue() - 1, false, false));
+                    }
                 }
             } else {
                 if (entity instanceof Player player) {
@@ -70,7 +73,7 @@ public abstract class BaseRiderArmor extends BaseRiderArmorBase {
                         ItemStack backupArmor = BaseRiderArmor.getBackupArmor(stack);
                         GJ.ToItem.playerRemoveItem(player, this, 1);
                         if (player.getItemBySlot(slot).isEmpty()) GJ.ToItem.equipBySlot(player, slot, backupArmor);
-                        else ItemHandlerHelper.giveItemToPlayer(player, backupArmor);
+                        else if (!level.isClientSide()) ItemHandlerHelper.giveItemToPlayer(player, backupArmor);
                     }
                 } else unequip(livingEntity, slot);
                 for (Holder<MobEffect> effect : getEffects().keySet()){

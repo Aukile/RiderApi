@@ -25,6 +25,8 @@ import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.server.ServerLifecycleHooks;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -196,6 +198,7 @@ public interface IGeoItem extends GeoItem {
     }
 
     /**隐藏块（物品）*/
+    @OnlyIn(Dist.CLIENT)
     default Map<String, Boolean> visibilityBones(BaseGeoItemRenderer<?> renderer) {return new HashMap<>();}
 
     /**是否自动识别 “_glowmask” 后缀发光，启用后必须保证贴图存在*/
@@ -207,11 +210,13 @@ public interface IGeoItem extends GeoItem {
     }
 
     /**改渲染*/
+    @OnlyIn(Dist.CLIENT)
     default RenderType getRenderType(ResourceLocation texture) {
         return null;
     }
 
     /**添加Layer渲染*/
+    @OnlyIn(Dist.CLIENT)
     default GeoRenderLayer<?>[] getRenderLayers(GeoRenderer<?> renderer) {
         return new GeoRenderLayer[0];
     }
@@ -225,5 +230,6 @@ public interface IGeoItem extends GeoItem {
     /**默认贴图文件*/
     ResourceLocation getTexture();
 
+    @OnlyIn(Dist.CLIENT)
     default <T extends Item & IGeoItem> void withRender(BaseGeoItemRenderer<T> tBaseGeoItemRenderer, PoseStack poseStack, T animatable, BakedGeoModel model, @Nullable RenderType renderType, MultiBufferSource bufferSource, @Nullable VertexConsumer buffer, boolean isReRender, float partialTick, int packedLight, int packedOverlay, int colour){}
 }

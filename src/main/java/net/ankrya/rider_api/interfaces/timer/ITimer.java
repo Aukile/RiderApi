@@ -4,8 +4,8 @@ import org.spongepowered.asm.mixin.Unique;
 
 public interface ITimer {
     int timeNormal = 0;
-    int timeStop = 1;
-    int timeSlow = 2;
+    int timeStop = 2;
+    int timeSlow = 1;
     int riderApi$advanceTime(long time);
 
     float riderApi$deltaTick();

@@ -3,6 +3,7 @@ package net.ankrya.rider_api.item;
 import net.ankrya.rider_api.client.shaber.util.TransformUtils;
 import net.ankrya.rider_api.help.GJ;
 import net.ankrya.rider_api.interfaces.ICCosmic;
+import net.ankrya.rider_api.interfaces.ItemToArrow;
 import net.minecraft.client.resources.model.ModelState;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -11,9 +12,11 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.SwordItem;
 import net.minecraft.world.item.Tiers;
 import net.minecraft.world.level.GameType;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
 import org.jetbrains.annotations.NotNull;
 
-public class RenderTest extends SwordItem implements ICCosmic {
+public class RenderTest extends SwordItem implements ICCosmic, ItemToArrow {
     public RenderTest() {
         super(Tiers.DIAMOND, new Properties().stacksTo(1).durability(1));
     }
@@ -34,6 +37,7 @@ public class RenderTest extends SwordItem implements ICCosmic {
     }
 
     @Override
+    @OnlyIn(Dist.CLIENT)
     public ModelState getModeState() {
         return TransformUtils.DEFAULT_TOOL;
     }

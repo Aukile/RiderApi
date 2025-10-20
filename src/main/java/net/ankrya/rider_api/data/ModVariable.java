@@ -8,6 +8,10 @@ public class ModVariable {
     public static final String HIT_COOLING = "hit_cooling";
     /**攻击冷却变量，int类型*/
     public static final String TIME_STATUS = "time_status";
+    /**禁止移动，boolean类型*/
+    public static final String DISABLE_MOVE = "disable_move";
+    /**弹射物形式丢弃模式，boolean类型*/
+    public static final String ARROW_DROP_MODE = "arrow_drop_mode";
 
     /**
      * 添加变量 <br>
@@ -16,6 +20,8 @@ public class ModVariable {
     public static void init(Variables variables){
         variables.registerVariable(int.class, HIT_COOLING, 0, false);
         variables.registerVariable(int.class, TIME_STATUS, 0, false);
+        variables.registerVariable(boolean.class, DISABLE_MOVE, false, false);
+        variables.registerVariable(boolean.class, ARROW_DROP_MODE, false, false);
         NeoForge.EVENT_BUS.post(new DataInitEvent(variables));
     }
 }
