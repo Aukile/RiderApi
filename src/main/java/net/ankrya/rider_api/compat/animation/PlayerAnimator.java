@@ -1,32 +1,25 @@
 package net.ankrya.rider_api.compat.animation;
 
-import net.ankrya.rider_api.help.GJ;
-import net.ankrya.rider_api.interfaces.message.INMessage;
-import net.ankrya.rider_api.message.*;
-import net.ankrya.rider_api.message.ex_message.AllPackt;
-import net.ankrya.rider_api.message.ex_message.PlayerAnimationMessage;
-import net.ankrya.rider_api.message.ex_message.PlayerAnimationStopMessage;
 import dev.kosmx.playerAnim.api.layered.IAnimation;
 import dev.kosmx.playerAnim.api.layered.ModifierLayer;
 import dev.kosmx.playerAnim.api.layered.modifier.AbstractFadeModifier;
 import dev.kosmx.playerAnim.core.util.Ease;
 import dev.kosmx.playerAnim.minecraftApi.PlayerAnimationAccess;
 import dev.kosmx.playerAnim.minecraftApi.PlayerAnimationFactory;
+import net.ankrya.rider_api.help.GJ;
+import net.ankrya.rider_api.interfaces.message.INMessage;
+import net.ankrya.rider_api.message.MessageLoader;
+import net.ankrya.rider_api.message.NMessageCreater;
+import net.ankrya.rider_api.message.ex_message.PlayerAnimationMessage;
+import net.ankrya.rider_api.message.ex_message.PlayerAnimationStopMessage;
 import net.minecraft.client.player.AbstractClientPlayer;
-import net.minecraft.network.Connection;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.ModList;
-import net.minecraftforge.network.NetworkDirection;
-
-import java.util.Iterator;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
 
 /**
  * 玩家动画的东东<br>
@@ -78,6 +71,7 @@ public class PlayerAnimator {
         stopAnimation(player, RIDE, 8);
     }
 
+    @OnlyIn(Dist.CLIENT)
     public boolean isAnimationPlaying(Player player){
         if (player instanceof AbstractClientPlayer clientPlayer){
             return isAnimationPlaying(clientPlayer, ANIMATION);
@@ -85,6 +79,7 @@ public class PlayerAnimator {
         return false;
     }
 
+    @OnlyIn(Dist.CLIENT)
     public boolean isRiderAnimationPlaying(Player player){
         if (player instanceof AbstractClientPlayer clientPlayer){
             return isAnimationPlaying(clientPlayer, RIDE);
@@ -97,11 +92,12 @@ public class PlayerAnimator {
         Level level = player.level();
         if (level instanceof ServerLevel serverLevel)
             MessageLoader.getApiLoader().sendToPlayersInDimension(new NMessageCreater(animationMessage), serverLevel);
-        if (player instanceof AbstractClientPlayer clientPlayer)
+        else if (player instanceof AbstractClientPlayer clientPlayer)
             PlayerAnimationMessage.playerAnimation(clientPlayer, dataId, animation, showRightArm, showLeftArm, override);
     }
 
     @SuppressWarnings("unchecked")
+    @OnlyIn(Dist.CLIENT)
     public boolean isAnimationPlaying(AbstractClientPlayer player, ResourceLocation dataId){
         if (installed()){
             var associatedData = PlayerAnimationAccess.getPlayerAssociatedData(player);
@@ -116,6 +112,7 @@ public class PlayerAnimator {
     }
 
     @SuppressWarnings("unchecked")
+    @OnlyIn(Dist.CLIENT)
     public void playAnimation(AbstractClientPlayer player, ResourceLocation dataId, IAnimation keyframeAnimation, boolean override){
         if (installed()){
             var associatedData = PlayerAnimationAccess.getPlayerAssociatedData(player);
@@ -138,6 +135,7 @@ public class PlayerAnimator {
     }
 
     @SuppressWarnings("unchecked")
+    @OnlyIn(Dist.CLIENT)
     public void stopAnimation(AbstractClientPlayer player, ResourceLocation dataId, int fadeTime) {
         if (installed()){
             var associatedData = PlayerAnimationAccess.getPlayerAssociatedData(player);

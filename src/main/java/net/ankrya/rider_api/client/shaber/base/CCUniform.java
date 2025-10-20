@@ -1,9 +1,9 @@
 package net.ankrya.rider_api.client.shaber.base;
 
-import net.ankrya.rider_api.interfaces.inside_use.ICCUniform;
-import net.ankrya.rider_api.client.shaber.base.UniformType.Carrier;
 import com.mojang.blaze3d.shaders.Shader;
 import com.mojang.blaze3d.shaders.Uniform;
+import net.ankrya.rider_api.client.shaber.base.UniformType.Carrier;
+import net.ankrya.rider_api.interfaces.inside_use.ICCUniform;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;

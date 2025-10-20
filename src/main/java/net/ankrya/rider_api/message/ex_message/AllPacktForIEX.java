@@ -1,5 +1,6 @@
 package net.ankrya.rider_api.message.ex_message;
 
+import net.ankrya.rider_api.help.GJ;
 import net.ankrya.rider_api.interfaces.message.IEXMessage;
 import net.ankrya.rider_api.message.EXMessageCreater;
 import net.ankrya.rider_api.message.MessageLoader;
@@ -40,7 +41,7 @@ public class AllPacktForIEX implements IEXMessage {
         ctx.enqueueWork(()->{
             if (!(message instanceof AllPackt)) {
                 if (ctx.getDirection().getReceptionSide().isClient())
-                    MessageLoader.getApiLoader().sendToPlayersNearby(new EXMessageCreater(message), ctx.getSender());
+                    MessageLoader.getApiLoader().sendToPlayersNearbyAndSelf(new EXMessageCreater(message), GJ.Easy.getPlayer(ctx));
                 else message.run(ctx);
             }
         });

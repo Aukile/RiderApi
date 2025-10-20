@@ -1,11 +1,7 @@
 package net.ankrya.rider_api.help.recipe.packet;
 
-import com.google.gson.JsonObject;
-import net.ankrya.rider_api.help.recipe.json.RecipeJsonManager;
 import net.ankrya.rider_api.help.recipe.json.RecipeJsonManager.RecipeData;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.crafting.Ingredient;
 
 public class CreateRecipePacket {
     public final RecipeData recipe;

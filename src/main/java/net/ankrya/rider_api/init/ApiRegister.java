@@ -3,6 +3,8 @@ package net.ankrya.rider_api.init;
 import net.ankrya.rider_api.RiderApi;
 import net.ankrya.rider_api.client.particle.base.advanced.AdvancedParticleData;
 import net.ankrya.rider_api.client.particle.base.advanced.RibbonParticleData;
+import net.ankrya.rider_api.entity.ArrowSource;
+import net.ankrya.rider_api.entity.SpecialArrow;
 import net.ankrya.rider_api.entity.SpecialEffectEntity;
 import net.ankrya.rider_api.item.LogoItem;
 import net.ankrya.rider_api.item.RenderTest;
@@ -12,10 +14,6 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.item.Item;
 import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.registries.DeferredRegister;
-
-import java.util.Map;
-import java.util.function.Supplier;
 
 public class ApiRegister extends ClassRegister{
     private static ApiRegister register;
@@ -39,7 +37,11 @@ public class ApiRegister extends ClassRegister{
         apiRegister.register(particleTypeClass, "advanced_particle", AdvancedParticleData::createParticleType);
         apiRegister.register(particleTypeClass, "ribbon_particle", RibbonParticleData::createRibbonParticleType);
 
-        apiRegister.onceRegister(EntityType.class, SpecialEffectEntity.NAME, () -> EntityType.Builder.of(SpecialEffectEntity::new, MobCategory.MISC).sized(0.1F, 0.5F).setShouldReceiveVelocityUpdates(true).updateInterval(3).build("special_effects"));
+        Class<?> entityTypeClass = EntityType.class;
+        apiRegister.registerSource(entityTypeClass);
+        apiRegister.register(entityTypeClass, SpecialEffectEntity.NAME, () -> EntityType.Builder.of(SpecialEffectEntity::new, MobCategory.MISC).sized(0.1F, 0.5F).setShouldReceiveVelocityUpdates(true).updateInterval(3).build("special_effects"));
+        apiRegister.register(entityTypeClass, ArrowSource.NAME, () -> EntityType.Builder.<ArrowSource>of(ArrowSource::new, MobCategory.MISC).setShouldReceiveVelocityUpdates(true).setTrackingRange(64).setUpdateInterval(1).sized(0.5F, 0.5F).build("arrow_source"));
+        apiRegister.register(entityTypeClass, SpecialArrow.NAME, () -> EntityType.Builder.<SpecialArrow>of(SpecialArrow::new, MobCategory.MISC).setShouldReceiveVelocityUpdates(true).setTrackingRange(64).setUpdateInterval(1).sized(0.5F, 0.5F).build("special_arrow"));
 
         Class<?> itemClass = Item.class;
         apiRegister.registerSource(itemClass);

@@ -149,12 +149,10 @@ public class SpecialEffectEntity extends Entity implements GeoEntity {
     }
 
     private PlayState predicate(AnimationState<SpecialEffectEntity> state) {
-        String animation = this.animationName();
-        if (animation.equals("null"))
-            state.getController().setAnimation(RawAnimation.begin().then("idle", Animation.LoopType.LOOP));
-        else {
-            state.getController().setAnimation(RawAnimation.begin().then(animation, Animation.LoopType.LOOP));
-        }
+        AnimationController<SpecialEffectEntity> controller = state.getController();
+        controller.setAnimation(RawAnimation.begin().then(animationName(), Animation.LoopType.PLAY_ONCE));
+        if(controller.getAnimationState() == AnimationController.State.STOPPED)
+            state.resetCurrentAnimation();
         return PlayState.CONTINUE;
     }
 

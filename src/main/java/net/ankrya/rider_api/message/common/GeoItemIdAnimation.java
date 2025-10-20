@@ -1,6 +1,7 @@
 package net.ankrya.rider_api.message.common;
 
 import net.ankrya.rider_api.interfaces.geo.IGeoItem;
+import net.ankrya.rider_api.message.MessageLoader;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
@@ -45,6 +46,8 @@ public class GeoItemIdAnimation {
                 if (message.itemStack.getItem() instanceof IGeoItem item)
                     item.triggerAnim(entity, GeoItem.getId(message.itemStack), "controller", message.animation);
             });
+        } else {
+            context.enqueueWork(() -> MessageLoader.getApiLoader().sendToServer(new GeoItemIdAnimation(message.itemStack, message.animation, message.uuid)));
         }
     }
 }

@@ -1,7 +1,6 @@
 package net.ankrya.rider_api.entity.model;
 
 import net.ankrya.rider_api.entity.SpecialEffectEntity;
-import net.ankrya.rider_api.help.GJ;
 import net.minecraft.resources.ResourceLocation;
 import software.bernie.geckolib.model.GeoModel;
 

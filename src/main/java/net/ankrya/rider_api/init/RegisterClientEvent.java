@@ -9,7 +9,11 @@ import net.ankrya.rider_api.client.particle.base.advanced.RibbonParticleData;
 import net.ankrya.rider_api.client.shaber.ModShaders;
 import net.ankrya.rider_api.client.shaber.model.base.CosmicModelLoader;
 import net.ankrya.rider_api.compat.animation.PlayerAnimator;
+import net.ankrya.rider_api.entity.ArrowSource;
+import net.ankrya.rider_api.entity.SpecialArrow;
 import net.ankrya.rider_api.entity.SpecialEffectEntity;
+import net.ankrya.rider_api.entity.renderer.ArrowSourceRenderer;
+import net.ankrya.rider_api.entity.renderer.SpecialArrowRenderer;
 import net.ankrya.rider_api.entity.renderer.SpecialEffectEntityRenderer;
 import net.minecraft.core.particles.ParticleType;
 import net.minecraft.world.entity.EntityType;
@@ -43,6 +47,8 @@ public class RegisterClientEvent {
     @SuppressWarnings("unchecked")
     public static void registerEntityRenderers(EntityRenderersEvent.RegisterRenderers event) {
         event.registerEntityRenderer(ApiRegister.get().getRegisterObject(SpecialEffectEntity.NAME, EntityType.class).get(), context -> new SpecialEffectEntityRenderer<>(context));
+        event.registerEntityRenderer(SpecialArrow.getInstance(), SpecialArrowRenderer::new);
+        event.registerEntityRenderer(ArrowSource.getInstance(), ArrowSourceRenderer::new);
     }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)

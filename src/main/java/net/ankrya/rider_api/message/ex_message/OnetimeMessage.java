@@ -25,10 +25,7 @@ public class OnetimeMessage implements INMessage {
 
     @Override
     public void run(NetworkEvent.Context ctx) {
-        ctx.enqueueWork(() -> {
-            GJ onetime = getOnetime(name, ctx.getSender());
-            onetime.use();
-        });
+        ctx.enqueueWork(() -> getOnetime(name, GJ.Easy.getPlayer(ctx)).use());
     }
 
     private static GJ getOnetime(String name, Player player) {

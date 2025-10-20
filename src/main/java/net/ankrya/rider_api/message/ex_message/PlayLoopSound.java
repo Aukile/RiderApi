@@ -1,8 +1,9 @@
 package net.ankrya.rider_api.message.ex_message;
 
 import net.ankrya.rider_api.client.sound.LoopSound;
-import net.ankrya.rider_api.interfaces.message.INMessage;
+import net.ankrya.rider_api.help.GJ;
 import net.ankrya.rider_api.interfaces.inside_use.ISoundMap;
+import net.ankrya.rider_api.interfaces.message.INMessage;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
@@ -50,7 +51,7 @@ public class PlayLoopSound implements INMessage {
     @Override
     public void run(NetworkEvent.Context ctx) {
         ctx.enqueueWork(() -> {
-            Level level = ctx.getSender().serverLevel();
+            Level level = GJ.Easy.getLevel(ctx);
             Entity entity = level.getEntity(id);
             LoopSound loopSound = new LoopSound(entity, sound, getSoundSource(type), loop, range);
             if (loop && entity instanceof ISoundMap soundMap)

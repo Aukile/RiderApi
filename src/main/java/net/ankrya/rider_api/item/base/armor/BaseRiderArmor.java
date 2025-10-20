@@ -56,9 +56,12 @@ public abstract class BaseRiderArmor extends BaseRiderArmorBase {
         if (entity instanceof LivingEntity livingEntity){
             if (allArmorEquip(livingEntity)){
                 livingEntity.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, 10, 0, false, false));
-                for (Map.Entry<Holder<MobEffect>, Integer> entry : getEffects().entrySet()){
-                    if (entry.getKey() == MobEffects.NIGHT_VISION) livingEntity.addEffect(new MobEffectInstance(entry.getKey().get(), 240, entry.getValue(), false, false));
-                    else livingEntity.addEffect(new MobEffectInstance(entry.getKey().get(), 10, entry.getValue(), false, false));
+                for (Map.Entry<Holder<MobEffect>, Integer> entry : getEffects(level, livingEntity, stack, slot).entrySet()){
+                    if (entry.getValue() > 0){
+                        if (entry.getKey().get() == MobEffects.NIGHT_VISION)
+                            livingEntity.addEffect(new MobEffectInstance(entry.getKey().get(), 240, entry.getValue() - 1, false, false));
+                        else if (!livingEntity.hasEffect(entry.getKey().get())) livingEntity.addEffect(new MobEffectInstance(entry.getKey().get(), 25, entry.getValue() - 1, false, false));
+                    }
                 }
             } else {
                 if (entity instanceof Player player) {
@@ -70,7 +73,7 @@ public abstract class BaseRiderArmor extends BaseRiderArmorBase {
                         else if (!level.isClientSide()) ItemHandlerHelper.giveItemToPlayer(player, backupArmor);
                     }
                 } else unequip(livingEntity, slot);
-                for (Holder<MobEffect> effect : getEffects().keySet()){
+                for (Holder<MobEffect> effect : getEffects(level, livingEntity, stack, slot).keySet()){
                     livingEntity.removeEffect(effect.get());
                 }
                 livingEntity.removeEffect(MobEffects.INVISIBILITY);
@@ -78,7 +81,7 @@ public abstract class BaseRiderArmor extends BaseRiderArmorBase {
         }
     }
 
-    public abstract Map<Holder<MobEffect>, Integer> getEffects();
+    public abstract Map<Holder<MobEffect>, Integer> getEffects(Level level, LivingEntity entity, ItemStack stack, EquipmentSlot slot);
 
     // 存储备用盔甲
     public static void storeBackupArmor(ItemStack storageArmor, ItemStack backupArmor) {
@@ -95,7 +98,7 @@ public abstract class BaseRiderArmor extends BaseRiderArmorBase {
      * 会触发{@link RiderArmorEquipEvent}
      */
     public static void equip(LivingEntity entity, EquipmentSlot slot, ItemStack stack){
-        if (MinecraftForge.EVENT_BUS.post(new RiderArmorEquipEvent.Pre(entity, slot, stack))){
+        if (!MinecraftForge.EVENT_BUS.post(new RiderArmorEquipEvent.Pre(entity, slot, stack))){
             ItemStack original = entity.getItemBySlot(slot);
             if (!original.isEmpty()) storeBackupArmor(stack, original);
             if (entity instanceof Player player) {
@@ -110,11 +113,12 @@ public abstract class BaseRiderArmor extends BaseRiderArmorBase {
      * 会触发{@link RiderArmorRemoveEvent}
      */
     public static void unequip(LivingEntity entity, EquipmentSlot slot){
-        if (MinecraftForge.EVENT_BUS.post(new RiderArmorRemoveEvent.Pre(entity, slot))){
+        ItemStack original = entity.getItemBySlot(slot);
+        if (!MinecraftForge.EVENT_BUS.post(new RiderArmorRemoveEvent.Pre(entity, slot, original))){
             ItemStack stack = entity.getItemBySlot(slot);
             ItemStack backup = getBackupArmor(stack);
             entity.setItemSlot(slot, backup);
-            MinecraftForge.EVENT_BUS.post(new RiderArmorRemoveEvent.Post(entity, slot));
+            MinecraftForge.EVENT_BUS.post(new RiderArmorRemoveEvent.Post(entity, slot, original));
         }
     }
 

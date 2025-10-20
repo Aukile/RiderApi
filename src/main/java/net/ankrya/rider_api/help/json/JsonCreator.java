@@ -15,7 +15,6 @@ import net.minecraft.world.level.block.Block;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Locale;
 
 /**
  * 难说，感觉也就{@link JsonCreator#createSoundsFile}还行<br>

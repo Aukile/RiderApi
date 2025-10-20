@@ -1,11 +1,10 @@
 package net.ankrya.rider_api.client.shaber;
 
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import net.ankrya.rider_api.RiderApi;
 import net.ankrya.rider_api.client.shaber.base.CCShaderInstance;
 import net.ankrya.rider_api.client.shaber.base.CCUniform;
-import net.ankrya.rider_api.help.GJ;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;

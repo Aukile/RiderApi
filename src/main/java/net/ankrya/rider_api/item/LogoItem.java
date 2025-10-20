@@ -1,7 +1,6 @@
 package net.ankrya.rider_api.item;
 
 import net.ankrya.rider_api.help.GJ;
-import net.ankrya.rider_api.help.recipe.json.RecipeJsonManager;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.player.Player;
@@ -34,13 +33,13 @@ public class LogoItem extends Item {
 //                , 40, 0.12f, 1, -3), 10);
 
 
-//        if (GJ.TimerControl.getWorldTime(level) == 0)
-//            GJ.TimerControl.timerStartUp(level, player, 2);
-//        else if (GJ.TimerControl.getWorldTime(level) == 2)
-//            GJ.TimerControl.timerStartUp(level, player, 1);
-//        else if (GJ.TimerControl.getWorldTime(level) == 1)
-//            GJ.TimerControl.timerStartUp(level, player, 0);
-//        player.getCooldowns().addCooldown(this, 10);
+        if (GJ.TimerControl.getWorldTime(level) == 0)
+            GJ.TimerControl.timerStartUp(level, player, 2);
+        else if (GJ.TimerControl.getWorldTime(level) == 2)
+            GJ.TimerControl.timerStartUp(level, player, 1);
+        else if (GJ.TimerControl.getWorldTime(level) == 1)
+            GJ.TimerControl.timerStartUp(level, player, 0);
+        player.getCooldowns().addCooldown(this, 10);
 
 //        if (level.isClientSide()){
 //            RecipeJsonManager.test();

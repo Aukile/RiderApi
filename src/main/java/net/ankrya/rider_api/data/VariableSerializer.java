@@ -1,7 +1,7 @@
 package net.ankrya.rider_api.data;
 
-import net.ankrya.rider_api.interfaces.inside_use.IVariable;
 import com.google.common.primitives.Primitives;
+import net.ankrya.rider_api.interfaces.inside_use.IVariable;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.*;
 import net.minecraft.network.FriendlyByteBuf;

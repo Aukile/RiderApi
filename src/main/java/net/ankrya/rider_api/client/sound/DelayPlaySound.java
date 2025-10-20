@@ -3,7 +3,6 @@ package net.ankrya.rider_api.client.sound;
 import net.ankrya.rider_api.message.MessageLoader;
 import net.ankrya.rider_api.message.common.LoopSoundMessage;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;

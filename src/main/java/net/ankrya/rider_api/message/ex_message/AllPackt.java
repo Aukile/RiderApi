@@ -1,5 +1,6 @@
 package net.ankrya.rider_api.message.ex_message;
 
+import net.ankrya.rider_api.help.GJ;
 import net.ankrya.rider_api.interfaces.message.INMessage;
 import net.ankrya.rider_api.message.MessageLoader;
 import net.ankrya.rider_api.message.NMessageCreater;
@@ -40,7 +41,7 @@ public class AllPackt implements INMessage {
         ctx.enqueueWork(()->{
             if (!(message instanceof AllPackt)) {
                 if (ctx.getDirection().getReceptionSide().isClient())
-                    MessageLoader.getApiLoader().sendToAllTracking(new NMessageCreater(message), ctx.getSender());
+                    MessageLoader.getApiLoader().sendToAllTracking(new NMessageCreater(message), GJ.Easy.getPlayer(ctx));
                 else message.run(ctx);
             }
         });

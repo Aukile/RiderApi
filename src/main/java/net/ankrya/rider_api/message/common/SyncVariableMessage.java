@@ -1,11 +1,10 @@
 package net.ankrya.rider_api.message.common;
 
 import net.ankrya.rider_api.data.Variables;
-import net.minecraft.client.Minecraft;
+import net.ankrya.rider_api.help.GJ;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.network.NetworkEvent;
@@ -46,25 +45,25 @@ public class SyncVariableMessage {
 
     public static void handle(final SyncVariableMessage message, final Supplier<NetworkEvent.Context> supplier) {
         NetworkEvent.Context context = supplier.get();
-
-        if (context.getDirection().getReceptionSide().isClient()) {
-            context.enqueueWork(() -> {
-                ServerPlayer sender = context.getSender();
-                Level level = sender == null ? Minecraft.getInstance().level : sender.level();
-                if (level == null) return;
-                if (message.id >= 0) {
-                    Entity entity = level.getEntity(message.id);
-                    if (entity != null) {
-                        entity.getCapability(Variables.VARIABLES).ifPresent(cap ->
-                                cap.deserializeNBT(message.variables.serializeNBT()));
-                    }
-                } else {
-                    level.getCapability(Variables.VARIABLES).ifPresent(cap ->
-                            cap.deserializeNBT(message.variables.serializeNBT()));
-                }
-            });
-        }
-
+        context.enqueueWork(() -> {
+            if (context.getDirection().getReceptionSide().isClient()){
+                Level level = GJ.Easy.getLevel(context);
+                update(message, level);
+            }
+        });
         context.setPacketHandled(true);
+    }
+
+    private static void update(SyncVariableMessage message, Level level) {
+        if (message.id >= 0) {
+            Entity entity = level.getEntity(message.id);
+            if (entity != null) {
+                entity.getCapability(Variables.VARIABLES).ifPresent(cap ->
+                        cap.deserializeNBT(message.variables.serializeNBT()));
+            }
+        } else {
+            level.getCapability(Variables.VARIABLES).ifPresent(cap ->
+                    cap.deserializeNBT(message.variables.serializeNBT()));
+        }
     }
 }

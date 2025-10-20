@@ -1,8 +1,8 @@
 package net.ankrya.rider_api.client.particle.base.advanced;
 
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.ankrya.rider_api.client.particle.base.AdvancedParticleBase;
 import net.ankrya.rider_api.help.GJ;
-import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.phys.Vec3;

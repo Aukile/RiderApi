@@ -1,7 +1,8 @@
 package net.ankrya.rider_api.message.ex_message;
 
-import net.ankrya.rider_api.interfaces.message.INMessage;
+import net.ankrya.rider_api.help.GJ;
 import net.ankrya.rider_api.interfaces.inside_use.ISoundMap;
+import net.ankrya.rider_api.interfaces.message.INMessage;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
@@ -32,7 +33,7 @@ public class StopLoopSound implements INMessage {
     @Override
     public void run(NetworkEvent.Context ctx) {
         ctx.enqueueWork(() ->{
-            Level level = ctx.getSender() == null ? Minecraft.getInstance().level : ctx.getSender().level();
+            Level level = GJ.Easy.getLevel(ctx);
             Entity entity = level.getEntity(id);
             if (entity instanceof ISoundMap soundMap && soundMap.rider$containsLoopSound(location))
                 soundMap.rider$removeLoopSound(location);

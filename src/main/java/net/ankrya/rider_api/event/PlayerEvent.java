@@ -17,11 +17,9 @@ import net.minecraftforge.fml.common.Mod;
 
 import java.util.List;
 
-/**
- * 灾厄极狐的普攻~
- */
 @Mod.EventBusSubscriber
 public class PlayerEvent {
+
     /**普攻冷却*/
     @SubscribeEvent
     public static void onPlayerTick(TickEvent.PlayerTickEvent event) {

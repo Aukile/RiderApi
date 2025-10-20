@@ -1,14 +1,15 @@
 package net.ankrya.rider_api.message.common;
 
 import net.ankrya.rider_api.client.sound.LoopSound;
+import net.ankrya.rider_api.help.GJ;
 import net.ankrya.rider_api.message.ex_message.PlayLoopSound;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
@@ -54,16 +55,12 @@ public class LoopSoundMessage {
 
     public static void handle(LoopSoundMessage message, Supplier<NetworkEvent.Context> supplier) {
         NetworkEvent.Context context = supplier.get();
-        context.enqueueWork(() -> {
-            ServerPlayer sender = context.getSender();
-            playSound(message, sender == null ? null : sender.level());
-        });
+        context.enqueueWork(() -> DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> playSound(message, GJ.Easy.getLevel(context))));
+        context.setPacketHandled(true);
     }
 
     @OnlyIn(Dist.CLIENT)
     private static void playSound(LoopSoundMessage message, Level level) {
-        if (level == null)
-            level = Minecraft.getInstance().level;
         PlayLoopSound.playLoopSound(Minecraft.getInstance(), new LoopSound(level.getEntity(message.id), message.sound, getSoundSource(message.type), message.loop, message.range));
     }
 

@@ -1,6 +1,5 @@
 package net.ankrya.rider_api.item.model.base;
 
-import net.ankrya.rider_api.help.GJ;
 import net.ankrya.rider_api.interfaces.geo.IGeoItem;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;

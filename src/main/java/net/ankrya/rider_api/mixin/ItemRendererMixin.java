@@ -1,7 +1,7 @@
 package net.ankrya.rider_api.mixin;
 
-import net.ankrya.rider_api.client.shaber.model.CosmicBakeModel;
 import com.mojang.blaze3d.vertex.PoseStack;
+import net.ankrya.rider_api.client.shaber.model.CosmicBakeModel;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.client.resources.model.BakedModel;

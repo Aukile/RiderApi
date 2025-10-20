@@ -1,7 +1,7 @@
 package net.ankrya.rider_api.help.recipe.screen;
 
-import net.ankrya.rider_api.help.recipe.screen.pinyinhelper_fork.Pinyin;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.ankrya.rider_api.help.recipe.screen.pinyinhelper_fork.Pinyin;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;

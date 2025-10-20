@@ -1,7 +1,6 @@
 package net.ankrya.rider_api.init;
 
 import com.mojang.serialization.MapCodec;
-import net.ankrya.rider_api.help.GJ;
 import net.ankrya.rider_api.init.assist.RegisterAssist;
 import net.ankrya.rider_api.interfaces.IGeoBase;
 import net.minecraft.core.Registry;
@@ -12,11 +11,7 @@ import net.minecraft.world.item.Item;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.DeferredRegister;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 

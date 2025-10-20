@@ -5,6 +5,7 @@ import org.spongepowered.asm.mixin.Unique;
 public interface ITimer {
     int timeStop = 2;
     int timeSlow = 1;
+    int timeNormal = 0;
     int rider_api$advanceTime(long p_92526_);
 
     float rider_api$partialTick();

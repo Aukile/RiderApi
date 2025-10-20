@@ -25,6 +25,10 @@ public class ConditionsToRun {
         this(MinecraftForge.EVENT_BUS, runnable, conditions);
     }
 
+    public ConditionsToRun(Predicate<Integer> conditions) {
+        this(() -> {}, conditions);
+    }
+
     @SubscribeEvent
     public void tick(TickEvent.ServerTickEvent event) {
         if (event.phase == TickEvent.Phase.END) {

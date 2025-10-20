@@ -1,10 +1,10 @@
 package net.ankrya.rider_api.client.shaber.model.base;
 
-import net.ankrya.rider_api.client.shaber.model.CosmicBakeModel;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
+import net.ankrya.rider_api.client.shaber.model.CosmicBakeModel;
 import net.minecraft.client.renderer.block.model.BlockModel;
 import net.minecraft.client.renderer.block.model.ItemOverrides;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;

@@ -1,7 +1,6 @@
 package net.ankrya.rider_api.data;
 
 import com.google.common.primitives.Primitives;
-import net.ankrya.rider_api.RiderApi;
 import net.ankrya.rider_api.interfaces.inside_use.IVariable;
 import net.ankrya.rider_api.message.MessageLoader;
 import net.ankrya.rider_api.message.common.SyncVariableMessage;

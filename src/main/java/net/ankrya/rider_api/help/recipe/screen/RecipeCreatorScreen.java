@@ -2,8 +2,7 @@ package net.ankrya.rider_api.help.recipe.screen;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.logging.LogUtils;
-import  net.ankrya.rider_api.help.recipe.json.RecipeJsonManager;
-import net.ankrya.rider_api.help.recipe.packet.CreateRecipePacket;
+import net.ankrya.rider_api.help.recipe.json.RecipeJsonManager;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.CycleButton;

@@ -38,10 +38,15 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.network.NetworkEvent;
 import org.jetbrains.annotations.ApiStatus;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
@@ -50,10 +55,7 @@ import org.joml.Vector4f;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -81,6 +83,24 @@ public abstract class GJ {
         @ApiStatus.Internal
         public static ResourceLocation getApiResource(String path){
             return ResourceLocation.fromNamespaceAndPath(RiderApi.MODID, path);
+        }
+
+        @OnlyIn(Dist.CLIENT)
+        public static Level getLevel() {
+            return Minecraft.getInstance().level;
+        }
+
+        @OnlyIn(Dist.CLIENT)
+        public static Player getPlayer(){
+            return Minecraft.getInstance().player;
+        }
+
+        public static Player getPlayer(NetworkEvent.Context context) {
+            return context.getSender() == null && context.getDirection().getReceptionSide().isClient() ? getPlayer() : context.getSender();
+        }
+
+        public static Level getLevel(NetworkEvent.Context context){
+            return context.getSender() == null && context.getDirection().getReceptionSide().isClient() ? getLevel() : context.getSender().level();
         }
 
         /**
@@ -180,6 +200,16 @@ public abstract class GJ {
             return false;
         }
 
+        public static void canFly(Player player, boolean canFly){
+            if (!canFly) {
+                GameType gameType = ToPlayer.getEntityGameType(player);
+                if (!(gameType != null && gameType != GameType.CREATIVE && gameType != GameType.SPECTATOR))
+                    return;
+            }
+            player.getAbilities().mayfly = canFly;
+            player.onUpdateAbilities();
+        }
+
         public static GameType getEntityGameType(Entity entity) {
             if (entity instanceof ServerPlayer serverPlayer) {
                 return serverPlayer.gameMode.getGameModeForPlayer();
@@ -219,6 +249,20 @@ public abstract class GJ {
         public static void playExplosionSound(Entity entity) {
             ToWorld.playMSound(entity.level(), entity.getX(), entity.getY() + 1, entity.getZ(), "entity.generic.explode");
         }
+
+        public static void turnTo(Entity entity, Entity target){
+            entity.setYRot(target.getYRot());
+            entity.setXRot(target.getXRot());
+            entity.setYBodyRot(entity.getYRot());
+            entity.setYHeadRot(entity.getYRot());
+            entity.yRotO = entity.getYRot();
+            entity.xRotO = entity.getXRot();
+            if (entity instanceof LivingEntity livingEntity) {
+                livingEntity.yBodyRotO = livingEntity.getYRot();
+                livingEntity.yHeadRotO = livingEntity.getYRot();
+            }
+        }
+
     }
 
 
@@ -264,6 +308,14 @@ public abstract class GJ {
         public static void playerRemoveItem(Player player, Predicate<ItemStack> condition, int count){
             player.getInventory().clearOrCountMatchingItems(condition, count, player.getInventory());
         }
+
+        public static void removeItemEnchantment(ItemStack stack, Enchantment enchantment){
+            Map<Enchantment, Integer> enchantments = EnchantmentHelper.getEnchantments(stack);
+            if (enchantments.containsKey(enchantment)) {
+                enchantments.remove(enchantment);
+                EnchantmentHelper.setEnchantments(enchantments, stack);
+            }
+        }
     }
 
     /**数学相关*/
@@ -300,6 +352,18 @@ public abstract class GJ {
             target.hurt(world.damageSources().explosion(target, source), amount);
             if (world instanceof ServerLevel level)
                 level.sendParticles(ParticleTypes.EXPLOSION, (target.getX()), (target.getY() + 1), (target.getZ()), 2, 0.1, 0.1, 0.1, 0.1);
+        }
+
+        public static void ExplosionTo(Entity source, Vec3 vec3, int range, Level world, int amount){
+            List<LivingEntity> livingEntities = ToWorld.rangeFind(world, vec3, range);
+            for (LivingEntity target : livingEntities){
+                if (target != source){
+                    ToEntity.playExplosionSound(target);
+                    target.hurt(world.damageSources().explosion(target, source), amount);
+                }
+            }
+            if (world instanceof ServerLevel level)
+                level.sendParticles(ParticleTypes.EXPLOSION, vec3.x, vec3.y, vec3.z, 2, 0.1, 0.1, 0.1, 0.1);
         }
     }
 

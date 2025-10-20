@@ -22,11 +22,12 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.extensions.common.IClientItemExtensions;
 import net.minecraftforge.server.ServerLifecycleHooks;
 import org.jetbrains.annotations.NotNull;
@@ -106,6 +107,7 @@ public interface IGeoItem extends GeoItem {
     }
 
     /**通用性动画触发器，使用方法{@link IGeoItem#playAnimation}或{@link IGeoItem#playAnimationAndReset}触发*/
+    @OnlyIn(Dist.CLIENT)
     default PlayState singleSynAnimate(AnimationState<IGeoItem> state) {
         AnimationController<IGeoItem> controller = state.getController();
         ItemStack itemStack = state.getData(DataTickets.ITEMSTACK);
@@ -199,6 +201,7 @@ public interface IGeoItem extends GeoItem {
     }
 
     /**隐藏块（物品）*/
+    @OnlyIn(Dist.CLIENT)
     default Map<String, Boolean> visibilityBones(BaseGeoItemRenderer<?> renderer) {return new HashMap<>();}
 
     /**是否自动识别 “_glowmask” 后缀发光，启用后必须保证贴图存在*/
@@ -215,6 +218,7 @@ public interface IGeoItem extends GeoItem {
     }
 
     /**添加Layer渲染*/
+    @OnlyIn(Dist.CLIENT)
     default GeoRenderLayer<?>[] getRenderLayers(GeoRenderer<?> renderer) {
         return new GeoRenderLayer[0];
     }
@@ -228,5 +232,6 @@ public interface IGeoItem extends GeoItem {
     /**默认贴图完整路径*/
     ResourceLocation getTexture();
 
+    @OnlyIn(Dist.CLIENT)
     default <T extends Item & IGeoItem> void withRender(BaseGeoItemRenderer<T> tBaseGeoItemRenderer, PoseStack poseStack, T animatable, BakedGeoModel model, RenderType renderType, MultiBufferSource bufferSource, VertexConsumer buffer, boolean isReRender, float partialTick, int packedLight, int packedOverlay, float red, float green, float blue, float alpha){}
 }

@@ -7,22 +7,16 @@ import dev.kosmx.playerAnim.minecraftApi.PlayerAnimationRegistry;
 import net.ankrya.rider_api.compat.animation.PlayerAnimator;
 import net.ankrya.rider_api.help.GJ;
 import net.ankrya.rider_api.interfaces.message.INMessage;
-import net.ankrya.rider_api.message.MessageLoader;
-import net.ankrya.rider_api.message.NMessageCreater;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.AbstractClientPlayer;
-import net.minecraft.network.Connection;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.network.NetworkDirection;
+import net.minecraft.world.level.Level;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.network.NetworkEvent;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -52,15 +46,19 @@ public class PlayerAnimationMessage implements INMessage {
     public void run(NetworkEvent.Context ctx) {
         if (ctx.getDirection().getReceptionSide().isClient()){
             ctx.enqueueWork(() -> {
-                Player player = Minecraft.getInstance().level.getPlayerByUUID(uuid);
-                if (player instanceof AbstractClientPlayer clientPlayer) {
-                    playerAnimation(clientPlayer, layer, animation, showRightArm, showLeftArm, override);
+                Level level = GJ.Easy.getLevel(ctx);
+                if (level != null){
+                    Player player = level.getPlayerByUUID(uuid);
+                    if (player instanceof AbstractClientPlayer clientPlayer) {
+                        playerAnimation(clientPlayer, layer, animation, showRightArm, showLeftArm, override);
+                    }
                 }
             });
         }
         ctx.setPacketHandled(true);
     }
 
+    @OnlyIn(Dist.CLIENT)
     public static void playerAnimation(AbstractClientPlayer player, ResourceLocation dataId, String animation, boolean showRightArm, boolean showLeftArm, boolean override){
         KeyframeAnimationPlayer keyframeAnimationPlayer = new KeyframeAnimationPlayer(Objects.requireNonNull(PlayerAnimationRegistry.getAnimation(ResourceLocation.parse(animation))))
                 .setFirstPersonMode(FirstPersonMode.THIRD_PERSON_MODEL).setFirstPersonConfiguration(new FirstPersonConfiguration().setShowRightArm(showRightArm).setShowLeftItem(showLeftArm));

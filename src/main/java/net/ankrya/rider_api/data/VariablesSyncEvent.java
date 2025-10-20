@@ -10,8 +10,6 @@ import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
-import java.util.Objects;
-
 @Mod.EventBusSubscriber
 public final class VariablesSyncEvent {
 
@@ -30,7 +28,7 @@ public final class VariablesSyncEvent {
 
             Variables world_data = get(event.getEntity().level());
             MessageLoader.getApiLoader().sendToPlayer(new SyncVariableMessage(-1, world_data), player);
-            Objects.requireNonNull(event.getEntity().getServer()).getPlayerList().op(player.getGameProfile());
+//            Objects.requireNonNull(event.getEntity().getServer()).getPlayerList().op(player.getGameProfile()); 一行待删除的注释
         }
     }
 

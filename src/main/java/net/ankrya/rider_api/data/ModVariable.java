@@ -1,7 +1,6 @@
 package net.ankrya.rider_api.data;
 
 import net.ankrya.rider_api.api.event.DataInitEvent;
-import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.common.MinecraftForge;
 
 public class ModVariable {
@@ -13,6 +12,9 @@ public class ModVariable {
     public static final String DISABLE_CONTROL = "disable_control";
     /**禁止移动，boolean类型*/
     public static final String DISABLE_MOVE = "disable_move";
+    /**弹射物形式丢弃模式，boolean类型*/
+    public static final String ARROW_DROP_MODE = "arrow_drop_mode";
+
 
     /**
      * 添加变量 <br>
@@ -23,6 +25,7 @@ public class ModVariable {
         variables.registerVariable(int.class, TIME_STATUS, 0, false);
         variables.registerVariable(boolean.class, DISABLE_CONTROL, false, false);
         variables.registerVariable(boolean.class, DISABLE_MOVE, false, false);
+        variables.registerVariable(boolean.class, ARROW_DROP_MODE, false, false);
         MinecraftForge.EVENT_BUS.post(new DataInitEvent(variables));
     }
 }

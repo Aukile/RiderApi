@@ -1,12 +1,15 @@
 package net.ankrya.rider_api.message.ex_message;
 
 import net.ankrya.rider_api.compat.animation.PlayerAnimator;
+import net.ankrya.rider_api.help.GJ;
 import net.ankrya.rider_api.interfaces.message.INMessage;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.network.NetworkEvent;
 import org.jetbrains.annotations.NotNull;
 
@@ -31,15 +34,18 @@ public class PlayerAnimationStopMessage implements INMessage {
     @Override
     public void run(NetworkEvent.Context ctx) {
         ctx.enqueueWork(() -> {
-            Level level = ctx.getSender().level();
-            Player player = level.getPlayerByUUID(uuid);
-            if (player instanceof AbstractClientPlayer clientPlayer) {
-                PlayerAnimator.instance().stopAnimation(clientPlayer, layer, fadeTime);
+            Level level = GJ.Easy.getLevel(ctx);
+            if (level != null){
+                Player player = level.getPlayerByUUID(uuid);
+                stopAnimation(player, layer, fadeTime);
             }
         });
     }
 
-    public static void stopAnimation(AbstractClientPlayer player, ResourceLocation dataId, int fadeTime){
-        PlayerAnimator.instance().stopAnimation(player, dataId, fadeTime);
+    @OnlyIn(Dist.CLIENT)
+    public static void stopAnimation(Player player, ResourceLocation dataId, int fadeTime){
+        if (player instanceof AbstractClientPlayer clientPlayer) {
+            PlayerAnimator.instance().stopAnimation(clientPlayer, dataId, fadeTime);
+        }
     }
 }
