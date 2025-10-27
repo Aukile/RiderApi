@@ -25,6 +25,8 @@ public abstract class ServerPlayerMixin extends Player {
     @Unique
     private static final float riderApi$damage = 1f;
     @Unique
+    private static final int riderApi$knockback = 1;
+    @Unique
     private static final float riderApi$throwPower = 1f;
 
     public ServerPlayerMixin(Level level, BlockPos blockPos, float p_251702_, GameProfile gameProfile) {
@@ -33,13 +35,13 @@ public abstract class ServerPlayerMixin extends Player {
 
     @Inject(method = {"drop(Lnet/minecraft/world/item/ItemStack;ZZ)Lnet/minecraft/world/entity/item/ItemEntity;"}, at = @At("HEAD"),cancellable = true)
     public void drop(ItemStack stack, boolean p_9086_, boolean p_9087_, CallbackInfoReturnable<ItemEntity> cir){
-        if ((boolean) Variables.getVariable(this, ModVariable.ARROW_DROP_MODE) || stack.getItem() instanceof ItemToArrow){
+        if ((boolean) Variables.getVariable(this, ModVariable.ARROW_DROP_MODE) || stack.getItem() instanceof ItemToArrow itemToArrow && itemToArrow.startThrow(stack)){
             LivingEntity shoot = this;
             Level level = shoot.level();
             if (!level.isClientSide()) {
                 float damageBonus = 0;
                 if (stack.getItem() instanceof TieredItem tieredItem) damageBonus = tieredItem.getTier().getAttackDamageBonus();
-                Projectile _entityToSpawn = ArrowSource.shoot(stack,true,level, this, riderApi$damage + damageBonus);
+                Projectile _entityToSpawn = ArrowSource.shoot(stack,true,level, this, riderApi$damage + damageBonus, riderApi$knockback);
                 _entityToSpawn.setPos(shoot.getX(), shoot.getEyeY() - 0.1, shoot.getZ());
                 _entityToSpawn.shoot(shoot.getLookAngle().x, shoot.getLookAngle().y, shoot.getLookAngle().z, riderApi$throwPower, 0);
                 level.addFreshEntity(_entityToSpawn);

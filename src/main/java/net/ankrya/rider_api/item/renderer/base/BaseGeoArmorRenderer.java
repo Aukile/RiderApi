@@ -71,8 +71,15 @@ public class BaseGeoArmorRenderer<T extends BaseGeoArmor> extends GeoArmorRender
             MultiBufferSource.BufferSource source = Minecraft.getInstance().renderBuffers().bufferSource();
             String name = bone.getName();
             if (getGeoArmorInterface().lightBones(this).contains(name)) {
-                VertexConsumer newBuffer = source.getBuffer(RenderType.beaconBeam(getTextureLocation(animatable), false));
+                VertexConsumer newBuffer = source.getBuffer(RenderType.beaconBeam(getTextureLocation(animatable), true));
                 super.renderCubesOfBone(poseStack, bone, newBuffer, packedLight, packedOverlay, colour);
+            } else if (!getGeoArmorInterface().boneByRenderType(this).isEmpty() && getGeoArmorInterface().boneByRenderType(this).containsKey(name)) {
+                for (Map.Entry<String, RenderType> entry : getGeoArmorInterface().boneByRenderType(this).entrySet()){
+                    if (name.equals(entry.getKey())) {
+                        VertexConsumer newBuffer = source.getBuffer(entry.getValue());
+                        super.renderCubesOfBone(poseStack, bone, newBuffer, packedLight, packedOverlay, colour);
+                    } else super.renderCubesOfBone(poseStack, bone, buffer, packedLight, packedOverlay, colour);
+                }
             } else super.renderCubesOfBone(poseStack, bone, buffer, packedLight, packedOverlay, colour);
         } else super.renderCubesOfBone(poseStack, bone, buffer, packedLight, packedOverlay, colour);
     }

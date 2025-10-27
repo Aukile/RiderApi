@@ -2,6 +2,7 @@ package net.ankrya.rider_api.entity;
 
 import net.ankrya.rider_api.help.GJ;
 import net.ankrya.rider_api.init.ApiRegister;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
@@ -10,12 +11,15 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.NotNull;
 import software.bernie.geckolib.animatable.GeoEntity;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.animation.*;
 import software.bernie.geckolib.util.GeckoLibUtil;
+
+import javax.annotation.Nullable;
 
 public class SpecialArrow extends AbstractArrow implements GeoEntity {
     public static final EntityDataAccessor<String> ANIMATION = SynchedEntityData.defineId(SpecialArrow.class, EntityDataSerializers.STRING);
@@ -24,14 +28,15 @@ public class SpecialArrow extends AbstractArrow implements GeoEntity {
     public static final EntityDataAccessor<String> MODID = SynchedEntityData.defineId(SpecialArrow.class, EntityDataSerializers.STRING);
     public static final String NAME = "special_arrow";
     private ItemStack stack = ItemStack.EMPTY;
+    int knockback = 0;
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
 
     public SpecialArrow(EntityType<? extends SpecialArrow> entityType, Level level) {
         super(entityType, level);
     }
 
-    public SpecialArrow(Level level, LivingEntity livingEntity, String modid, String model, String texture, String animation) {
-        super(getInstance(), livingEntity, level, ItemStack.EMPTY, ItemStack.EMPTY);
+    public SpecialArrow(Level level, LivingEntity livingEntity, String modid, String model, String texture, String animation, ItemStack pickupItemStack, @Nullable ItemStack firedFromWeapon) {
+        super(getInstance(), livingEntity, level, pickupItemStack, firedFromWeapon);
 
         if (modid != null)
             this.entityData.set(MODID, modid);
@@ -41,6 +46,12 @@ public class SpecialArrow extends AbstractArrow implements GeoEntity {
             this.entityData.set(TEXTURE, texture);
         if (animation != null)
             this.entityData.set(ANIMATION, animation);
+        if (firedFromWeapon != null)
+            setKnockback(firedFromWeapon.getEnchantmentLevel(level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(Enchantments.KNOCKBACK)));
+    }
+
+    public SpecialArrow(Level level, LivingEntity livingEntity, String modid, String model, String texture, String animation){
+        this(level, livingEntity, modid, model, texture, animation, ItemStack.EMPTY, ItemStack.EMPTY);
     }
 
     @Override
@@ -125,24 +136,30 @@ public class SpecialArrow extends AbstractArrow implements GeoEntity {
         this.entityData.set(MODID, modid);
     }
 
+    public int getKnockback() {
+        return knockback;
+    }
+
+    public void setKnockback(int knockback) {
+        this.knockback = knockback;
+    }
+
     @SuppressWarnings("unchecked")
     public static EntityType<SpecialArrow> getInstance() {
         return (EntityType<SpecialArrow>) ApiRegister.get().getRegisterObject(NAME, EntityType.class).get();
     }
 
     /**旧版*/
-    public static AbstractArrow shoot(AbstractArrow specialArrow, double vx, double vy, double vz, float power, double damage, int knockback, float scattering){
-        return shoot(specialArrow, vx, vy, vz, power, damage, scattering);
-    }
-
-    public static AbstractArrow shoot(AbstractArrow specialArrow, double vx, double vy, double vz, float power, double damage, float scattering){
-        Level world = specialArrow.level();
-        specialArrow.shoot(vx, vy, vz, power, scattering);
-        specialArrow.setSilent(true);
-        specialArrow.setCritArrow(false);
-        specialArrow.setBaseDamage(damage);
-        world.addFreshEntity(specialArrow);
-        return specialArrow;
+    public static AbstractArrow shoot(AbstractArrow arrow, double vx, double vy, double vz, float power, double damage, int knockback, float scattering){
+        Level world = arrow.level();
+        arrow.shoot(vx, vy, vz, power, scattering);
+        arrow.setSilent(true);
+        arrow.setCritArrow(false);
+        arrow.setBaseDamage(damage);
+        if (arrow instanceof SpecialArrow specialArrow)
+            specialArrow.setKnockback(knockback);
+        world.addFreshEntity(arrow);
+        return arrow;
     }
 
     public static AbstractArrow shoot(AbstractArrow specialArrow, LivingEntity entity, float power, double damage, int knockback, float scattering) {

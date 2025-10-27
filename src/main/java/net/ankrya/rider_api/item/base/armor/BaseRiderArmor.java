@@ -58,8 +58,8 @@ public abstract class BaseRiderArmor extends BaseRiderArmorBase {
         }
         if (entity instanceof LivingEntity livingEntity){
             if (allArmorEquip(livingEntity)){
-                livingEntity.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, 10, 0, false, false));
-                for (Map.Entry<Holder<MobEffect>, Integer> entry : getEffects().entrySet()){
+                if (needInvisibility(level, livingEntity, stack, slot)) livingEntity.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, 10, 0, false, false));
+                for (Map.Entry<Holder<MobEffect>, Integer> entry : getEffects(level, livingEntity, stack, slot).entrySet()){
                     if (entry.getValue() > 0){
                         if (entry.getKey().value() == MobEffects.NIGHT_VISION)
                             livingEntity.addEffect(new MobEffectInstance(entry.getKey(), 240, entry.getValue() - 1, false, false));
@@ -68,15 +68,15 @@ public abstract class BaseRiderArmor extends BaseRiderArmorBase {
                 }
             } else {
                 if (entity instanceof Player player) {
-                    if (player.getItemBySlot(slot) == stack) unequip(player, slot);
+                    if (player.getItemBySlot(slot) == stack) unequip(player, slot, player.getItemBySlot(slot));
                     else {
                         ItemStack backupArmor = BaseRiderArmor.getBackupArmor(stack);
                         GJ.ToItem.playerRemoveItem(player, this, 1);
                         if (player.getItemBySlot(slot).isEmpty()) GJ.ToItem.equipBySlot(player, slot, backupArmor);
                         else if (!level.isClientSide()) ItemHandlerHelper.giveItemToPlayer(player, backupArmor);
                     }
-                } else unequip(livingEntity, slot);
-                for (Holder<MobEffect> effect : getEffects().keySet()){
+                } else unequip(livingEntity, slot, livingEntity.getItemBySlot(slot));
+                for (Holder<MobEffect> effect : getEffects(level, livingEntity, stack, slot).keySet()){
                     livingEntity.removeEffect(effect);
                 }
                 livingEntity.removeEffect(MobEffects.INVISIBILITY);
@@ -84,7 +84,11 @@ public abstract class BaseRiderArmor extends BaseRiderArmorBase {
         }
     }
 
-    public abstract Map<Holder<MobEffect>, Integer> getEffects();
+    public boolean needInvisibility(@NotNull Level level, LivingEntity livingEntity, @NotNull ItemStack stack, EquipmentSlot slot) {
+        return true;
+    }
+
+    public abstract Map<Holder<MobEffect>, Integer> getEffects(Level level, LivingEntity entity, ItemStack stack, EquipmentSlot slot);
 
     // 存储备用盔甲
     public static void storeBackupArmor(ItemStack storageArmor, ItemStack backupArmor) {
@@ -116,12 +120,11 @@ public abstract class BaseRiderArmor extends BaseRiderArmorBase {
      * 解除盔甲装备时的方法<br>
      * 会触发{@link RiderArmorRemoveEvent}
      */
-    public static void unequip(LivingEntity entity, EquipmentSlot slot){
-        if (NeoForge.EVENT_BUS.post(new RiderArmorRemoveEvent.Pre(entity, slot)).canRun()){
-            ItemStack stack = entity.getItemBySlot(slot);
+    public static void unequip(LivingEntity entity, EquipmentSlot slot, ItemStack stack){
+        if (NeoForge.EVENT_BUS.post(new RiderArmorRemoveEvent.Pre(entity, slot, stack)).canRun()){
             ItemStack backup = getBackupArmor(stack);
             entity.setItemSlot(slot, backup);
-            NeoForge.EVENT_BUS.post(new RiderArmorRemoveEvent.Post(entity, slot));
+            NeoForge.EVENT_BUS.post(new RiderArmorRemoveEvent.Post(entity, slot, stack));
         }
     }
 

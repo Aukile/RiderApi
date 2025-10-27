@@ -4,6 +4,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
+import net.ankrya.rider_api.item.base.armor.BaseRiderArmor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.PlayerModel;
@@ -117,8 +118,7 @@ public class PlayerRender {
         ItemStack chest = player.getItemBySlot(EquipmentSlot.CHEST);
         ItemStack leg = player.getItemBySlot(EquipmentSlot.LEGS);
         ItemStack boot = player.getItemBySlot(EquipmentSlot.FEET);
-        if(head.getItem() instanceof GeoItem || chest.getItem() instanceof GeoItem || leg.getItem() instanceof GeoItem ||
-                boot.getItem() instanceof GeoItem)
+        if(needVisiblePlayerPart(head, player) || needVisiblePlayerPart(chest, player) || needVisiblePlayerPart(leg, player) || needVisiblePlayerPart(boot, player))
             if(head != ItemStack.EMPTY || chest != ItemStack.EMPTY || leg != ItemStack.EMPTY || boot != ItemStack.EMPTY){
                 playermodel.head.visible = !(head.getItem() instanceof GeoItem);
                 playermodel.hat.visible = !(head.getItem() instanceof GeoItem);
@@ -133,6 +133,10 @@ public class PlayerRender {
                 playermodel.rightPants.visible = !(boot.getItem() instanceof GeoItem);
                 playermodel.jacket.visible = !(chest.getItem() instanceof GeoItem);
             }
+    }
+
+    private static boolean needVisiblePlayerPart(ItemStack stack, Player player){
+        return stack.getItem() instanceof BaseRiderArmor riderArmor && riderArmor.needInvisibility(player.level(), player, stack, riderArmor.getSlot());
     }
 
     private static <T extends LivingEntity> HumanoidModel<?> getArmorModelHook(T entity, ItemStack itemStack, EquipmentSlot slot, HumanoidModel<T> model) {

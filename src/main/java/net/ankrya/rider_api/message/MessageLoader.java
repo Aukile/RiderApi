@@ -23,9 +23,9 @@ public final class MessageLoader {
         final PayloadRegistrar registrar = event.registrar(RiderApi.MODID);
         registrar.playBidirectional(SyncVariableMessage.TYPE, SyncVariableMessage.CODEC, new DirectionalPayloadHandler<>(SyncVariableMessage::handle, SyncVariableMessage::handleServer));
         registrar.playBidirectional(LoopSoundMessage.TYPE, LoopSoundMessage.CODEC, new DirectionalPayloadHandler<>(LoopSoundMessage::handle, LoopSoundMessage::handleServer));
-        registrar.playBidirectional(MessageCreater.TYPE, MessageCreater.CODEC, new DirectionalPayloadHandler<>(MessageCreater::run,MessageCreater::serverRun));
-        registrar.playBidirectional(EXMessageCreater.TYPE, EXMessageCreater.CODEC, new DirectionalPayloadHandler<>(EXMessageCreater::run, EXMessageCreater::serverRun));
-        registrar.playBidirectional(NMessageCreater.TYPE, NMessageCreater.CODEC, new DirectionalPayloadHandler<>(NMessageCreater::run, NMessageCreater::serverRun));
+        registrar.playBidirectional(MessageCreater.TYPE, MessageCreater.CODEC, new DirectionalPayloadHandler<>(MessageCreater::run,MessageCreater::run));
+        registrar.playBidirectional(EXMessageCreater.TYPE, EXMessageCreater.CODEC, new DirectionalPayloadHandler<>(EXMessageCreater::run, EXMessageCreater::run));
+        registrar.playBidirectional(NMessageCreater.TYPE, NMessageCreater.CODEC, new DirectionalPayloadHandler<>(NMessageCreater::run, NMessageCreater::run));
 
     }
 

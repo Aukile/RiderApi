@@ -30,6 +30,10 @@ public class ConditionsToRun {
         this(NeoForge.EVENT_BUS, runnable, conditions);
     }
 
+    public ConditionsToRun(Predicate<Integer> conditions){
+        this(() -> {}, conditions);
+    }
+
     @SubscribeEvent
     public void tick(ServerTickEvent.Post event) {
         if (event.hasTime()) {

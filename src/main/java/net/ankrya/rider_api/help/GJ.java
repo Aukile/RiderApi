@@ -14,6 +14,8 @@ import net.ankrya.rider_api.entity.SpecialEffectEntity;
 import net.ankrya.rider_api.message.MessageLoader;
 import net.ankrya.rider_api.message.NMessageCreater;
 import net.ankrya.rider_api.message.common.LoopSoundMessage;
+import net.ankrya.rider_api.message.ex_message.AllPackt;
+import net.ankrya.rider_api.message.ex_message.OnetimeMessage;
 import net.ankrya.rider_api.message.ex_message.PlayLoopSound;
 import net.ankrya.rider_api.message.ex_message.StopLoopSound;
 import net.minecraft.client.CameraType;
@@ -114,6 +116,10 @@ public abstract class GJ {
                 e.printStackTrace();
                 return new String[0];
             }
+        }
+
+        public static void useOnetime(GJ order){
+            MessageLoader.sendToServer(new NMessageCreater(new AllPackt(new OnetimeMessage(order))));
         }
     }
 

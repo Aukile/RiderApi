@@ -1,8 +1,7 @@
 package net.ankrya.rider_api.help.json;
 
-import net.ankrya.rider_api.help.GJ;
-import net.ankrya.rider_api.init.ApiRegister;
 import net.ankrya.rider_api.init.ClassRegister;
+import net.ankrya.rider_api.interfaces.IGeoBase;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.data.PackOutput;
@@ -32,14 +31,28 @@ public abstract class DateGather {
     protected abstract String modid();
     protected abstract ClassRegister register();
 
+    public static DateGather simply(String modid, ClassRegister register) {
+        return new DateGather() {
+            @Override
+            public String modid() {
+                return modid;
+            }
+
+            @Override
+            public ClassRegister register() {
+                return register;
+            }
+        };
+    }
+
     public void gatherJson(GatherDataEvent event) {
         DataGenerator generator = event.getGenerator();
         PackOutput output = generator.getPackOutput();
         ExistingFileHelper helper = event.getExistingFileHelper();
 
-        generator.addProvider(event.includeClient(), new ItemModels(output, helper));
-        generator.addProvider(event.includeClient(), new BlockModels(output, helper));
-        generator.addProvider(event.includeClient(), new BlockStates(output, helper));
+        generator.addProvider(event.includeClient(), new ItemModels(output, modid(), helper));
+        generator.addProvider(event.includeClient(), new BlockModels(output, modid(), helper));
+        generator.addProvider(event.includeClient(), new BlockStates(output, modid(), helper));
     }
 
     public class ItemModels extends ItemModelProvider {
@@ -47,17 +60,15 @@ public abstract class DateGather {
             super(output, modid, existingFileHelper);
         }
 
-        public ItemModels(PackOutput output, ExistingFileHelper existingFileHelper){
-            this(output, modid(), existingFileHelper);
-        }
-
         @Override
         protected void registerModels() {
             Class<?> clazz = Item.class;
-            if (ApiRegister.get().isRegistered(clazz)){
-                ApiRegister.get().getRegisterObjects(clazz).forEach((name, registerObject) -> {
+            if (register().isRegistered(clazz)){
+                register().registerObjects.get(clazz).forEach((name, registerObject) -> {
                     Object object = registerObject.get();
-                    if (object instanceof Item item) {
+                    if (object instanceof IGeoBase item){
+                        basicItem(ResourceLocation.fromNamespaceAndPath(item.modid(), item.path() + item.name()));
+                    } else if (object instanceof Item item) {
                         basicItem(item);
                     }
                 });
@@ -75,19 +86,17 @@ public abstract class DateGather {
             super(output, modid, existingFileHelper);
         }
 
-        public BlockModels(PackOutput output, ExistingFileHelper existingFileHelper){
-            this(output, modid(), existingFileHelper);
-        }
-
         @Override
         protected void registerModels() {
             Class<?> clazz = Block.class;
-            if (ApiRegister.get().isRegistered(clazz)){
-                ApiRegister.get().getRegisterObjects(clazz).forEach((name, registerObject) -> {
+            if (register().isRegistered(clazz)){
+                register().getRegisterObjects(clazz).forEach((name, registerObject) -> {
                     Object object = registerObject.get();
-                    if (object instanceof Block block) {
+                    if (object instanceof IGeoBase item){
+                        cubeAll(item.name(), ResourceLocation.fromNamespaceAndPath(item.modid(), item.path() + item.name()));
+                    } else if (object instanceof Block block) {
                         String blockName = block.getName().getString();
-                        cubeAll(blockName, ResourceLocation.fromNamespaceAndPath(modid(), blockName));
+                        cubeAll(blockName, ResourceLocation.fromNamespaceAndPath(modid, blockName));
                     }
                 });
             }
@@ -104,15 +113,11 @@ public abstract class DateGather {
             super(output, modid, existingFileHelper);
         }
 
-        public BlockStates(PackOutput output, ExistingFileHelper existingFileHelper){
-            this(output, modid(), existingFileHelper);
-        }
-
         @Override
         protected void registerStatesAndModels() {
             Class<?> clazz = Block.class;
-            if (ApiRegister.get().isRegistered(clazz)){
-                ApiRegister.get().getRegisterObjects(clazz).forEach((name, registerObject) -> {
+            if (register().isRegistered(clazz)){
+                register().getRegisterObjects(clazz).forEach((name, registerObject) -> {
                     Object object = registerObject.get();
                     if (object instanceof Block block) {
                         cubeAll(block);

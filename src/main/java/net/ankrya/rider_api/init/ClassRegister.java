@@ -27,11 +27,11 @@ public abstract class ClassRegister {
     public Map<Class<?>,  DeferredRegister<?>> registers = new HashMap<>();
     public Map<Class<?>, Map<String, Supplier<?>>> registerObjects = new HashMap<>();
 
-    public <T> DeferredRegister<T> registerSource(Class<T> type, String registerName) {
+    protected <T> DeferredRegister<T> registerSource(Class<T> type, String registerName) {
         return registerSource(type, registerName, modid());
     }
 
-    public <T> void registerSource(Class<T> type, ResourceKey<Registry<T>> registerTo) {
+    protected <T> void registerSource(Class<T> type, ResourceKey<Registry<T>> registerTo) {
         registerSource(type, registerTo, modid());
     }
 
@@ -40,7 +40,7 @@ public abstract class ClassRegister {
         return registerSource(type, key, modid());
     }
 
-    public <T> DeferredRegister<T> registerSource(Class<T> type, ResourceKey<Registry<T>> registerTo, String modid) {
+    protected <T> DeferredRegister<T> registerSource(Class<T> type, ResourceKey<Registry<T>> registerTo, String modid) {
         DeferredRegister<T> register = DeferredRegister.create(registerTo, modid());
         if (!registers.containsKey(type) && RegisterAssist.registerSourceSafe(type, registers)){
             registers.put(type, register);
@@ -54,11 +54,11 @@ public abstract class ClassRegister {
      * 例如: {@link MapCodec}<br>
      * （好像也就这一个这样，不过可以用{@link ClassRegister#registerSource(Class, ResourceKey)}注册就没事了）
      */
-    public <T> DeferredRegister<T> registerSource(Class<T> type){
+    protected <T> DeferredRegister<T> registerSource(Class<T> type){
         return registerSource(type, RegisterAssist.getRegisterName(type));
     }
 
-    private DeferredRegister<?> getRegisterSource(Class<?> type){
+    protected DeferredRegister<?> getRegisterSource(Class<?> type){
         return registers.get(type);
     }
 
@@ -79,7 +79,7 @@ public abstract class ClassRegister {
      * 用{@link ClassRegister#registerSource}
      */
     @SuppressWarnings("unchecked")
-    public <T> Supplier<T> register(Class<? extends T> type, final String name, final Supplier<? extends T> sup){
+    protected <T> Supplier<T> register(Class<? extends T> type, final String name, final Supplier<? extends T> sup){
         DeferredRegister<T> r = (DeferredRegister<T>) getRegisterSource(type);
         Supplier<T> object = r.register(name, sup);
         updateRegisters(type, name, object);
@@ -88,7 +88,7 @@ public abstract class ClassRegister {
 
     /**大概没什么用*/
     @SuppressWarnings("unchecked")
-    public <T> DeferredHolder<T, T> registerAsHolder(Class<? extends T> type, final String name, final Supplier<? extends T> sup){
+    protected <T> DeferredHolder<T, T> registerAsHolder(Class<? extends T> type, final String name, final Supplier<? extends T> sup){
         DeferredRegister<T> r = (DeferredRegister<T>) getRegisterSource(type);
         DeferredHolder<T, T> object = r.register(name, sup);
         updateRegisters(type, name, object);
@@ -96,16 +96,16 @@ public abstract class ClassRegister {
     }
 
     /**注册一次，只注册一个东西的时候可以用*/
-    public <T> DeferredRegister<? extends T> onceRegister(Class<? extends T> type, final String name, final Supplier<? extends T> sup){
+    protected <T> DeferredRegister<? extends T> onceRegister(Class<? extends T> type, final String name, final Supplier<? extends T> sup){
         DeferredRegister<? extends T> source = registerSource(type);
         register(type, name, sup);
         return source;
     }
 
     /**简易注册（也没那么简），实验品*/
-    public <T> void easyRegister(Class<T> clazz, IEventBus bus, Tectonic<T>[] tectonics){
+    protected <T> void easyRegister(Class<T> clazz, IEventBus bus, Tectonic[] tectonics){
         DeferredRegister<T> source = registerSource(clazz);
-        for (Tectonic<T> tectonic : tectonics) {
+        for (Tectonic tectonic : tectonics) {
             register(clazz, tectonic.name(), tectonic::t);
         }
         source.register(bus);
@@ -125,9 +125,8 @@ public abstract class ClassRegister {
      * IGeoBase 体系使用，必须实现{@link IGeoBase}
      * @see IGeoBase
      */
-    public <T extends IGeoBase> void getIGoBaseObject(T target, Class<?> as) {{
+    public <T extends IGeoBase> void getIGoBaseObject(T target, Class<?> as) {
         registerObjects.get(as).get(target.name());
-    }
     }
 
     /**
@@ -144,7 +143,7 @@ public abstract class ClassRegister {
         }
     }
 
-    private void soundRegister(String... names){
+    protected void soundRegister(String... names){
         for (String name : names)
             register(SoundEvent.class, name, () -> SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath(modid(), name)));
     }
@@ -170,5 +169,5 @@ public abstract class ClassRegister {
         return (Supplier<T>) getRegisterObjects(clazz).get(name);
     }
 
-    public record Tectonic<T>(String name, T t) {}
+    public record Tectonic(String name, Object t) {}
 }

@@ -50,7 +50,7 @@ public class AllPackt implements INMessage {
         ctx.enqueueWork(()->{
             if (!(message instanceof AllPackt)) {
                 if (!ctx.flow().isServerbound())
-                    MessageLoader.sendToPlayersNearby(new NMessageCreater(message), (ServerPlayer) ctx.player());
+                    MessageLoader.sendToAllTracking(new NMessageCreater(message), ctx.player());
                 else message.run(ctx);
             }
         });

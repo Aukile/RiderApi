@@ -34,4 +34,6 @@ public interface IGeoArmor extends IGeoItem {
     /**会让这个组里面的都发光*/
     @OnlyIn(Dist.CLIENT)
     default Set<String> lightBones(BaseGeoArmorRenderer<?> renderer){return new HashSet<>();}
+
+    default Map<String, RenderType> boneByRenderType(BaseGeoArmorRenderer<?> renderer){return new HashMap<>();}
 }

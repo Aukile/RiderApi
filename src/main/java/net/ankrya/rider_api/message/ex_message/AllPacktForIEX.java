@@ -45,7 +45,7 @@ public class AllPacktForIEX implements IEXMessage {
         ctx.enqueueWork(()->{
             if (!(message instanceof AllPackt)) {
                 if (!ctx.flow().isServerbound())
-                    MessageLoader.sendToPlayersNearby(new EXMessageCreater(message), (ServerPlayer) ctx.player());
+                    MessageLoader.sendToAllTracking(new EXMessageCreater(message), ctx.player());
                 else message.run(ctx);
             }
         });
