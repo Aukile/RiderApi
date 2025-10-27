@@ -1,10 +1,9 @@
-package net.ankrya.rider_api.client;
+package net.ankrya.rider_api.compat.animation;
 
 import dev.kosmx.playerAnim.api.TransformType;
 import dev.kosmx.playerAnim.core.util.Vec3f;
 import dev.kosmx.playerAnim.impl.IAnimatedPlayer;
 import dev.kosmx.playerAnim.impl.animation.AnimationApplier;
-import net.ankrya.rider_api.compat.animation.PlayerAnimator;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.player.Player;
