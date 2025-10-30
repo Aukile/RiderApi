@@ -55,7 +55,7 @@ public abstract class BaseRiderArmor extends BaseRiderArmorBase {
         }
         if (entity instanceof LivingEntity livingEntity){
             if (allArmorEquip(livingEntity)){
-                livingEntity.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, 10, 0, false, false));
+                if (needInvisibility(level, livingEntity, stack, slot)) livingEntity.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, 10, 0, false, false));
                 for (Map.Entry<Holder<MobEffect>, Integer> entry : getEffects(level, livingEntity, stack, slot).entrySet()){
                     if (entry.getValue() > 0){
                         if (entry.getKey().get() == MobEffects.NIGHT_VISION)
@@ -124,5 +124,9 @@ public abstract class BaseRiderArmor extends BaseRiderArmorBase {
 
     public EquipmentSlot getSlot() {
         return slot;
+    }
+
+    public boolean needInvisibility(Level level, LivingEntity entity, ItemStack stack, EquipmentSlot slot) {
+        return true;
     }
 }

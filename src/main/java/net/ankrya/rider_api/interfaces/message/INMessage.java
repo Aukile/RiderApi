@@ -27,14 +27,14 @@ public interface INMessage {
     void run(NetworkEvent.Context ctx);
 
     /**自动解析,一行解决*/
-    static void autoWriteAll(FriendlyByteBuf buf, Comparable<?>... values){
+    static void autoWriteAll(FriendlyByteBuf buf, Object... values){
         if (values.length == 0){
             buf.writeInt(0);
             return;
         }
 
         List<Integer> types = new ArrayList<>();
-        List<Comparable<?>> valueList = new ArrayList<>();
+        List<Object> valueList = new ArrayList<>();
         for (var value : values) autoAnalysis(value, types, valueList);
 
         int time = 0;
@@ -42,7 +42,10 @@ public interface INMessage {
         for (int type : types) valueInt = creatMassageNumber(valueInt, type, time++);
         buf.writeInt(valueInt);
 
-        for (int type : types) writeFromType(buf, type, valueList.get(types.indexOf(type)));
+        for (int i = 0; i < types.size(); i++) {
+            int type = types.get(i);
+            writeFromType(buf, type, valueList.get(i));
+        }
     }
 
     /**自动解析的协助方法，请勿调用*/
@@ -60,7 +63,7 @@ public interface INMessage {
     }
 
     /**自动解析的协助方法，请勿调用*/
-    static void autoAnalysis(Comparable<?> value, List<Integer> types, List<Comparable<?>>  values){
+    static void autoAnalysis(Object value, List<Integer> types, List<Object>  values){
         Class<?> aClass = value.getClass();
         values.add(value);
         if (aClass.isAssignableFrom(Integer.class)) types.add(1);

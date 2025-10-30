@@ -18,6 +18,20 @@ public abstract class DateGather {
     protected abstract String modid();
     protected abstract ClassRegister register();
 
+    public static DateGather simply(String modid, ClassRegister register) {
+        return new DateGather() {
+            @Override
+            public String modid() {
+                return modid;
+            }
+
+            @Override
+            public ClassRegister register() {
+                return register;
+            }
+        };
+    }
+
     public void gatherJson(GatherDataEvent event) {
         DataGenerator generator = event.getGenerator();
         PackOutput output = generator.getPackOutput();

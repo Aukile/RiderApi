@@ -236,11 +236,22 @@ public abstract class GJ {
          */
         public static SpecialEffectEntity createSpecialEffect(Level level, Player player,String modid, String modelPath, String texturePath, int dead, boolean ride) {
             SpecialEffectEntity effect = new SpecialEffectEntity(level, player, modid, modelPath, texturePath, dead);
-            if (ride) effect.startRiding(player);
-            effect.setPos(player.getX(), player.getY(), player.getZ());
+            if (player != null){
+                if (ride) effect.startRiding(player);
+                effect.setPos(player.getX(), player.getY(), player.getZ());
+            }
             level.addFreshEntity(effect);
             return effect;
         }
+
+        public static SpecialEffectEntity createSpecialEffect(Level level, Vec3 pos,String modid, String modelPath, String texturePath, int dead) {
+            SpecialEffectEntity effect = new SpecialEffectEntity(level, null, modid, modelPath, texturePath, dead);
+            effect.setAutoClear(false);
+            effect.setPos(pos.x(), pos.y(), pos.z());
+            level.addFreshEntity(effect);
+            return effect;
+        }
+
         public static void fixHealth(LivingEntity entity) {
             if (entity.getMaxHealth() < entity.getHealth())
                 entity.setHealth(entity.getMaxHealth());

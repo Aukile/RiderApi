@@ -4,6 +4,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
+import net.ankrya.rider_api.item.base.armor.BaseRiderArmor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.PlayerModel;
@@ -61,10 +62,10 @@ public class PlayerRender {
         ItemStack chest = player.getItemBySlot(EquipmentSlot.CHEST);
         EntityRenderDispatcher entityrenderdispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
         EntityRenderer<?> entityrenderer = entityrenderdispatcher.getRenderer(player);
-        PlayerModel<AbstractClientPlayer> playermodel = ((PlayerRenderer)entityrenderer).getModel();
+        PlayerModel<AbstractClientPlayer> playermodel = ((PlayerRenderer) entityrenderer).getModel();
         poseStack.pushPose();
 
-        if(chest.getItem() instanceof GeoItem items){
+        if (chest.getItem() instanceof GeoItem items) {
             GeoArmorRenderer geoArmorRender = (GeoArmorRenderer) getArmorModelHook(player, chest, EquipmentSlot.CHEST, playermodel);
 
             VertexConsumer buffer = bufferSource.getBuffer(RenderType.entityTranslucent(geoArmorRender.getTextureLocation(items)));
@@ -74,20 +75,20 @@ public class PlayerRender {
             BakedGeoModel model = geoArmorRender.getGeoModel().getBakedModel(geoArmorRender.getGeoModel().getModelResource(items));
 
             SetAllBoneNoVisible(geoArmorRender);
-            GeoBone right =  geoArmorRender.getRightArmBone();
+            GeoBone right = geoArmorRender.getRightArmBone();
             if (right != null) {
                 right.setHidden(event.getArm() != HumanoidArm.RIGHT);
                 right.updateRotation(0, 0, 0);
                 right.updatePosition(0, 0, 0);
             }
 
-            GeoBone left =  geoArmorRender.getLeftArmBone();
+            GeoBone left = geoArmorRender.getLeftArmBone();
             if (left != null) {
                 left.setHidden(event.getArm() != HumanoidArm.LEFT);
                 left.updateRotation(0, 0, 0);
                 left.updatePosition(0, 0, 0);
             }
-            geoArmorRender.actuallyRender(poseStack, (Item) items,model,renderType,bufferSource, buffer,true,partialTick, packedLight,OverlayTexture.NO_OVERLAY, renderColor.getRed() / 255f, renderColor.getGreen() / 255f,
+            geoArmorRender.actuallyRender(poseStack, (Item) items, model, renderType, bufferSource, buffer, true, partialTick, packedLight, OverlayTexture.NO_OVERLAY, renderColor.getRed() / 255f, renderColor.getGreen() / 255f,
                     renderColor.getBlue() / 255f, renderColor.getAlpha() / 255f);
             event.setCanceled(true);
         }
@@ -95,7 +96,7 @@ public class PlayerRender {
         poseStack.popPose();
     }
 
-    private static void SetAllBoneNoVisible(GeoArmorRenderer<?> render){
+    private static void SetAllBoneNoVisible(GeoArmorRenderer<?> render) {
         try {
             for (GeoBone geoBone : Arrays.asList(render.getHeadBone()
                     , render.getBodyBone(), render.getRightLegBone()
@@ -110,18 +111,17 @@ public class PlayerRender {
     @SubscribeEvent
     public static void renderPlayerEvent(RenderPlayerEvent.Pre event) {
         if (!isGeckolib()) return;
-        if(event.getEntity() == null) return;
+        if (event.getEntity() == null) return;
         Player player = event.getEntity();
         EntityRenderDispatcher entityrenderdispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
         EntityRenderer<?> entityrenderer = entityrenderdispatcher.getRenderer(player);
-        PlayerModel<AbstractClientPlayer> playermodel = ((PlayerRenderer)entityrenderer).getModel();
+        PlayerModel<AbstractClientPlayer> playermodel = ((PlayerRenderer) entityrenderer).getModel();
         ItemStack head = player.getItemBySlot(EquipmentSlot.HEAD);
         ItemStack chest = player.getItemBySlot(EquipmentSlot.CHEST);
         ItemStack leg = player.getItemBySlot(EquipmentSlot.LEGS);
         ItemStack boot = player.getItemBySlot(EquipmentSlot.FEET);
-        if(head.getItem() instanceof GeoItem || chest.getItem() instanceof GeoItem || leg.getItem() instanceof GeoItem ||
-                boot.getItem() instanceof GeoItem)
-            if(head != ItemStack.EMPTY || chest != ItemStack.EMPTY || leg != ItemStack.EMPTY || boot != ItemStack.EMPTY){
+        if (needVisiblePlayerPart(head, player) || needVisiblePlayerPart(chest, player) || needVisiblePlayerPart(leg, player) || needVisiblePlayerPart(boot, player))
+            if (head != ItemStack.EMPTY || chest != ItemStack.EMPTY || leg != ItemStack.EMPTY || boot != ItemStack.EMPTY) {
                 playermodel.head.visible = !(head.getItem() instanceof GeoItem);
                 playermodel.hat.visible = !(head.getItem() instanceof GeoItem);
                 playermodel.body.visible = !(chest.getItem() instanceof GeoItem);
@@ -137,6 +137,10 @@ public class PlayerRender {
             }
     }
 
+    private static boolean needVisiblePlayerPart(ItemStack stack, Player player) {
+        return stack.getItem() instanceof BaseRiderArmor riderArmor && riderArmor.needInvisibility(player.level(), player, stack, riderArmor.getSlot());
+    }
+
     private static net.minecraft.client.model.Model getArmorModelHook(LivingEntity entity, ItemStack itemStack, EquipmentSlot slot, HumanoidModel model) {
         return net.minecraftforge.client.ForgeHooksClient.getArmorModel(entity, itemStack, slot, model);
     }
@@ -144,12 +148,12 @@ public class PlayerRender {
     @SubscribeEvent
     public static void renderPlayerEvent(RenderHandEvent event) {
         if (!isGeckolib()) return;
-        if(Minecraft.getInstance().player == null) return;
+        if (Minecraft.getInstance().player == null) return;
         Minecraft mc = Minecraft.getInstance();
 
         LocalPlayer player = mc.player;
         PoseStack poseStack = event.getPoseStack();
-        int packedLight =  event.getPackedLight();
+        int packedLight = event.getPackedLight();
         float partialTicks = event.getPartialTick();
         float equipProgress = event.getEquipProgress();
         float swingProgress = event.getSwingProgress();
@@ -160,7 +164,7 @@ public class PlayerRender {
 
         ItemStack chest = player.getItemBySlot(EquipmentSlot.CHEST);
 
-        if(chest.getItem() instanceof GeoItem){
+        if (chest.getItem() instanceof GeoItem) {
             poseStack.pushPose();
             if (!player.isScoping()) {
                 if (stack.isEmpty()) {
@@ -176,17 +180,17 @@ public class PlayerRender {
     }
 
 
-    public static void renderPlayerArm(PoseStack p_109347_, MultiBufferSource p_109348_, int p_109349_, float p_109350_, float p_109351_, HumanoidArm p_109352_){
+    public static void renderPlayerArm(PoseStack p_109347_, MultiBufferSource p_109348_, int p_109349_, float p_109350_, float p_109351_, HumanoidArm p_109352_) {
         boolean flag = p_109352_ != HumanoidArm.RIGHT;
         float f = flag ? 1.0F : -1.0F;
         float f1 = Mth.sqrt(p_109351_);
-        float f2 = -0.3F * Mth.sin(f1 * (float)Math.PI);
-        float f3 = 0.4F * Mth.sin(f1 * ((float)Math.PI * 2F));
-        float f4 = -0.4F * Mth.sin(p_109351_ * (float)Math.PI);
+        float f2 = -0.3F * Mth.sin(f1 * (float) Math.PI);
+        float f3 = 0.4F * Mth.sin(f1 * ((float) Math.PI * 2F));
+        float f4 = -0.4F * Mth.sin(p_109351_ * (float) Math.PI);
         p_109347_.translate(f * (f2 + 0.64000005F), f3 + -0.6F + p_109350_ * -0.6F, f4 + -0.71999997F);
         p_109347_.mulPose(Axis.YP.rotationDegrees(f * 45.0F));
-        float f5 = Mth.sin(p_109351_ * p_109351_ * (float)Math.PI);
-        float f6 = Mth.sin(f1 * (float)Math.PI);
+        float f5 = Mth.sin(p_109351_ * p_109351_ * (float) Math.PI);
+        float f6 = Mth.sin(f1 * (float) Math.PI);
         p_109347_.mulPose(Axis.YP.rotationDegrees(f * f6 * 70.0F));
         p_109347_.mulPose(Axis.ZP.rotationDegrees(f * f5 * -20.0F));
         AbstractClientPlayer abstractclientplayer = Minecraft.getInstance().player;
@@ -197,7 +201,7 @@ public class PlayerRender {
         p_109347_.mulPose(Axis.YP.rotationDegrees(f * -135.0F));
         p_109347_.translate(f * 5.6F, 0.0F, 0.0F);
 
-        PlayerRenderer playerrenderer = (PlayerRenderer)Minecraft.getInstance().getEntityRenderDispatcher().<AbstractClientPlayer>getRenderer(abstractclientplayer);
+        PlayerRenderer playerrenderer = (PlayerRenderer) Minecraft.getInstance().getEntityRenderDispatcher().<AbstractClientPlayer>getRenderer(abstractclientplayer);
         if (flag) {
             playerrenderer.renderRightHand(p_109347_, p_109348_, p_109349_, abstractclientplayer);
         } else {

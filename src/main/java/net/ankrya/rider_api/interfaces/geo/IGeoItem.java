@@ -150,10 +150,15 @@ public interface IGeoItem extends GeoItem {
      * 因为动画是一次性触发导致动画无法在关闭游戏后仍然保留<br>
      * 即关闭游戏重进之后会恢复至默认状态
      */
-    default PlayState synAnimate(AnimationState<IGeoItem> state){
-        AnimationController<IGeoItem> controller = state.getController();
-        for (String animation : getAllAnimationName())
-            controller.triggerableAnim(animation, RawAnimation.begin().thenPlayAndHold(animation));
+    default AnimationController<IGeoItem> synAnimate(String name){
+        AnimationController<IGeoItem> controller = new AnimationController<>(this, name, 0, state -> PlayState.CONTINUE);
+        for (String animationName : getAllAnimationName())
+            controller.triggerableAnim(animationName, RawAnimation.begin().thenPlay(animationName));
+        return controller;
+    }
+
+    default PlayState idle(AnimationState<IGeoItem> state) {
+        state.getController().setAnimation(RawAnimation.begin().thenLoop(getAnimation()));
         return PlayState.CONTINUE;
     }
 
@@ -197,7 +202,12 @@ public interface IGeoItem extends GeoItem {
 
     @Override
     default void registerControllers(AnimatableManager.ControllerRegistrar controllerRegistrar) {
-        controllerRegistrar.add(new AnimationController<>(this, "controller", 0, this::synAnimate));
+        if (this instanceof ArmorItem)
+            controllerRegistrar.add(new AnimationController<>(this, "controller", 0, this::predicate));
+        else {
+        controllerRegistrar.add(synAnimate("controller"));
+        controllerRegistrar.add(new AnimationController<>(this, "idle", 0, this::idle));
+        }
     }
 
     /**隐藏块（物品）*/

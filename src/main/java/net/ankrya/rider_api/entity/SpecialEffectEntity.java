@@ -115,8 +115,7 @@ public class SpecialEffectEntity extends Entity implements GeoEntity {
         this.showSet(entity, Entity::setPos);
     }
     protected void showSet(Entity entity, Entity.MoveFunction function) {
-        if(this.getOwner() != null)
-        {
+        if(this.getOwner() != null) {
             LivingEntity e = this.getOwner();
             double d0 = e.getY()-0.136;
             function.accept(entity, e.getX(), d0, e.getZ());
@@ -139,7 +138,7 @@ public class SpecialEffectEntity extends Entity implements GeoEntity {
     public void followTick(){
         LivingEntity owner = getOwner();
         if (AutoClear() && (owner == null || !owner.isAlive())) this.discard();
-        else positionSet(Entity::setPos);
+        else if (owner != null) positionSet(Entity::setPos);
     }
 
     public final void positionSet(MoveFunction function) {

@@ -17,11 +17,20 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 /**
- * 难说，感觉也就{@link JsonCreator#createSoundsFile}还行<br>
- * 用的话自己弄个main方法吧
+ * 有一个神奇的用法
+ * @see IGeoBase
  */
 public abstract class JsonCreator {
     protected abstract String id();
+
+    public static JsonCreator simply(String modid){
+        return new JsonCreator() {
+            @Override
+            public String id() {
+                return modid;
+            }
+        };
+    }
 
     /**
      * 自动创建 sounds文件<br>
@@ -85,65 +94,38 @@ public abstract class JsonCreator {
     /**
      * IGeoBase体系使用，必须实现{@link IGeoBase}
      */
-
-//    public <T extends IGeoBase> void createStartForIGeoBase(T geo) {
-//        if (geo instanceof Item) {
-//            if (geo instanceof BaseRiderArmor armor) {
-//                String armorSlot = armor.slot.getName();
-//                //JsonObject root = createGeoItemJson("geo/" + geo.path() + geo.name() + ".item", geo.path() + geo.name());
-//                JsonObject root = createItemJson(geo.path() + geo.name() + '_' + armorSlot);
-//                createStart(geo.name() + '_' + armorSlot, GatherType.ITEM, root);
-//
-//                createLangFile(GatherType.LANG.getPath(this), "item." + id() + '.' + geo.name() + '_' + armorSlot, geo.name() + '_' + armorSlot);
-//            } else if (geo instanceof BaseDriver driver) {
-//                JsonObject root = createItemJson(geo.path() + geo.name());
-//                createStart(geo.name(), GatherType.ITEM.getPath(this), root);
-//
-//                createLangFile(GatherType.LANG.getPath(this), "item." + id() + '.' + geo.name(), geo.name());
-//            } else {
-//                JsonObject root = createGeoItemJson("geo/" + geo.path() + geo.name() + ".item", geo.path() + geo.name());
-//                createStart(geo.name(), GatherType.ITEM, root);
-//
-//                createLangFile(GatherType.LANG.getPath(this), "item." + id() + '.' + geo.name(), geo.name());
-//            }
-//        } else if (geo instanceof Block) {
-//            JsonObject root = createBlockJson(geo.path() + geo.name(), "cutout");
-//            JsonObject root2 = createBlockStateJson(geo.path() + geo.name());
-//            createStart(geo.name(), GatherType.BLOCK, root);
-//            createStart(geo.name(), GatherType.BLOCKSTATE, root2);
-//
-//            createLangFile(GatherType.LANG.getPath(this), "block." + id() + '.' + geo.name(), geo.name());
-//        }
-//    }
-
-    public <T extends IGeoBase> void createStartForIGeoBase(T geo, String output) {
+    public <T extends IGeoBase> void createStartForIGeoBase(T geo, String output, boolean override) {
         if (geo instanceof Item) {
             if (geo instanceof BaseRiderArmor armor) {
                 String armorSlot = armor.slot.getName();
                 //JsonObject root = createGeoItemJson("geo/" + geo.path() + geo.name() + ".item", geo.path() + geo.name());
                 JsonObject root = createItemJson(geo.path() + geo.name() + '_' + armorSlot);
-                createStart(geo.name() + '_' + armorSlot, Path.of(output + GatherType.ITEM.resourcesPathString(this)) , root);
+                createStart(geo.name() + '_' + armorSlot, Path.of(output + GatherType.ITEM.resourcesPathString(this)) , root, override);
 
                 createLangFile(Path.of(output + GatherType.LANG.resourcesPathString(this)), "item." + id() + '.' + geo.name() + '_' + armorSlot, geo.name() + '_' + armorSlot);
             } else if (geo instanceof BaseDriver driver) {
                 JsonObject root = createItemJson(geo.path() + geo.name());
-                createStart(geo.name(), Path.of(output + GatherType.ITEM.resourcesPathString(this)), root);
+                createStart(geo.name(), Path.of(output + GatherType.ITEM.resourcesPathString(this)), root, override);
 
                 createLangFile(Path.of(output + GatherType.LANG.resourcesPathString(this)), "item." + id() + '.' + geo.name(), geo.name());
             } else {
                 JsonObject root = createGeoItemJson("geo/" + geo.path() + geo.name() + ".item", geo.path() + geo.name());
-                createStart(geo.name(), Path.of(output + GatherType.ITEM.resourcesPathString(this)), root);
+                createStart(geo.name(), Path.of(output + GatherType.ITEM.resourcesPathString(this)), root, override);
 
                 createLangFile(Path.of(output + GatherType.LANG.resourcesPathString(this)), "item." + id() + '.' + geo.name(), geo.name());
             }
         } else if (geo instanceof Block) {
             JsonObject root = createBlockJson(geo.path() + geo.name(), "cutout");
             JsonObject root2 = createBlockStateJson(geo.path() + geo.name());
-            createStart(geo.name(), Path.of(output  + GatherType.BLOCK.resourcesPathString(this)), root);
-            createStart(geo.name(), Path.of(output  + GatherType.BLOCKSTATE.resourcesPathString(this)), root2);
+            createStart(geo.name(), Path.of(output  + GatherType.BLOCK.resourcesPathString(this)), root, override);
+            createStart(geo.name(), Path.of(output  + GatherType.BLOCKSTATE.resourcesPathString(this)), root2, override);
 
             createLangFile(Path.of(output + GatherType.LANG.resourcesPathString(this)), "block." + id() + '.' + geo.name(), geo.name());
         }
+    }
+
+    public <T extends IGeoBase> void createStartForIGeoBase(T geo, String output){
+        createStartForIGeoBase(geo, output, true);
     }
 
     /**
@@ -171,6 +153,17 @@ public abstract class JsonCreator {
         } catch (IOException e) {
             RiderApi.LOGGER.error("fail to create json: {} ", name, e);
         }
+    }
+
+    public void createStart(String name, Path path, JsonObject root, boolean override){
+        if (override) createStart(name, path, root);
+        else createStartIfNo(name, path, root);
+    }
+
+    public void createStartIfNo(String name, Path path, JsonObject root){
+        path = path.resolve(name + ".json");
+        if (!Files.exists(path))
+            createStart(name, path, root);
     }
 
     public JsonObject createItemJson(String texture){
