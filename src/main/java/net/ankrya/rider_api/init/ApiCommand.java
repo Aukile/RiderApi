@@ -1,7 +1,9 @@
 package net.ankrya.rider_api.init;
 
+import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.ankrya.rider_api.RiderApi;
 import net.ankrya.rider_api.data.ModVariable;
 import net.ankrya.rider_api.data.Variables;
@@ -9,6 +11,7 @@ import net.ankrya.rider_api.help.GJ;
 import net.ankrya.rider_api.interfaces.timer.ITimer;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -32,6 +35,14 @@ public class ApiCommand {
                                 .executes(context -> timeCommend(context, ITimer.timeSlow)))
                         .then(Commands.literal("normal")
                                 .executes(context -> timeCommend(context, ITimer.timeNormal))))
+                .then(Commands.literal("timer")
+                        .then(Commands.argument("user", EntityArgument.entity())
+                                .then(Commands.literal("stop")
+                                        .executes(context -> timeUserCommend(context, ITimer.timeStop)))
+                                .then(Commands.literal("slow")
+                                        .executes(context -> timeUserCommend(context, ITimer.timeSlow)))
+                                .then(Commands.literal("normal")
+                                        .executes(context -> timeUserCommend(context, ITimer.timeNormal)))))
                 .then(Commands.literal("arrow")
                         .executes(ApiCommand::arrowCommend)
                         .then(Commands.argument("use", BoolArgumentType.bool())
@@ -43,6 +54,16 @@ public class ApiCommand {
         Level world = context.getSource().getUnsidedLevel();
         GJ.TimerControl.timerStartUp(world, (LivingEntity) getEntity(context), state);
         return 0;
+    }
+
+    private static int timeUserCommend(CommandContext<CommandSourceStack> context, int state) {
+        try {
+            Entity entity = EntityArgument.getEntity(context, "user");
+            Variables.setVariable(entity, ModVariable.TIME_STATUS, state);
+            return 0;
+        } catch (CommandSyntaxException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private static int arrowCommend(CommandContext<CommandSourceStack> context){

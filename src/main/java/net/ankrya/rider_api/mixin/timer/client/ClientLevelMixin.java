@@ -3,6 +3,7 @@ package net.ankrya.rider_api.mixin.timer.client;
 import net.ankrya.rider_api.data.ModVariable;
 import net.ankrya.rider_api.data.Variables;
 import net.ankrya.rider_api.help.GJ;
+import net.ankrya.rider_api.interfaces.timer.ITimer;
 import net.ankrya.rider_api.interfaces.timer.TimerClientLevel;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -58,7 +59,7 @@ public abstract class ClientLevelMixin extends Level implements TimerClientLevel
     public void tickNonPassengerM(Entity p_104640_,CallbackInfo ci) {
         if(this.minecraft != null){
             int time_state = Variables.getVariable(this, ModVariable.TIME_STATUS);
-            if (time_state == 1 ) {
+            if (time_state == ITimer.timeSlow) {
                 boolean speed_down = GJ.TimerControl.isSlowEntity(p_104640_);
 
                 if(speed_down) {
@@ -69,7 +70,7 @@ public abstract class ClientLevelMixin extends Level implements TimerClientLevel
                     ci.cancel();
                 }
 
-            } else if (time_state == 2) {
+            } else if (time_state == ITimer.timeStop) {
                 boolean speed_down = GJ.TimerControl.isPauseEntity(p_104640_);
 
                 if(!speed_down) {

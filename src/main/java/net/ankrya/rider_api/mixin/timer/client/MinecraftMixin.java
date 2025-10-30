@@ -177,9 +177,9 @@ public abstract class MinecraftMixin extends ReentrantBlockableEventLoop<Runnabl
             int time_state = Variables.getVariable(this.level, ModVariable.TIME_STATUS);
 
             if (this.level != null && this.player != null) {
-                if ((int) Variables.getVariable(this.level, ModVariable.TIME_STATUS) ==1)
+                if ((int) Variables.getVariable(this.level, ModVariable.TIME_STATUS) ==ITimer.timeSlow)
                     speed_down = !GJ.TimerControl.isSlowEntity(this.player);
-                else if ((int) Variables.getVariable(this.level, ModVariable.TIME_STATUS) ==2) {
+                else if ((int) Variables.getVariable(this.level, ModVariable.TIME_STATUS) ==ITimer.timeStop) {
                     speed_down = GJ.TimerControl.isPauseEntity(this.player);
                 }
             }
@@ -436,7 +436,7 @@ public abstract class MinecraftMixin extends ReentrantBlockableEventLoop<Runnabl
         }
 
         if (this.level instanceof TimerClientLevel _level){
-            if (time_Status == 1) {
+            if (time_Status == ITimer.timeSlow) {
                 _level.rider_api$tickEntitiesTimeSlow();
             }
         }

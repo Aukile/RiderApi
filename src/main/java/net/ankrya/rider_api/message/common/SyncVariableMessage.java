@@ -53,12 +53,16 @@ public class SyncVariableMessage implements CustomPacketPayload {
         if (context.flow() == PacketFlow.CLIENTBOUND && message.variables != null) {
             if (message.id >= 0){
                 Player player = context.player();
-                context.enqueueWork(() -> player.getData(Variables.VARIABLES)
-                        .deserializeNBT(player.registryAccess(), message.variables
-                                .serializeNBT(player.registryAccess()))).exceptionally(e -> {
-                    context.connection().disconnect(Component.literal(e.getMessage()));
-                    return null;
-                });
+                Level level = player.level();
+                Entity entity = level.getEntity(message.id);
+                if (entity != null){
+                    context.enqueueWork(() -> entity.getData(Variables.VARIABLES)
+                            .deserializeNBT(entity.registryAccess(), message.variables
+                                    .serializeNBT(entity.registryAccess()))).exceptionally(e -> {
+                        context.connection().disconnect(Component.literal(e.getMessage()));
+                        return null;
+                    });
+                }
             } else {
                 try (Level level = context.player().level()) {
                     context.enqueueWork(() -> level.getData(Variables.VARIABLES)
