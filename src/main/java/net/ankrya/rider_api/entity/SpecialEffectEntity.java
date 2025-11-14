@@ -2,17 +2,23 @@ package net.ankrya.rider_api.entity;
 
 import net.ankrya.rider_api.RiderApi;
 import net.ankrya.rider_api.init.ApiRegister;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.event.EventHooks;
+import org.jetbrains.annotations.Nullable;
 import software.bernie.geckolib.animatable.GeoEntity;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.animation.*;
@@ -93,7 +99,9 @@ public class SpecialEffectEntity extends Entity implements GeoEntity {
         tag.putString("modid", this.entityData.get(MODID));
         tag.putString("texture", this.entityData.get(TEXTURE));
         tag.putString("model", this.entityData.get(MODEL));
-        tag.putUUID("owner_uuid", this.entityData.get(OWNER_UUID).get());
+        if (this.entityData.get(OWNER_UUID).isPresent()) {
+            tag.putUUID("owner_uuid", this.entityData.get(OWNER_UUID).get());
+        }
     }
 
     @Override
@@ -106,6 +114,21 @@ public class SpecialEffectEntity extends Entity implements GeoEntity {
         if (!EventHooks.fireEntityTickPre(this).isCanceled()) {
             this.tick();
             EventHooks.fireEntityTickPost(this);
+        }
+        if (this.isPassenger()) {
+            this.showSet(this);
+        }
+    }
+
+    public void showSet(Entity entity) {
+        this.showSet(entity, Entity::setPos);
+    }
+
+    protected void showSet(Entity entity, Entity.MoveFunction function) {
+        if(this.getOwner() != null) {
+            LivingEntity e = this.getOwner();
+            double d0 = e.getY()-0.136;
+            function.accept(entity, e.getX(), d0, e.getZ());
         }
     }
 
@@ -125,7 +148,7 @@ public class SpecialEffectEntity extends Entity implements GeoEntity {
     public void followTick(){
         LivingEntity owner = getOwner();
         if (AutoClear() && (owner == null || !owner.isAlive())) this.discard();
-        else positionSet(Entity::setPos);
+        else if (owner != null) positionSet(Entity::setPos);
     }
 
     public final void positionSet(MoveFunction function) {
@@ -135,12 +158,10 @@ public class SpecialEffectEntity extends Entity implements GeoEntity {
     }
 
     private PlayState predicate(AnimationState<SpecialEffectEntity> state) {
-        String animation = this.animationName();
-        if (animation.equals("null"))
-            state.getController().setAnimation(RawAnimation.begin().then("idle", Animation.LoopType.LOOP));
-        else {
-            state.getController().setAnimation(RawAnimation.begin().then(animation, Animation.LoopType.LOOP));
-        }
+        AnimationController<SpecialEffectEntity> controller = state.getController();
+        controller.setAnimation(RawAnimation.begin().then(animationName(), Animation.LoopType.PLAY_ONCE));
+        if(controller.getAnimationState() == AnimationController.State.STOPPED)
+            state.resetCurrentAnimation();
         return PlayState.CONTINUE;
     }
 
@@ -225,5 +246,10 @@ public class SpecialEffectEntity extends Entity implements GeoEntity {
     /**是否自动识别 “_glowmask” 后缀发光，启用后必须保证贴图存在*/
     public boolean autoGlow(){
         return false;
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    public RenderType getRenderType(ResourceLocation texture, @Nullable MultiBufferSource bufferSource, float partialTick) {
+        return null;
     }
 }

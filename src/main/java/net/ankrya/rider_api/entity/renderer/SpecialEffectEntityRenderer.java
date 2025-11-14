@@ -110,4 +110,11 @@ public class SpecialEffectEntityRenderer<T extends SpecialEffectEntity> extends 
     public long getInstanceId(T animatable) {
         return animatable.getUUID().hashCode();
     }
+
+    @Override
+    public @Nullable RenderType getRenderType(T animatable, ResourceLocation texture, @Nullable MultiBufferSource bufferSource, float partialTick) {
+        RenderType renderType = animatable.getRenderType(texture, bufferSource, partialTick);
+        if (renderType != null) return renderType;
+        return super.getRenderType(animatable, texture, bufferSource, partialTick);
+    }
 }

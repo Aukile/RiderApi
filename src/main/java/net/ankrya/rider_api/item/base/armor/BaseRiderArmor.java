@@ -52,7 +52,7 @@ public abstract class BaseRiderArmor extends BaseRiderArmorBase {
         if (entity instanceof Player player){
             ItemStack carried = player.containerMenu.getCarried();
             if (carried.is(stack.getItem())) {
-                player.containerMenu.setCarried(ItemStack.EMPTY);
+                player.getInventory().clearOrCountMatchingItems(stackInt -> stackInt == stack, 1, player.getInventory());
                 return;
             }
         }
@@ -61,9 +61,10 @@ public abstract class BaseRiderArmor extends BaseRiderArmorBase {
                 if (needInvisibility(level, livingEntity, stack, slot)) livingEntity.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, 10, 0, false, false));
                 for (Map.Entry<Holder<MobEffect>, Integer> entry : getEffects(level, livingEntity, stack, slot).entrySet()){
                     if (entry.getValue() > 0){
-                        if (entry.getKey().value() == MobEffects.NIGHT_VISION)
+                        if (entry.getKey() == MobEffects.NIGHT_VISION)
                             livingEntity.addEffect(new MobEffectInstance(entry.getKey(), 240, entry.getValue() - 1, false, false));
-                        else if (!livingEntity.hasEffect(entry.getKey())) livingEntity.addEffect(new MobEffectInstance(entry.getKey(), 25, entry.getValue() - 1, false, false));
+                        else if (entry.getKey() == MobEffects.REGENERATION && !livingEntity.hasEffect(entry.getKey())) livingEntity.addEffect(new MobEffectInstance(entry.getKey(), 25, entry.getValue() - 1, false, false));
+                        else livingEntity.addEffect(new MobEffectInstance(entry.getKey(), 25, entry.getValue() - 1, false, false));
                     }
                 }
             } else {
@@ -84,6 +85,7 @@ public abstract class BaseRiderArmor extends BaseRiderArmorBase {
         }
     }
 
+    /// 设置自动隐藏玩家部位
     public boolean needInvisibility(@NotNull Level level, LivingEntity livingEntity, @NotNull ItemStack stack, EquipmentSlot slot) {
         return true;
     }

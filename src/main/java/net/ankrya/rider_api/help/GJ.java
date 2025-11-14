@@ -28,8 +28,10 @@ import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleType;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.game.ClientboundSetEquipmentPacket;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -47,6 +49,9 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.crafting.*;
+import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
@@ -199,6 +204,16 @@ public abstract class GJ {
             return false;
         }
 
+        public static void canFly(Player player, boolean canFly){
+            if (!canFly) {
+                GameType gameType = ToPlayer.getEntityGameType(player);
+                if (!(gameType != null && gameType != GameType.CREATIVE && gameType != GameType.SPECTATOR))
+                    return;
+            }
+            player.getAbilities().mayfly = canFly;
+            player.onUpdateAbilities();
+        }
+
         public static GameType getEntityGameType(Entity entity) {
             if (entity instanceof ServerPlayer serverPlayer) {
                 return serverPlayer.gameMode.getGameModeForPlayer();
@@ -223,13 +238,24 @@ public abstract class GJ {
          * @param dead 特效实体时长（刻）
          * @param ride 是否骑乘玩家
          */
-        public static SpecialEffectEntity createSpecialEffect(Level level, Player player, String modid, String modelPath, String texturePath, int dead, boolean ride) {
+        public static SpecialEffectEntity createSpecialEffect(Level level, Player player,String modid, String modelPath, String texturePath, int dead, boolean ride) {
             SpecialEffectEntity effect = new SpecialEffectEntity(level, player, modid, modelPath, texturePath, dead);
-            if (ride) effect.startRiding(player);
-            effect.setPos(player.getX(), player.getY(), player.getZ());
+            if (player != null){
+                if (ride) effect.startRiding(player);
+                effect.setPos(player.getX(), player.getY(), player.getZ());
+            }
             level.addFreshEntity(effect);
             return effect;
         }
+
+        public static SpecialEffectEntity createSpecialEffect(Level level, Vec3 pos,String modid, String modelPath, String texturePath, int dead) {
+            SpecialEffectEntity effect = new SpecialEffectEntity(level, null, modid, modelPath, texturePath, dead);
+            effect.setAutoClear(false);
+            effect.setPos(pos.x(), pos.y(), pos.z());
+            level.addFreshEntity(effect);
+            return effect;
+        }
+
         public static void fixHealth(LivingEntity entity) {
             if (entity.getMaxHealth() < entity.getHealth())
                 entity.setHealth(entity.getMaxHealth());
@@ -295,6 +321,10 @@ public abstract class GJ {
             player.getInventory().clearOrCountMatchingItems(condition, count, player.getInventory());
         }
 
+        public static void removeItemEnchantment(Level world, ItemStack stack, ResourceKey<Enchantment> enchantment){
+            EnchantmentHelper.updateEnchantments(stack, mutableEnchantments -> mutableEnchantments.removeIf(enchantmentHolder -> enchantmentHolder.is(world.registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(enchantment))));
+        }
+
         public <I extends RecipeInput, T extends Recipe<I>> ItemStack getResult(Level level, RecipeType<T> type, Map<Integer, ItemStack> stacks) {
             RecipeManager manager = level.getRecipeManager();
             List<RecipeHolder<T>> recipes = manager.getAllRecipesFor(type);
@@ -345,11 +375,27 @@ public abstract class GJ {
             serverLevel.sendParticles(pType, pos.x, pos.y, pos.z, pParticleCount, move.x, move.y, move.z, pSpeed);
         }
 
-        public static void ExplosionTo(Entity source, Entity target, Level world, int amount) {
+        public static void explosionTo(Entity source, Entity target, Level world, int amount) {
             ToEntity.playExplosionSound(target);
             target.hurt(new DamageSource(world.holderOrThrow(DamageTypes.PLAYER_EXPLOSION), source), amount);
             if (world instanceof ServerLevel level)
                 level.sendParticles(ParticleTypes.EXPLOSION, (target.getX()), (target.getY() + 1), (target.getZ()), 2, 0.1, 0.1, 0.1, 0.1);
+        }
+
+        public static void explosionTo(Entity source, Vec3 vec3, int range, Level world, int amount){
+            explosionTo(source, vec3, range, world, amount, true);
+        }
+
+        public static void explosionTo(Entity source, Vec3 vec3, int range, Level world, int amount, boolean centerExplosion){
+            List<LivingEntity> livingEntities = ToWorld.rangeFind(world, vec3, range);
+            for (LivingEntity target : livingEntities){
+                if (target != source){
+                    ToEntity.playExplosionSound(target);
+                    target.hurt(world.damageSources().explosion(target, source), amount);
+                }
+            }
+            if (centerExplosion && world instanceof ServerLevel level)
+                level.sendParticles(ParticleTypes.EXPLOSION, vec3.x, vec3.y, vec3.z, 2, 0.1, 0.1, 0.1, 0.1);
         }
     }
 

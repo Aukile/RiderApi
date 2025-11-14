@@ -103,4 +103,9 @@ public class SpecialArrowRenderer<T extends SpecialArrow> extends GeoEntityRende
     public long getInstanceId(T animatable) {
         return animatable.getUUID().hashCode();
     }
+
+    @Override
+    public void renderCubesOfBone(PoseStack poseStack, GeoBone bone, VertexConsumer buffer, int packedLight, int packedOverlay, int colour) {
+        super.renderCubesOfBone(poseStack, bone, buffer, packedLight, packedOverlay, colour);
+    }
 }
