@@ -141,7 +141,11 @@ public abstract class GJ {
         }
 
         public static List<LivingEntity> rangeFind(Level level, Vec3 center, int radius) {
-            return level.getEntitiesOfClass(LivingEntity.class, new AABB(center, center)
+            return rangeFind(LivingEntity.class, level, center, radius);
+        }
+
+        public static <T extends Entity> List<T> rangeFind(Class<T> clazz, Level level, Vec3 center, int radius) {
+            return level.getEntitiesOfClass(clazz, new AABB(center, center)
                             .inflate(radius / 2d), e -> true).stream()
                     .sorted(Comparator
                             .comparingDouble(livingEntity ->
@@ -150,8 +154,22 @@ public abstract class GJ {
         }
     }
 
-    public static boolean isFront(Entity entity, Entity target, float width) {
-        return (target.getX() - entity.getX()) * entity.getLookAngle().x >= 0 && (target.getZ() - entity.getZ()) * entity.getLookAngle().z >= width;
+//    public static boolean isFront(Entity entity, Entity target, float width) {
+//        return (target.getX() - entity.getX()) * entity.getLookAngle().x >= 0 && (target.getZ() - entity.getZ()) * entity.getLookAngle().z >= width;
+//    }
+
+    public static boolean isFront(Entity entity, Entity target, float angleThreshold){
+        Vec3 lookVec = entity.getLookAngle().normalize();
+
+        Vec3 toTargetVec = new Vec3(
+                target.getX() - entity.getX(),
+                target.getY() - entity.getY(),
+                target.getZ() - entity.getZ()
+        ).normalize();
+
+        double dotProduct = lookVec.dot(toTargetVec);
+
+        return Math.acos(dotProduct) <= Math.toRadians(angleThreshold);
     }
 
     public static List<LivingEntity> rangeFind(Entity entity, double radius) {
