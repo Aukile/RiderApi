@@ -35,7 +35,7 @@ public abstract class BaseGeoSword extends SwordItem implements IGeoItem {
      * @return 创建Tier
      */
     public static Tier createTier(int uses, float speed, float attackDamage, int level, int enchantmentValue, Ingredient repairIngredient){
-        return createTier(uses, speed, attackDamage, level, enchantmentValue, repairIngredient, null);
+        return createTier(uses, speed, attackDamage, level, enchantmentValue, repairIngredient, BlockTags.INCORRECT_FOR_DIAMOND_TOOL);
     }
 
     public static Tier createTier(int uses, float speed, float attackDamage, int level, int enchantmentValue, Ingredient repairIngredient, TagKey<Block> tag){
@@ -57,7 +57,7 @@ public abstract class BaseGeoSword extends SwordItem implements IGeoItem {
 
             @Override
             public @NotNull TagKey<Block> getIncorrectBlocksForDrops() {
-                return BlockTags.INCORRECT_FOR_DIAMOND_TOOL;
+                return tag;
             }
 
             @Override

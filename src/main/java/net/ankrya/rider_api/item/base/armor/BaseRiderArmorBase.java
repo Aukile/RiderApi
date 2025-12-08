@@ -21,6 +21,7 @@ import java.util.function.Consumer;
  */
 public abstract class BaseRiderArmorBase extends BaseGeoArmor {
     protected Map<EquipmentSlot, Class<? extends BaseRiderArmorBase>> armorClass = Map.of(EquipmentSlot.HEAD, BaseRiderArmor.class, EquipmentSlot.CHEST, BaseRiderArmor.class, EquipmentSlot.LEGS, BaseDriver.class, EquipmentSlot.FEET, BaseRiderArmor.class);
+
     public BaseRiderArmorBase(Holder<ArmorMaterial> material, Type type, Properties properties) {
         super(material, type, properties);
     }
@@ -46,21 +47,21 @@ public abstract class BaseRiderArmorBase extends BaseGeoArmor {
         return new EquipmentSlot[]{EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET};
     }
 
-    public static Class<?> slotToClass(LivingEntity entity, EquipmentSlot slot){
+    public static Class<?> slotToClass(LivingEntity entity, EquipmentSlot slot) {
         return entity.getItemBySlot(slot).getItem().getClass();
     }
 
-    public boolean armorEquip(LivingEntity entity, EquipmentSlot slot){
+    public boolean armorEquip(LivingEntity entity, EquipmentSlot slot) {
         boolean equip = true;
         if (getArmorClass().containsKey(slot))
             equip = getArmorClass().get(slot).isAssignableFrom(slotToClass(entity, slot));
         return equip;
     }
 
-    public boolean allArmorEquip(LivingEntity entity){
+    public boolean allArmorEquip(LivingEntity entity) {
         boolean equip = true;
-        for (EquipmentSlot slot : getAllSlots()){
-            if (!armorEquip(entity, slot)){
+        for (EquipmentSlot slot : getAllSlots()) {
+            if (!armorEquip(entity, slot)) {
                 equip = false;
                 break;
             }
@@ -68,11 +69,11 @@ public abstract class BaseRiderArmorBase extends BaseGeoArmor {
         return equip;
     }
 
-    public static boolean isAllEquip(LivingEntity entity, ItemStack stack){
+    public static boolean isAllEquip(LivingEntity entity, ItemStack stack) {
         return stack.getItem() instanceof BaseRiderArmorBase armor && armor.allArmorEquip(entity);
     }
 
-    public static boolean isAllEquip(LivingEntity entity){
+    public static boolean isAllEquip(LivingEntity entity) {
         return isAllEquip(entity, entity.getItemBySlot(EquipmentSlot.LEGS));
     }
 

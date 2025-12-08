@@ -40,7 +40,10 @@ public interface INMessage {
         for (int type : types) valueInt = creatMassageNumber(valueInt, type, time++);
         buf.writeInt(valueInt);
 
-        for (int type : types) writeFromType(buf, type, valueList.get(types.indexOf(type)));
+        for(int i = 0; i < types.size(); ++i) {
+            int type = types.get(i);
+            writeFromType(buf, type, valueList.get(i));
+        }
     }
 
     /**自动解析的协助方法，请勿调用*/
