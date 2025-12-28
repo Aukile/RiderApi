@@ -1,5 +1,6 @@
 package net.ankrya.rider_api.interfaces;
 
+import net.ankrya.rider_api.interfaces.geo.IGeoItem;
 import net.minecraft.resources.ResourceLocation;
 
 /**
@@ -78,7 +79,7 @@ import net.minecraft.resources.ResourceLocation;
  * }
  * }</pre>
  */
-public interface IGeoBase {
+public interface IGeoBase extends IGeoItem {
 
     String modid();
     String path();
@@ -102,5 +103,20 @@ public interface IGeoBase {
 
     default ResourceLocation modDisplay(){
         return modLocation("geo/" + path() + name() + ".item");
+    }
+
+    @Override
+    default ResourceLocation getModel(){
+        return modGeo();
+    }
+
+    @Override
+    default ResourceLocation getAnimationFile() {
+        return modAnimations();
+    }
+
+    @Override
+    default ResourceLocation getTexture(){
+        return modItemTextures();
     }
 }

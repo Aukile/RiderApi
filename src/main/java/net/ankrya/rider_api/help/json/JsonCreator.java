@@ -161,8 +161,8 @@ public abstract class JsonCreator {
     }
 
     public void createStartIfNo(String name, Path path, JsonObject root){
-        path = path.resolve(name + ".json");
-        if (!Files.exists(path))
+        Path allPath = path.resolve(name + ".json");
+        if (!Files.exists(allPath))
             createStart(name, path, root);
     }
 
