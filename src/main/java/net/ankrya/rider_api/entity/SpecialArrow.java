@@ -11,6 +11,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.NotNull;
@@ -51,7 +52,7 @@ public class SpecialArrow extends AbstractArrow implements GeoEntity {
     }
 
     public SpecialArrow(Level level, LivingEntity livingEntity, String modid, String model, String texture, String animation){
-        this(level, livingEntity, modid, model, texture, animation, ItemStack.EMPTY, ItemStack.EMPTY);
+        this(level, livingEntity, modid, model, texture, animation, Items.ARROW.getDefaultInstance(), null);
     }
 
     @Override
@@ -150,7 +151,7 @@ public class SpecialArrow extends AbstractArrow implements GeoEntity {
     }
 
     /**旧版*/
-    public static AbstractArrow shoot(AbstractArrow arrow, double vx, double vy, double vz, float power, double damage, int knockback, float scattering){
+    public static AbstractArrow toShoot(AbstractArrow arrow, double vx, double vy, double vz, float power, double damage, int knockback, float scattering){
         Level world = arrow.level();
         arrow.shoot(vx, vy, vz, power, scattering);
         arrow.setSilent(true);
@@ -162,9 +163,9 @@ public class SpecialArrow extends AbstractArrow implements GeoEntity {
         return arrow;
     }
 
-    public static AbstractArrow shoot(AbstractArrow specialArrow, LivingEntity entity, float power, double damage, int knockback, float scattering) {
+    public static AbstractArrow toShoot(AbstractArrow specialArrow, LivingEntity entity, float power, double damage, int knockback, float scattering) {
         GJ.ToEntity.turnTo(specialArrow, entity);
-        return shoot(specialArrow, entity.getViewVector(1).x, entity.getViewVector(1).y, entity.getViewVector(1).z, power, damage, knockback, scattering);
+        return toShoot(specialArrow, entity.getViewVector(1).x, entity.getViewVector(1).y, entity.getViewVector(1).z, power, damage, knockback, scattering);
     }
 
     @Override

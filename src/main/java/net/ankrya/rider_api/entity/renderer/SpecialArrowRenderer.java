@@ -47,20 +47,19 @@ public class SpecialArrowRenderer<T extends SpecialArrow> extends GeoEntityRende
         this.dispatchedMat = poseStack.last().pose();
 
         poseStack.pushPose();
-        poseStack.mulPose(Axis.YP.rotationDegrees(Mth.lerp(partialTick, animatable.yRotO, animatable.getYRot()) +180F));
-        poseStack.mulPose(Axis.XP.rotationDegrees(Mth.lerp(partialTick, animatable.xRotO, animatable.getXRot()) +270f));
-        poseStack.translate(0.0D, -0.5D, 0.6D);
+        poseStack.mulPose(Axis.YP.rotationDegrees(Mth.lerp(partialTick, animatable.yRotO, animatable.getYRot())));
+        poseStack.mulPose(Axis.XP.rotationDegrees(Mth.lerp(partialTick, animatable.xRotO, animatable.getXRot())));
 
         AnimationState<T> predicate = new AnimationState<>(animatable, 0, 0, partialTick, false);
 
         ResourceLocation textureResource = this.modelProvider.getTextureResource(animatable, this);
         modelProvider.setCustomAnimations(animatable, getInstanceId(animatable), predicate);
         RenderSystem.setShaderTexture(0, textureResource);
-        poseStack.translate(0, -0.01f, 0);
+
         Color renderColor = getRenderColor(animatable, partialTick, packedLight);
 
         if (renderType != null){
-            actuallyRender(poseStack, animatable, model, renderType, bufferSource, buffer, false, partialTick, packedLight, OverlayTexture.NO_OVERLAY, renderColor.argbInt());
+            super.actuallyRender(poseStack, animatable, model, renderType, bufferSource, buffer, false, partialTick, packedLight, OverlayTexture.NO_OVERLAY, renderColor.argbInt());
             getRenderLayers().forEach(layer -> {
                 if (animatable.autoGlow() || (!animatable.autoGlow() && layer != this.glowLayer))
                     layer.render(poseStack, animatable, model, renderType, bufferSource, buffer, partialTick, packedLight, getPackedOverlay(animatable, 0.0f, partialTick));
