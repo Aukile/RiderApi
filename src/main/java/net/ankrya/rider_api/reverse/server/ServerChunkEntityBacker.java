@@ -31,15 +31,12 @@ public class ServerChunkEntityBacker implements IBacker {
 	
 	@Override
 	public void back() {
-		try {
-			Entity entity = entClass.getConstructor(EntityType.class, Level.class).newInstance(type, level);
-			int id = entity.getId();
-			entity.load(tag);
-			entity.setId(id);
+		Entity entity = EntityType.loadEntityRecursive(tag, level, (loadedEntity) -> loadedEntity);
+		if (entity != null) {
+			entity.absMoveTo(tag.getDouble("PosX"), tag.getDouble("PosY"), tag.getDouble("PosZ"));
 			level.addFreshEntity(entity);
-		} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
-				| NoSuchMethodException | SecurityException e) {
-			e.printStackTrace();
+		} else {
+			EntityType.create(tag, level).ifPresent(level::addFreshEntity);
 		}
 	}
 

@@ -15,30 +15,34 @@ public class ServerChunkBlockBacker implements IBacker {
 	public final ChunkAccess chunk;
 	public final ServerLevel level;
 	public final BlockPos pos;
-	public final Block block;
-	private final DataComponentMap tag;
+	public final BlockState blockState;
+	private final CompoundTag tag;
 	
 	public ServerChunkBlockBacker(ServerLevel sl, ChunkAccess chunk, BlockPos pos) {
 		this.level = sl;
 		this.chunk = chunk;
 		this.pos = pos;
-		BlockState state = sl.getBlockState(pos);
-		this.block = state.getBlock();
-		if (state.hasBlockEntity()) {
-			BlockEntity be = chunk.getBlockEntity(pos);
-			tag = be != null ? be.components() : DataComponentMap.EMPTY;
+		this.blockState = sl.getBlockState(pos);
+		if (blockState.hasBlockEntity()) {
+			BlockEntity blockEntity = chunk.getBlockEntity(pos);
+			if (blockEntity != null) {
+				CompoundTag savedTag = blockEntity.saveCustomAndMetadata(sl.registryAccess());
+				this.tag = savedTag.isEmpty() ? null : savedTag;
+			} else {
+				this.tag = null;
+			}
 		} else {
-			tag = null;
+			this.tag = null;
 		}
 	}
 	
 	@Override
 	public void back() {
-		level.setBlock(pos, block.defaultBlockState(), 4);
+		level.setBlock(pos, blockState, 4);
 		if (tag != null) {
 			BlockEntity blockEntity = level.getBlockEntity(pos);
 			if (blockEntity != null) {
-				blockEntity.setComponents(tag);
+				blockEntity.loadWithComponents(tag, level.registryAccess());
 			}
 		}
 	}
