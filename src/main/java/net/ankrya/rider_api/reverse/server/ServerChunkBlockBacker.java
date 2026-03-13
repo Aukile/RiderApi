@@ -1,5 +1,6 @@
 package net.ankrya.rider_api.reverse.server;
 
+import net.ankrya.rider_api.help.GJ;
 import net.ankrya.rider_api.reverse.common.IBacker;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponentMap;
@@ -38,7 +39,7 @@ public class ServerChunkBlockBacker implements IBacker {
 	
 	@Override
 	public void back() {
-		level.setBlock(pos, blockState, 4);
+		GJ.ToWorld.setBlock(level, pos, blockState);
 		if (tag != null) {
 			BlockEntity blockEntity = level.getBlockEntity(pos);
 			if (blockEntity != null) {

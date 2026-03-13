@@ -1,8 +1,10 @@
 package net.ankrya.rider_api.reverse.common;
 
+import net.ankrya.rider_api.help.GJ;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -19,15 +21,15 @@ public class ChunkBlockBacker implements IBacker {
 	public final BlockState blockState;
 	private final CompoundTag tag;
 	
-	public ChunkBlockBacker(Level serverLevel, ChunkAccess chunk, BlockPos pos) {
-		this.level = serverLevel;
+	public ChunkBlockBacker(Level level, ChunkAccess chunk, BlockPos pos) {
+		this.level = level;
 		this.chunk = chunk;
 		this.pos = pos;
-		this.blockState = serverLevel.getBlockState(pos);
+		this.blockState = level.getBlockState(pos);
 		if (blockState.hasBlockEntity()) {
 			BlockEntity blockEntity = chunk.getBlockEntity(pos);
 			if (blockEntity != null) {
-				CompoundTag savedTag = blockEntity.saveCustomAndMetadata(serverLevel.registryAccess());
+				CompoundTag savedTag = blockEntity.saveCustomAndMetadata(level.registryAccess());
 				this.tag = savedTag.isEmpty() ? null : savedTag;
 			} else {
 				this.tag = null;
@@ -39,7 +41,11 @@ public class ChunkBlockBacker implements IBacker {
 	
 	@Override
 	public void back() {
-		level.setBlock(pos, blockState, 4);
+		if (level instanceof ServerLevel serverLevel){
+			GJ.ToWorld.setBlock(serverLevel, pos, blockState, null);
+		} else {
+			level.setBlock(pos, blockState, 3);
+		}
 		if (tag != null) {
 			BlockEntity blockEntity = level.getBlockEntity(pos);
             if (blockEntity != null) {

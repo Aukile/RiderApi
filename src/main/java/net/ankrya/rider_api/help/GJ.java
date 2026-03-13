@@ -21,6 +21,7 @@ import net.ankrya.rider_api.message.ex_message.StopLoopSound;
 import net.minecraft.client.CameraType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.PlayerInfo;
+import net.minecraft.commands.arguments.blocks.BlockInput;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
 import net.minecraft.core.component.DataComponents;
@@ -37,12 +38,14 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.Clearable;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.item.Item;
@@ -54,6 +57,9 @@ import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.fml.loading.FMLLoader;
@@ -145,6 +151,10 @@ public abstract class GJ {
             return rangeFind(LivingEntity.class, level, center, radius);
         }
 
+        public static List<Mob> rangeFindMob(Level level, Vec3 center, int radius) {
+            return rangeFind(Mob.class, level, center, radius);
+        }
+
         public static <T extends Entity> List<T> rangeFind(Class<T> clazz, Level level, Vec3 center, int radius) {
             return level.getEntitiesOfClass(clazz, new AABB(center, center)
                             .inflate(radius / 2d), e -> true).stream()
@@ -152,6 +162,19 @@ public abstract class GJ {
                             .comparingDouble(livingEntity ->
                                     livingEntity.distanceToSqr(center)))
                     .toList();
+        }
+
+        public static void setBlock(ServerLevel serverlevel, BlockPos blockPos, BlockState state, HashSet<Property<?>> properties) {
+            BlockInput blockInput = new BlockInput(state, properties, null);
+            BlockEntity blockentity = serverlevel.getBlockEntity(blockPos);
+            Clearable.tryClear(blockentity);
+            if (blockInput.place(serverlevel, blockPos, 2)) {
+                serverlevel.blockUpdated(blockPos, blockInput.getState().getBlock());
+            }
+        }
+
+        public static void setBlock(ServerLevel serverlevel, BlockPos blockPos, BlockState blockState) {
+            setBlock(serverlevel, blockPos, blockState, new HashSet<>());
         }
     }
 
