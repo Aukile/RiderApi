@@ -114,21 +114,16 @@ public class RibbonParticleData extends AdvancedParticleData {
         buffer.writeInt(this.length);
     }
 
-    public static Codec<RibbonParticleData> CODEC_RIBBON(ParticleType<RibbonParticleData> particleType) {
-        return RecordCodecBuilder.create((codecBuilder) -> codecBuilder.group(Codec.DOUBLE.fieldOf("scale").forGetter(AdvancedParticleData::getScale), Codec.DOUBLE.fieldOf("r").forGetter(AdvancedParticleData::getRed), Codec.DOUBLE.fieldOf("g").forGetter(AdvancedParticleData::getGreen), Codec.DOUBLE.fieldOf("b").forGetter(AdvancedParticleData::getBlue), Codec.DOUBLE.fieldOf("a").forGetter(AdvancedParticleData::getAlpha), Codec.DOUBLE.fieldOf("drag").forGetter(AdvancedParticleData::getAirDrag), Codec.DOUBLE.fieldOf("duration").forGetter(AdvancedParticleData::getDuration), Codec.BOOL.fieldOf("emissive").forGetter(AdvancedParticleData::isEmissive), Codec.INT.fieldOf("length").forGetter(RibbonParticleData::getLength)).apply(codecBuilder, (scale, r, g, b, a, drag, duration, emissive, length) -> new RibbonParticleData(particleType, new ParticleRotation.FaceCamera(0.0F), scale, r, g, b, a, drag, duration, emissive, length, new ParticleComponent[0])));
-    }
+//    public static Codec<RibbonParticleData> CODEC_RIBBON(ParticleType<RibbonParticleData> particleType) {
+//        return RecordCodecBuilder.create((codecBuilder) -> codecBuilder.group(Codec.DOUBLE.fieldOf("scale").forGetter(AdvancedParticleData::getScale), Codec.DOUBLE.fieldOf("r").forGetter(AdvancedParticleData::getRed), Codec.DOUBLE.fieldOf("g").forGetter(AdvancedParticleData::getGreen), Codec.DOUBLE.fieldOf("b").forGetter(AdvancedParticleData::getBlue), Codec.DOUBLE.fieldOf("a").forGetter(AdvancedParticleData::getAlpha), Codec.DOUBLE.fieldOf("drag").forGetter(AdvancedParticleData::getAirDrag), Codec.DOUBLE.fieldOf("duration").forGetter(AdvancedParticleData::getDuration), Codec.BOOL.fieldOf("emissive").forGetter(AdvancedParticleData::isEmissive), Codec.INT.fieldOf("length").forGetter(RibbonParticleData::getLength)).apply(codecBuilder, (scale, r, g, b, a, drag, duration, emissive, length) -> new RibbonParticleData(particleType, new ParticleRotation.FaceCamera(0.0F), scale, r, g, b, a, drag, duration, emissive, length, new ParticleComponent[0])));
+//    }
 
-    @SuppressWarnings("unchecked")
-    public static ParticleType<RibbonParticleData> getRibbonParticleType() {
-        return (ParticleType<RibbonParticleData>) ApiRegister.get().getRegisterObject("ribbon_particle", ParticleType.class).get();
-    }
-
-    public static ParticleType<RibbonParticleData> createRibbonParticleType() {
-        return new ParticleType<>(false, RibbonParticleData.DESERIALIZER) {
-            @Override
-            public @NotNull Codec<RibbonParticleData> codec() {
-                return CODEC_RIBBON(this);
-            }
-        };
-    }
+//    public static ParticleType<RibbonParticleData> createRibbonParticleType() {
+//        return new ParticleType<>(false, RibbonParticleData.DESERIALIZER) {
+//            @Override
+//            public @NotNull Codec<RibbonParticleData> codec() {
+//                return CODEC_RIBBON(this);
+//            }
+//        };
+//    }
 }

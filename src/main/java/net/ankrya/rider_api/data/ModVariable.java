@@ -14,6 +14,8 @@ public class ModVariable {
     public static final String DISABLE_MOVE = "disable_move";
     /**弹射物形式丢弃模式，boolean类型*/
     public static final String ARROW_DROP_MODE = "arrow_drop_mode";
+    /**禁止盔甲栏，boolean类型*/
+    public static final String DISABLE_ARMOR_SLOT = "disable_armor_slot";
 
 
     /**
@@ -26,6 +28,7 @@ public class ModVariable {
         variables.registerVariable(boolean.class, DISABLE_CONTROL, false, false);
         variables.registerVariable(boolean.class, DISABLE_MOVE, false, false);
         variables.registerVariable(boolean.class, ARROW_DROP_MODE, false, false);
+        variables.registerVariable(boolean.class, DISABLE_ARMOR_SLOT, false, false);
         MinecraftForge.EVENT_BUS.post(new DataInitEvent(variables));
     }
 }

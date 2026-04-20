@@ -7,6 +7,8 @@ import net.ankrya.rider_api.data.ModVariable;
 import net.ankrya.rider_api.data.Variables;
 import net.ankrya.rider_api.help.GJ;
 import net.ankrya.rider_api.interfaces.timer.ITimer;
+import net.ankrya.rider_api.message.MessageCreater;
+import net.ankrya.rider_api.message.MessageLoader;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.server.level.ServerLevel;
@@ -36,7 +38,13 @@ public class ApiCommand {
                         .executes(ApiCommand::arrowCommend)
                         .then(Commands.argument("use", BoolArgumentType.bool())
                                 .executes(context -> arrowCommend(context, BoolArgumentType.getBool(context, "use"))))
-                ));
+                )
+                .then(Commands.literal("test").executes(ApiCommand::testCommend))
+        );
+    }
+
+    private static int testCommend(CommandContext<CommandSourceStack> commandSourceStackCommandContext) {
+        return 0;
     }
 
     private static int timeCommend(CommandContext<CommandSourceStack> context, int state) {

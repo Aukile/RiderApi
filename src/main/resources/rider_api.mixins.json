@@ -8,6 +8,7 @@
     "ItemMixin",
     "ItemStackMixin",
     "arrow.ServerPlayerMixin",
+    "player.InventoryMenuSlotMixin",
     "timer.ServerLevelMixin",
     "timer.ServerPauseTick$EndDragonFightMixin",
     "timer.ServerPauseTick$LevelChunkMixin",

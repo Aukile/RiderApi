@@ -119,22 +119,22 @@ public class AdvancedParticleData implements ParticleOptions {
         this.components = components;
     }
 
-    public static ParticleType<AdvancedParticleData> createParticleType() {
-        return new ParticleType<>(false, AdvancedParticleData.DESERIALIZER) {
-            @Override
-            public Codec<AdvancedParticleData> codec() {
-                return CODEC(this);
-            }
-        };
-    }
+//    public static ParticleType<AdvancedParticleData> createParticleType() {
+//        return new ParticleType<>(false, AdvancedParticleData.DESERIALIZER) {
+//            @Override
+//            public Codec<AdvancedParticleData> codec() {
+//                return CODEC(this);
+//            }
+//        };
+//    }
 
-    public static Codec<AdvancedParticleData> CODEC(ParticleType<AdvancedParticleData> particleType) {
-        return RecordCodecBuilder.create((codecBuilder) -> {
-            return codecBuilder.group(Codec.DOUBLE.fieldOf("scale").forGetter(AdvancedParticleData::getScale), Codec.DOUBLE.fieldOf("r").forGetter(AdvancedParticleData::getRed), Codec.DOUBLE.fieldOf("g").forGetter(AdvancedParticleData::getGreen), Codec.DOUBLE.fieldOf("b").forGetter(AdvancedParticleData::getBlue), Codec.DOUBLE.fieldOf("a").forGetter(AdvancedParticleData::getAlpha), Codec.DOUBLE.fieldOf("drag").forGetter(AdvancedParticleData::getAirDrag), Codec.DOUBLE.fieldOf("duration").forGetter(AdvancedParticleData::getDuration), Codec.BOOL.fieldOf("emissive").forGetter(AdvancedParticleData::isEmissive), Codec.BOOL.fieldOf("canCollide").forGetter(AdvancedParticleData::getCanCollide)).apply(codecBuilder, (scale, r, g, b, a, drag, duration, emissive, canCollide) -> {
-                return new AdvancedParticleData(particleType, new ParticleRotation.FaceCamera(0.0F), scale, r, g, b, a, drag, duration, emissive, canCollide, new ParticleComponent[0]);
-            });
-        });
-    }
+//    public static Codec<AdvancedParticleData> CODEC(ParticleType<AdvancedParticleData> particleType) {
+//        return RecordCodecBuilder.create((codecBuilder) -> {
+//            return codecBuilder.group(Codec.DOUBLE.fieldOf("scale").forGetter(AdvancedParticleData::getScale), Codec.DOUBLE.fieldOf("r").forGetter(AdvancedParticleData::getRed), Codec.DOUBLE.fieldOf("g").forGetter(AdvancedParticleData::getGreen), Codec.DOUBLE.fieldOf("b").forGetter(AdvancedParticleData::getBlue), Codec.DOUBLE.fieldOf("a").forGetter(AdvancedParticleData::getAlpha), Codec.DOUBLE.fieldOf("drag").forGetter(AdvancedParticleData::getAirDrag), Codec.DOUBLE.fieldOf("duration").forGetter(AdvancedParticleData::getDuration), Codec.BOOL.fieldOf("emissive").forGetter(AdvancedParticleData::isEmissive), Codec.BOOL.fieldOf("canCollide").forGetter(AdvancedParticleData::getCanCollide)).apply(codecBuilder, (scale, r, g, b, a, drag, duration, emissive, canCollide) -> {
+//                return new AdvancedParticleData(particleType, new ParticleRotation.FaceCamera(0.0F), scale, r, g, b, a, drag, duration, emissive, canCollide, new ParticleComponent[0]);
+//            });
+//        });
+//    }
 
     public String writeToString() {
         float faceCameraAngle = 0.0F;
@@ -305,10 +305,5 @@ public class AdvancedParticleData implements ParticleOptions {
                 type, rotation, scale, red, green, blue, alpha,
                 airDrag, duration, emissive, canCollide
         );
-    }
-
-    @SuppressWarnings("unchecked")
-    public static ParticleType<AdvancedParticleData> getParticleType() {
-        return (ParticleType<AdvancedParticleData>) ApiRegister.get().getRegisterObject("advanced_particle", ParticleType.class).get();
     }
 }

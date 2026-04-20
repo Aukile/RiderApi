@@ -8,6 +8,8 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -25,24 +27,29 @@ public abstract class EntityMixin implements ISoundMap {
     @Shadow public abstract boolean isAlive();
 
     @Unique
+    @OnlyIn(Dist.CLIENT)
     public Map<ResourceLocation, LoopSound> rider$loopSounds = new HashMap<>();
 
     @Override
+    @OnlyIn(Dist.CLIENT)
     public Map<ResourceLocation, LoopSound> rider$getLoopSounds() {
         return rider$loopSounds;
     }
 
     @Override
+    @OnlyIn(Dist.CLIENT)
     public boolean rider$containsLoopSound(ResourceLocation id) {
         return rider$loopSounds.containsKey(id);
     }
 
     @Override
+    @OnlyIn(Dist.CLIENT)
     public void rider$addLoopSound(ResourceLocation id, LoopSound sound) {
         rider$loopSounds.put(id, sound);
     }
 
     @Override
+    @OnlyIn(Dist.CLIENT)
     public void rider$removeLoopSound(ResourceLocation id) {
         if (rider$loopSounds.containsKey(id)){
             rider$loopSounds.get(id).stopSound();
