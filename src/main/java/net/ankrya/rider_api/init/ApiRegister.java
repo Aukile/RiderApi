@@ -1,6 +1,7 @@
 package net.ankrya.rider_api.init;
 
 import net.ankrya.rider_api.RiderApi;
+import net.ankrya.rider_api.client.particle.ParticleTypeFactory;
 import net.ankrya.rider_api.client.particle.base.advanced.AdvancedParticleData;
 import net.ankrya.rider_api.client.particle.base.advanced.RibbonParticleData;
 import net.ankrya.rider_api.entity.ArrowSource;
@@ -42,8 +43,8 @@ public class ApiRegister extends ClassRegister{
         Class<?> particleTypeClass = ParticleType.class;
         apiRegister.registerSource(particleTypeClass);
         apiRegister.register(particleTypeClass, "case_spread", () -> new SimpleParticleType(false));
-        apiRegister.register(particleTypeClass, "advanced_particle", AdvancedParticleData::createParticleType);
-        apiRegister.register(particleTypeClass, "ribbon_particle", RibbonParticleData::createRibbonParticleType);
+        apiRegister.register(particleTypeClass, "advanced_particle", ParticleTypeFactory::createParticleType);
+        apiRegister.register(particleTypeClass, "ribbon_particle", ParticleTypeFactory::createRibbonParticleType);
 
         Class<?> typeClass = DataComponentType.class;
         apiRegister.registerSource(typeClass, "data_component_type");

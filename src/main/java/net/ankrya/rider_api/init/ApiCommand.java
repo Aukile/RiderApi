@@ -47,7 +47,16 @@ public class ApiCommand {
                         .executes(ApiCommand::arrowCommend)
                         .then(Commands.argument("use", BoolArgumentType.bool())
                                 .executes(context -> arrowCommend(context, BoolArgumentType.getBool(context, "use"))))
+                )
+                .then(Commands.literal("armorLock")
+                        .then(Commands.argument("use", BoolArgumentType.bool())
+                                .executes(context -> armorLockCommend(context, BoolArgumentType.getBool(context, "use"))))
                 ));
+    }
+
+    private static int armorLockCommend(CommandContext<CommandSourceStack> context, boolean use) {
+        Variables.setVariable(getEntity(context), ModVariable.DISABLE_ARMOR_SLOT, use);
+        return 0;
     }
 
     private static int timeCommend(CommandContext<CommandSourceStack> context, int state) {

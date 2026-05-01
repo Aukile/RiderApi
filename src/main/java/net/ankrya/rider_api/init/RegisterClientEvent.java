@@ -1,6 +1,7 @@
 package net.ankrya.rider_api.init;
 
 import net.ankrya.rider_api.RiderApi;
+import net.ankrya.rider_api.client.particle.ParticleTypeFactory;
 import net.ankrya.rider_api.client.particle.base.AdvancedParticleBase;
 import net.ankrya.rider_api.client.particle.base.ParticleRibbon;
 import net.ankrya.rider_api.client.particle.base.SpreadBase;
@@ -40,8 +41,8 @@ public class RegisterClientEvent {
     @SubscribeEvent
     @SuppressWarnings("unchecked")
     public static void registerParticles(RegisterParticleProvidersEvent event) {
-        event.registerSpriteSet(AdvancedParticleData.getParticleType(), AdvancedParticleBase.Factory::new);
-        event.registerSpriteSet(RibbonParticleData.getRibbonParticleType(), ParticleRibbon.Factory::new);
+        event.registerSpriteSet(ParticleTypeFactory.getParticleType(), AdvancedParticleBase.Factory::new);
+        event.registerSpriteSet(ParticleTypeFactory.getRibbonParticleType(), ParticleRibbon.Factory::new);
         event.registerSpriteSet(ApiRegister.get().getRegisterObject("case_spread", ParticleType.class).get(), SpreadBase.CaseSpreadProvider::new);
     }
 

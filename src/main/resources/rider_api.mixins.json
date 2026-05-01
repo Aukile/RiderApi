@@ -4,6 +4,7 @@
   "package": "net.ankrya.rider_api.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
+    "ArmorPickSlotMixin",
     "EntityMixin",
     "ItemStackMixin",
     "arrow.ServerPlayerMixin",

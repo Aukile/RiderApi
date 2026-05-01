@@ -41,9 +41,7 @@ import software.bernie.geckolib.loading.object.BakedAnimations;
 import software.bernie.geckolib.renderer.GeoRenderer;
 import software.bernie.geckolib.renderer.layer.GeoRenderLayer;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Consumer;
 
 /**懒狗化GeoItem~*/
@@ -241,5 +239,13 @@ public interface IGeoItem extends GeoItem {
     ResourceLocation getTexture();
 
     @OnlyIn(Dist.CLIENT)
-    default <T extends Item & IGeoItem> void withRender(BaseGeoItemRenderer<T> tBaseGeoItemRenderer, PoseStack poseStack, T animatable, BakedGeoModel model, @Nullable RenderType renderType, MultiBufferSource bufferSource, @Nullable VertexConsumer buffer, boolean isReRender, float partialTick, int packedLight, int packedOverlay, int colour){}
+    default <T extends Item & IGeoItem> void withRender(BaseGeoItemRenderer<T> renderer, PoseStack poseStack, T animatable, BakedGeoModel model, @Nullable RenderType renderType, MultiBufferSource bufferSource, @Nullable VertexConsumer buffer, boolean isReRender, float partialTick, int packedLight, int packedOverlay, int colour){}
+
+    default <T extends Item & IGeoItem> Set<String> lightBones(BaseGeoItemRenderer<T> renderer){
+        return new HashSet<>();
+    }
+
+    default <T extends Item & IGeoItem> Map<String, RenderType> boneByRenderType(BaseGeoItemRenderer<T> renderer){
+        return new HashMap<>();
+    }
 }

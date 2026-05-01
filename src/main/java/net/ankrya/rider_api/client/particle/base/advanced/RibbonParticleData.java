@@ -29,31 +29,6 @@ public class RibbonParticleData extends AdvancedParticleData {
         this.length = length;
     }
 
-    public static ParticleType<RibbonParticleData> createRibbonParticleType() {
-        return new ParticleType<>(false) {
-            @Override
-            public @NotNull StreamCodec<? super RegistryFriendlyByteBuf, RibbonParticleData> streamCodec() {
-                return RibbonParticleData.deserializerRibbon(this);
-            }
-
-            @Override
-            public @NotNull MapCodec<RibbonParticleData> codec() {
-                return codecRibbon(this);
-            }
-        };
-    }
-
-    private static StreamCodec<RegistryFriendlyByteBuf, RibbonParticleData> deserializerRibbon(ParticleType<RibbonParticleData> type){
-        return StreamCodec.of(RibbonParticleData::writeToNetwork, buf -> RibbonParticleData.readRibbonFromNetwork(buf, type));
-    }
-
-    private static RibbonParticleData readRibbonFromNetwork(RegistryFriendlyByteBuf buffer, ParticleType<RibbonParticleData> type) {
-        AdvancedParticleData advancedParticleData = AdvancedParticleData.readFromNetwork(buffer,null);
-
-        int length = buffer.readInt();
-        return new RibbonParticleData(type, advancedParticleData, length);
-    }
-
     private static void writeToNetwork(FriendlyByteBuf buffer, RibbonParticleData data) {
         AdvancedParticleData.writeToNetwork(buffer, data);
         buffer.writeInt(data.getLength());
@@ -67,30 +42,5 @@ public class RibbonParticleData extends AdvancedParticleData {
     @OnlyIn(Dist.CLIENT)
     public int getLength() {
         return this.length;
-    }
-
-    private static MapCodec<RibbonParticleData> codecRibbon(ParticleType<RibbonParticleData> particleType) {
-        return RecordCodecBuilder.mapCodec((instance) -> instance.group(
-                Codec.DOUBLE.fieldOf("scale").forGetter(AdvancedParticleData::getScale),
-                Codec.DOUBLE.fieldOf("r").forGetter(AdvancedParticleData::getRed),
-                Codec.DOUBLE.fieldOf("g").forGetter(AdvancedParticleData::getGreen),
-                Codec.DOUBLE.fieldOf("b").forGetter(AdvancedParticleData::getBlue),
-                Codec.DOUBLE.fieldOf("a").forGetter(AdvancedParticleData::getAlpha),
-                Codec.DOUBLE.fieldOf("drag").forGetter(AdvancedParticleData::getAirDrag),
-                Codec.DOUBLE.fieldOf("duration").forGetter(AdvancedParticleData::getDuration),
-                Codec.BOOL.fieldOf("emissive").forGetter(AdvancedParticleData::isEmissive),
-                Codec.INT.fieldOf("length").forGetter(RibbonParticleData::getLength)
-        ).apply(instance, (scale, r, g, b, a, drag, duration, emissive, length) -> new RibbonParticleData(
-                particleType,
-                new ParticleRotation.FaceCamera(0.0F),
-                scale, r, g, b, a,
-                drag, duration, emissive, length,
-                new ParticleComponent[0]
-        )));
-    }
-
-    @SuppressWarnings("unchecked")
-    public static ParticleType<RibbonParticleData> getRibbonParticleType() {
-        return (ParticleType<RibbonParticleData>) ApiRegister.get().getRegisterObject("ribbon_particle", ParticleType.class).get();
     }
 }

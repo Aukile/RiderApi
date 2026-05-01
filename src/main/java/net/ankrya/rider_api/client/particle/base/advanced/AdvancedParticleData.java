@@ -50,23 +50,6 @@ public class AdvancedParticleData implements ParticleOptions {
         this.components = components;
     }
 
-    public static ParticleType<AdvancedParticleData> createParticleType() {
-        return new ParticleType<>(false) {
-            @Override
-            public @NotNull StreamCodec<? super RegistryFriendlyByteBuf, AdvancedParticleData> streamCodec() {
-                return AdvancedParticleData.deserializer(this);
-            }
-
-            @Override
-            public @NotNull MapCodec<AdvancedParticleData> codec() {
-                return AdvancedParticleData.codec(this);
-            }
-        };
-    }
-    private static StreamCodec<RegistryFriendlyByteBuf, AdvancedParticleData> deserializer(ParticleType<AdvancedParticleData> type){
-        return StreamCodec.of(AdvancedParticleData::writeToNetwork, buf -> AdvancedParticleData.readFromNetwork(buf, type));
-    }
-
     public static void writeToNetwork(FriendlyByteBuf buffer, AdvancedParticleData data) {
         float faceCameraAngle = 0.0F;
         float yaw = 0.0F;
@@ -207,38 +190,5 @@ public class AdvancedParticleData implements ParticleOptions {
                 drag, duration, emissive, canCollide,
                 new ParticleComponent[0]
         )));
-    }
-
-    public static AdvancedParticleData readFromNetwork(RegistryFriendlyByteBuf buffer, ParticleType<AdvancedParticleData> type) {
-        float airDrag = buffer.readFloat();
-        float red = buffer.readFloat();
-        float green = buffer.readFloat();
-        float blue = buffer.readFloat();
-        float alpha = buffer.readFloat();
-        String rotationMode = buffer.readUtf();
-        float scale = buffer.readFloat();
-        float yaw = buffer.readFloat();
-        float pitch = buffer.readFloat();
-        float roll = buffer.readFloat();
-        boolean emissive = buffer.readBoolean();
-        float duration = buffer.readFloat();
-        float faceCameraAngle = buffer.readFloat();
-        boolean canCollide = buffer.readBoolean();
-
-        ParticleRotation rotation = switch (rotationMode) {
-            case "face_camera" -> new ParticleRotation.FaceCamera(faceCameraAngle);
-            case "euler" -> new ParticleRotation.EulerAngles(yaw, pitch, roll);
-            default -> new ParticleRotation.OrientVector(new Vec3(yaw, pitch, roll));
-        };
-
-        return new AdvancedParticleData(
-                type, rotation, scale, red, green, blue, alpha,
-                airDrag, duration, emissive, canCollide
-        );
-    }
-
-    @SuppressWarnings("unchecked")
-    public static ParticleType<AdvancedParticleData> getParticleType() {
-        return (ParticleType<AdvancedParticleData>) ApiRegister.get().getRegisterObject("advanced_particle", ParticleType.class).get();
     }
 }

@@ -1,5 +1,6 @@
 package net.ankrya.rider_api.item;
 
+import net.ankrya.rider_api.client.particle.ParticleTypeFactory;
 import net.ankrya.rider_api.client.particle.base.SpreadBase;
 import net.ankrya.rider_api.client.particle.base.advanced.AdvancedParticleData;
 import net.ankrya.rider_api.client.particle.base.advanced.RibbonParticleData;
@@ -34,7 +35,7 @@ public class LogoItem extends Item {
 //            GJ.ToParticle.particle(serverLevel, (SimpleParticleType) SpreadBase.CaseSpreadProvider.getCaseSpread(), player.position().add(0, 3, 0), new Vec3(0, 0, 0), 0.5, 1);
 //        }
 //        new WaitToRun(()-> GJ.AdvancedParticleHelper.addCaseRobbin(level
-//                , AdvancedParticleData.getParticleType(), RibbonParticleData.getRibbonParticleType()
+//                , AdvancedParticleData.getParticleType(), ParticleTypeFactory.getRibbonParticleType()
 //                , player.position().add(0, 3, 0), 2, 4, 15, 15
 //                , 40, 0.12f, 1, -3), 10);
         if (GJ.TimerControl.getWorldTime(level) == ITimer.timeNormal)
