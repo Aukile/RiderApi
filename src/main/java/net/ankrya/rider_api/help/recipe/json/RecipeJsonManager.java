@@ -92,7 +92,7 @@ public class RecipeJsonManager {
                     return new Ingredient.ItemValue(recipeItem.asItemStack(true));
                 }
 
-                ResourceLocation resourcelocation = ResourceLocation.parse(input);
+                ResourceLocation resourcelocation = new ResourceLocation(input);
                 TagKey<Item> tagkey = TagKey.create(Registries.ITEM, resourcelocation);
                 return new Ingredient.TagValue(tagkey);
             } else {
@@ -128,7 +128,7 @@ public class RecipeJsonManager {
                              RecipeItem[] result, Map<String, JsonObject> extra) {
 
         public ResourceLocation getId(){
-            return ResourceLocation.fromNamespaceAndPath(type().getNamespace(), id());
+            return new ResourceLocation(type().getNamespace(), id());
         }
 
         public RecipeItem[] getRecipeIngredientsWithOutput() {
@@ -148,7 +148,7 @@ public class RecipeJsonManager {
 //                AIR_ITEM, item2, AIR_ITEM,
 //                AIR_ITEM, item, item,
 //        };
-//        RecipeData recipe = new RecipeData("test", ResourceLocation.fromNamespaceAndPath("minecraft", "crafting_shapeless"),
+//        RecipeData recipe = new RecipeData("test", new ResourceLocation("minecraft", "crafting_shapeless"),
 //                Pattern.empty(), ingredients, new RecipeItem[]{result,result2}, Map.of( "extra", extra)
 //        );
 //        saveRecipe(recipe);

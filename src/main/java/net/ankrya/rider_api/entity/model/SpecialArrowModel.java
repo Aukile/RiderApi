@@ -7,16 +7,16 @@ import software.bernie.geckolib.model.GeoModel;
 public class SpecialArrowModel<T extends SpecialArrow> extends GeoModel<T> {
     @Override
     public ResourceLocation getModelResource(T animatable) {
-        return ResourceLocation.fromNamespaceAndPath(animatable.getModid(), "geo/"+ animatable.getModel()+".geo.json");
+        return new ResourceLocation(animatable.getModid(), "geo/"+ animatable.getModel()+".geo.json");
     }
 
     @Override
     public ResourceLocation getTextureResource(T animatable) {
-        return ResourceLocation.fromNamespaceAndPath(animatable.getModid(), "textures/"+ animatable.getTexture()+".png");
+        return new ResourceLocation(animatable.getModid(), "textures/"+ animatable.getTexture()+".png");
     }
 
     @Override
     public ResourceLocation getAnimationResource(T animatable) {
-        return ResourceLocation.fromNamespaceAndPath(animatable.getModid(), "animations/"+ animatable.getModel()+".animation.json");
+        return new ResourceLocation(animatable.getModid(), "animations/"+ animatable.getModel()+".animation.json");
     }
 }

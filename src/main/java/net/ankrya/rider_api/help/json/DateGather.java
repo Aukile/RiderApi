@@ -54,7 +54,7 @@ public abstract class DateGather {
                 register().registerObjects.get(clazz).forEach((name, registerObject) -> {
                     Object object = registerObject.get();
                     if (object instanceof IGeoBase item){
-                        basicItem(ResourceLocation.fromNamespaceAndPath(item.modid(), item.path() + item.name()));
+                        basicItem(new ResourceLocation(item.modid(), item.path() + item.name()));
                     } else if (object instanceof Item item) {
                         basicItem(item);
                     }
@@ -80,10 +80,10 @@ public abstract class DateGather {
                 register().getRegisterObjects(clazz).forEach((name, registerObject) -> {
                     Object object = registerObject.get();
                     if (object instanceof IGeoBase item){
-                        cubeAll(item.name(), ResourceLocation.fromNamespaceAndPath(item.modid(), item.path() + item.name()));
+                        cubeAll(item.name(), new ResourceLocation(item.modid(), item.path() + item.name()));
                     } else if (object instanceof Block block) {
                         String blockName = block.getName().getString();
-                        cubeAll(blockName, ResourceLocation.fromNamespaceAndPath(modid, blockName));
+                        cubeAll(blockName, new ResourceLocation(modid, blockName));
                     }
                 });
             }

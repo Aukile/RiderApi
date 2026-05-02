@@ -86,7 +86,7 @@ public interface IGeoBase extends IGeoItem {
     String name();
 
     default ResourceLocation modLocation(String path){
-        return ResourceLocation.fromNamespaceAndPath(modid(), path);
+        return new ResourceLocation(modid(), path);
     }
 
     default ResourceLocation modItemTextures(){

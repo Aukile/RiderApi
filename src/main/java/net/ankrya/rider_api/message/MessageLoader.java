@@ -34,7 +34,7 @@ public class MessageLoader {
     public int id = 0;
 
     private MessageLoader(String modid) {
-        instance = NetworkRegistry.newSimpleChannel(ResourceLocation.fromNamespaceAndPath(modid, "main")
+        instance = NetworkRegistry.newSimpleChannel(new ResourceLocation(modid, "main")
                 , () -> PROTOCOL_VERSION, PROTOCOL_VERSION::equals, PROTOCOL_VERSION::equals);
     }
 

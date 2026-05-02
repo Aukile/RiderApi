@@ -60,7 +60,7 @@ public class PlayerAnimationMessage implements INMessage {
 
     @OnlyIn(Dist.CLIENT)
     public static void playerAnimation(AbstractClientPlayer player, ResourceLocation dataId, String animation, boolean showRightArm, boolean showLeftArm, boolean override){
-        KeyframeAnimationPlayer keyframeAnimationPlayer = new KeyframeAnimationPlayer(Objects.requireNonNull(PlayerAnimationRegistry.getAnimation(ResourceLocation.parse(animation))))
+        KeyframeAnimationPlayer keyframeAnimationPlayer = new KeyframeAnimationPlayer(Objects.requireNonNull(PlayerAnimationRegistry.getAnimation(new ResourceLocation(animation))))
                 .setFirstPersonMode(FirstPersonMode.THIRD_PERSON_MODEL).setFirstPersonConfiguration(new FirstPersonConfiguration().setShowRightArm(showRightArm).setShowLeftItem(showLeftArm));
         PlayerAnimator.instance().playAnimation(player, dataId, keyframeAnimationPlayer, override);
     }

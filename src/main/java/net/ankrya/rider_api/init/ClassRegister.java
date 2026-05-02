@@ -34,7 +34,7 @@ public abstract class ClassRegister {
     }
 
     private <T> DeferredRegister<T> registerSource(Class<T> type, String registerName, String modid) {
-        ResourceKey<Registry<T>> key = ResourceKey.createRegistryKey(ResourceLocation.parse(registerName));
+        ResourceKey<Registry<T>> key = ResourceKey.createRegistryKey(new ResourceLocation(registerName));
         return registerSource(type, key, modid());
     }
 
@@ -136,7 +136,7 @@ public abstract class ClassRegister {
 
     public void soundRegister(String... names){
         for (String name : names)
-              register(SoundEvent.class, name, () -> SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath(modid(), name)));
+              register(SoundEvent.class, name, () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(modid(), name)));
     }
 
     /**是否已注册类型*/

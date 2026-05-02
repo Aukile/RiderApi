@@ -45,7 +45,7 @@ public class ProduceRecipeManager {
     }
 
     public ProduceRecipeManager addShapedLessRecipe(RecipeJsonManager.RecipeData recipeData) {
-        ResourceLocation id = ResourceLocation.fromNamespaceAndPath(recipeData.type().getNamespace(), recipeData.id());
+        ResourceLocation id = new ResourceLocation(recipeData.type().getNamespace(), recipeData.id());
         RecipeJsonManager.RecipeItem[] ingredients = recipeData.getRecipeIngredientsWithOutput();
         NonNullList<Ingredient> inputs = NonNullList.withSize(ingredients.length, Ingredient.EMPTY);
         for (int i = 0; i < ingredients.length; i++)

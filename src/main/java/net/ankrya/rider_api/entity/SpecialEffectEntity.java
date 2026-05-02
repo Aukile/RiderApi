@@ -29,6 +29,8 @@ public class SpecialEffectEntity extends Entity implements GeoEntity {
     public static final EntityDataAccessor<String> MODEL = SynchedEntityData.defineId(SpecialEffectEntity.class, EntityDataSerializers.STRING);
     public static final EntityDataAccessor<String> MODID = SynchedEntityData.defineId(SpecialEffectEntity.class, EntityDataSerializers.STRING);
     public static final EntityDataAccessor<Optional<UUID>> OWNER_UUID = SynchedEntityData.defineId(SpecialEffectEntity.class, EntityDataSerializers.OPTIONAL_UUID);
+    public static final EntityDataAccessor<Boolean> GLOW = SynchedEntityData.defineId(SpecialEffectEntity.class, EntityDataSerializers.BOOLEAN);
+
     public static final String NAME = "special_effect";
     public Player owner;
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
@@ -36,7 +38,11 @@ public class SpecialEffectEntity extends Entity implements GeoEntity {
         this(type, level, null, null, null, null, 0);
     }
 
-    public SpecialEffectEntity(EntityType<?> type, Level level, Player owner, String modid, String model, String texture, int dead) {
+    public SpecialEffectEntity(EntityType<?> type, Level level, Player owner, String modid, String model, String texture, int dead){
+        this(type, level, owner, modid, model, texture, dead, false);
+    }
+
+    public SpecialEffectEntity(EntityType<?> type, Level level, Player owner, String modid, String model, String texture, int dead, boolean glow) {
         super(type, level);
         if (modid != null)this.entityData.set(MODID, modid);
         if (dead != 0) this.entityData.set(DEAD_TIME, dead);
@@ -46,6 +52,7 @@ public class SpecialEffectEntity extends Entity implements GeoEntity {
         if (owner != null){
             this.setOwnerUUID(owner.getUUID());
         }
+        this.entityData.set(GLOW, glow);
     }
 
     public SpecialEffectEntity(Level level, Player owner, String modid, String model, String texture, int dead){
@@ -61,6 +68,7 @@ public class SpecialEffectEntity extends Entity implements GeoEntity {
         this.entityData.define(MODEL, "null");
         this.entityData.define(MODID, RiderApi.MODID);
         this.entityData.define(OWNER_UUID, Optional.empty());
+        this.entityData.define(GLOW, false);
     }
 
     @Override
@@ -82,6 +90,8 @@ public class SpecialEffectEntity extends Entity implements GeoEntity {
             this.entityData.set(OWNER_UUID, Optional.of(tag.getUUID("owner_uuid")));
             this.owner = null;
         }
+        if (tag.contains("glow"))
+            this.entityData.set(GLOW, tag.getBoolean("glow"));
     }
 
     @Override
@@ -93,6 +103,7 @@ public class SpecialEffectEntity extends Entity implements GeoEntity {
         tag.putString("model", this.entityData.get(MODEL));
         tag.putString("modid", this.entityData.get(MODID));
         tag.putUUID("owner_uuid", this.entityData.get(OWNER_UUID).get());
+        tag.putBoolean("glow", this.entityData.get(GLOW));
     }
 
     @Override
@@ -247,6 +258,6 @@ public class SpecialEffectEntity extends Entity implements GeoEntity {
 
     /**是否自动识别 “_glowmask” 后缀发光，启用后必须保证贴图存在*/
     public boolean autoGlow(){
-        return false;
+        return this.entityData.get(GLOW);
     }
 }

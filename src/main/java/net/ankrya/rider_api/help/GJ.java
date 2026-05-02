@@ -88,7 +88,7 @@ public abstract class GJ {
         /**Api模组自用的*/
         @ApiStatus.Internal
         public static ResourceLocation getApiResource(String path){
-            return ResourceLocation.fromNamespaceAndPath(RiderApi.MODID, path);
+            return new ResourceLocation(RiderApi.MODID, path);
         }
 
         @OnlyIn(Dist.CLIENT)
@@ -136,7 +136,7 @@ public abstract class GJ {
     /**世界相关*/
     public static abstract class ToWorld {
         public static void playMSound(Level level, double x, double y, double z, String name) {
-            SoundEvent soundEvent = BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse(name));
+            SoundEvent soundEvent = BuiltInRegistries.SOUND_EVENT.get(new ResourceLocation(name));
             if (soundEvent != null) {
                 if (!level.isClientSide()) {
                     level.playSound(null, BlockPos.containing(x, y, z), soundEvent, SoundSource.NEUTRAL, 1, 1);

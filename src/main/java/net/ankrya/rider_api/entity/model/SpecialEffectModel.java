@@ -7,16 +7,16 @@ import software.bernie.geckolib.model.GeoModel;
 public class SpecialEffectModel<T extends SpecialEffectEntity> extends GeoModel<T> {
     @Override
     public ResourceLocation getModelResource(SpecialEffectEntity specialEffectEntity) {
-        return ResourceLocation.fromNamespaceAndPath(specialEffectEntity.modid(), "geo/"+ specialEffectEntity.model()+".geo.json");
+        return new ResourceLocation(specialEffectEntity.modid(), "geo/"+ specialEffectEntity.model()+".geo.json");
     }
 
     @Override
     public ResourceLocation getTextureResource(SpecialEffectEntity specialEffectEntity) {
-        return ResourceLocation.fromNamespaceAndPath(specialEffectEntity.modid(), "textures/"+ specialEffectEntity.texture()+".png");
+        return new ResourceLocation(specialEffectEntity.modid(), "textures/"+ specialEffectEntity.texture()+".png");
     }
 
     @Override
     public ResourceLocation getAnimationResource(SpecialEffectEntity specialEffectEntity) {
-        return ResourceLocation.fromNamespaceAndPath(specialEffectEntity.modid(), "animations/"+ specialEffectEntity.model()+".animation.json");
+        return new ResourceLocation(specialEffectEntity.modid(), "animations/"+ specialEffectEntity.model()+".animation.json");
     }
 }

@@ -48,7 +48,7 @@ public final class ModShaders {
     public static final RenderType COSMIC_RENDER_TYPE = RenderType.create(RiderApi.MODID + ":cosmic", DefaultVertexFormat.BLOCK, VertexFormat.Mode.QUADS, 2097152, true, false, RenderType.CompositeState.builder().setShaderState(new RenderStateShard.ShaderStateShard(() -> cosmicShader)).setDepthTestState(RenderStateShardAccess.EQUAL_DEPTH_TEST).setLightmapState(RenderStateShardAccess.LIGHT_MAP).setTransparencyState(RenderStateShardAccess.TRANSLUCENT_TRANSPARENCY).setTextureState(RenderStateShardAccess.BLOCK_SHEET_MIPPED).createCompositeState(true));
 
     public static void onRegisterShaders(RegisterShadersEvent event) {
-        event.registerShader(CCShaderInstance.create(event.getResourceProvider(), ResourceLocation.fromNamespaceAndPath(RiderApi.MODID, "cosmic"), DefaultVertexFormat.BLOCK), e -> {
+        event.registerShader(CCShaderInstance.create(event.getResourceProvider(), new ResourceLocation(RiderApi.MODID, "cosmic"), DefaultVertexFormat.BLOCK), e -> {
             cosmicShader = (CCShaderInstance) e;
             cosmicTime = Objects.requireNonNull(cosmicShader.getUniform("time"));
             cosmicYaw = Objects.requireNonNull(cosmicShader.getUniform("yaw"));
