@@ -37,10 +37,17 @@ public class ApiCommand {
                 .then(Commands.literal("arrow")
                         .executes(ApiCommand::arrowCommend)
                         .then(Commands.argument("use", BoolArgumentType.bool())
-                                .executes(context -> arrowCommend(context, BoolArgumentType.getBool(context, "use"))))
-                )
+                                .executes(context -> arrowCommend(context, BoolArgumentType.getBool(context, "use")))))
+                .then(Commands.literal("armorLock")
+                        .then(Commands.argument("open", BoolArgumentType.bool())
+                        .executes(ApiCommand::armorLockCommend)))
                 .then(Commands.literal("test").executes(ApiCommand::testCommend))
         );
+    }
+
+    private static int armorLockCommend(CommandContext<CommandSourceStack> commandSourceStackCommandContext) {
+        Variables.setVariable(getEntity(commandSourceStackCommandContext), ModVariable.DISABLE_ARMOR_SLOT, BoolArgumentType.getBool(commandSourceStackCommandContext, "open"));
+        return 0;
     }
 
     private static int testCommend(CommandContext<CommandSourceStack> commandSourceStackCommandContext) {
