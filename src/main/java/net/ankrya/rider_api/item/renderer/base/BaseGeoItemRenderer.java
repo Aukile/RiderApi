@@ -36,20 +36,20 @@ public class BaseGeoItemRenderer<T extends Item & IGeoItem> extends GeoItemRende
 
     @Override
     public void renderCubesOfBone(PoseStack poseStack, GeoBone bone, VertexConsumer buffer, int packedLight, int packedOverlay, int colour) {
+        String name = bone.getName();
+        MultiBufferSource.BufferSource source = Minecraft.getInstance().renderBuffers().bufferSource();
         if (getGeoItemInterface() != null && !getGeoItemInterface().lightBones(this).isEmpty()){
-            MultiBufferSource.BufferSource source = Minecraft.getInstance().renderBuffers().bufferSource();
-            String name = bone.getName();
             if (getGeoItemInterface().lightBones(this).contains(name)) {
                 VertexConsumer newBuffer = source.getBuffer(RenderType.beaconBeam(getTextureLocation(animatable), true));
                 super.renderCubesOfBone(poseStack, bone, newBuffer, packedLight, packedOverlay, colour);
-            } else if (!getGeoItemInterface().boneByRenderType(this).isEmpty() && getGeoItemInterface().boneByRenderType(this).containsKey(name)) {
-                for (Map.Entry<String, RenderType> entry : getGeoItemInterface().boneByRenderType(this).entrySet()){
-                    if (name.equals(entry.getKey())) {
-                        VertexConsumer newBuffer = source.getBuffer(entry.getValue());
-                        super.renderCubesOfBone(poseStack, bone, newBuffer, packedLight, packedOverlay, colour);
-                    } else super.renderCubesOfBone(poseStack, bone, buffer, packedLight, packedOverlay, colour);
-                }
-            } else super.renderCubesOfBone(poseStack, bone, buffer, packedLight, packedOverlay, colour);
+            }
+        } else if (!getGeoItemInterface().boneByRenderType(this).isEmpty() && getGeoItemInterface().boneByRenderType(this).containsKey(name)) {
+            for (Map.Entry<String, RenderType> entry : getGeoItemInterface().boneByRenderType(this).entrySet()){
+                if (name.equals(entry.getKey())) {
+                    VertexConsumer newBuffer = source.getBuffer(entry.getValue());
+                    super.renderCubesOfBone(poseStack, bone, newBuffer, packedLight, packedOverlay, colour);
+                } else super.renderCubesOfBone(poseStack, bone, buffer, packedLight, packedOverlay, colour);
+            }
         } else super.renderCubesOfBone(poseStack, bone, buffer, packedLight, packedOverlay, colour);
     }
 
