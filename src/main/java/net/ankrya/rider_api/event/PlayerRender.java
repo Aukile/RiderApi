@@ -45,7 +45,6 @@ import java.util.Objects;
 @EventBusSubscriber(Dist.CLIENT)
 public class PlayerRender {
     @SubscribeEvent
-    @SuppressWarnings("unchecked")
     public static void renderHandEvent(RenderArmEvent event) {
         if (!ModList.get().isLoaded("geckolib")) return;
 
@@ -56,14 +55,20 @@ public class PlayerRender {
         MultiBufferSource bufferSource = event.getMultiBufferSource();
         int packedLight = event.getPackedLight();
         float partialTick = mc.getFrameTimeNs();
-        ItemStack chest = player.getItemBySlot(EquipmentSlot.CHEST);
+        EquipmentSlot slot = EquipmentSlot.CHEST;
+        renderArm(event, player, slot, poseStack, bufferSource, partialTick, packedLight, true);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static void renderArm(RenderArmEvent event, AbstractClientPlayer player, EquipmentSlot slot, PoseStack poseStack, MultiBufferSource bufferSource, float partialTick, int packedLight, boolean otherLimit) {
+        ItemStack chest = player.getItemBySlot(slot);
         EntityRenderDispatcher entityrenderdispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
         EntityRenderer<?> entityrenderer = entityrenderdispatcher.getRenderer(player);
         PlayerModel<AbstractClientPlayer> playermodel = ((PlayerRenderer)entityrenderer).getModel();
         poseStack.pushPose();
 
-        if(chest.getItem() instanceof GeoItem items){
-            GeoArmorRenderer geoArmorRender = (GeoArmorRenderer) getArmorModelHook(player, chest, EquipmentSlot.CHEST, playermodel);
+        if(chest.getItem() instanceof GeoItem items && otherLimit){
+            GeoArmorRenderer geoArmorRender = (GeoArmorRenderer) getArmorModelHook(player, chest, slot, playermodel);
 
             VertexConsumer buffer = bufferSource.getBuffer(RenderType.entityTranslucent(geoArmorRender.getTextureLocation(items)));
             RenderType renderType = RenderType.entityTranslucent(geoArmorRender.getTextureLocation(items));
@@ -85,7 +90,7 @@ public class PlayerRender {
                 left.updateRotation(0, 0, 0);
                 left.updatePosition(0, 0, 0);
             }
-            geoArmorRender.actuallyRender(poseStack, (Item) items,model,renderType,bufferSource, buffer,true,partialTick, packedLight, OverlayTexture.NO_OVERLAY, -1);
+            geoArmorRender.actuallyRender(poseStack, (Item) items,model,renderType, bufferSource, buffer,true, partialTick, packedLight, OverlayTexture.NO_OVERLAY, -1);
             event.setCanceled(true);
         }
 
