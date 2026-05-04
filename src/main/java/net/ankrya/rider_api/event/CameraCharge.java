@@ -12,8 +12,9 @@ import net.minecraftforge.client.event.ViewportEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.api.distmarker.Dist;
 
-@Mod.EventBusSubscriber
+@Mod.EventBusSubscriber(value = Dist.CLIENT)
 public class CameraCharge {
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public void onCamera(ViewportEvent.ComputeCameraAngles event) {
