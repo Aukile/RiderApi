@@ -5,58 +5,83 @@ import dev.kosmx.playerAnim.core.util.Vec3f;
 import dev.kosmx.playerAnim.impl.IAnimatedPlayer;
 import dev.kosmx.playerAnim.impl.animation.AnimationApplier;
 import net.minecraft.client.Camera;
+import net.minecraft.client.CameraType;
 import net.minecraft.client.Minecraft;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
+import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ViewportEvent;
 
-@EventBusSubscriber
+@EventBusSubscriber(value = Dist.CLIENT)
 public class CameraCharge {
+    private static CameraType previousCameraType = null;
+
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void onCamera(ViewportEvent.ComputeCameraAngles event) {
         Player player = Minecraft.getInstance().player;
         AnimationApplier animationPlayer = ((IAnimatedPlayer) player).playerAnimator_getAnimation();
         animationPlayer.setTickDelta((float) event.getPartialTick());
+
         if (animationPlayer.isActive()) {
             Camera camera = event.getCamera();
             Vec3f pos = animationPlayer.get3DTransform("camera", TransformType.POSITION, Vec3f.ZERO);
-            Vec3 pos1 = new Vec3(pos.getX(), -pos.getY(), pos.getZ());
-            float yaw = player.getYRot();
-            float pitch = player.getXRot();
-            Vec3 transformedOffset = transformToViewSpace(pos1.scale(0.075), yaw);
-            if(pos.getX()!=0||pos.getY()!=0||pos.getZ()!=0)
-                camera.position=new Vec3(player.getX()+transformedOffset.x,player.getEyeY()+transformedOffset.y-0.05,player.getZ()+transformedOffset.z);
             Vec3f rot = animationPlayer.get3DTransform("camera", TransformType.ROTATION, Vec3f.ZERO);
-            if(rot.getY()!=0||rot.getX()!=0||rot.getZ()!=0) {
-                float deltaYaw = (float) Math.toDegrees(rot.getY());
-                float newYaw = yaw + Math.abs(deltaYaw); // 修正为加法
-                event.setYaw(newYaw);
-                //System.out.println(newYaw);
-
-                float deltaPitch = (float) Math.toDegrees(rot.getX());
-                float newPitch = pitch + Math.abs(deltaPitch); // 修正为加法
-                event.setPitch(newPitch);
-
-                event.setRoll((float) Math.toDegrees(rot.getZ()));
+            if ((noVec3fZero(pos) || noVec3fZero(rot)) && previousCameraType == null) {
+                previousCameraType = Minecraft.getInstance().options.getCameraType();
+                Minecraft.getInstance().options.setCameraType(CameraType.THIRD_PERSON_BACK);
             }
+            if (noVec3fZero(rot)) {
+                float totalYaw   = player.getYRot() + rot.getY();
+                float totalPitch = player.getXRot() - rot.getX();
+                float totalRoll  = -rot.getZ();
+
+                event.setYaw(totalYaw);
+                event.setPitch(totalPitch);
+                event.setRoll(totalRoll);
+            }
+            if (noVec3fZero(pos)) {
+                Vec3 localOffset = new Vec3(pos.getX(), pos.getY(), pos.getZ());
+                Vec3 worldOffset = localOffset
+                        .xRot(-player.getXRot() * Mth.DEG_TO_RAD)
+                        .yRot(-player.getYRot() * Mth.DEG_TO_RAD);
+
+                camera.position = player.position().add(worldOffset);
+            }
+        } else if (previousCameraType != null) {
+            Minecraft.getInstance().options.setCameraType(previousCameraType);
+            previousCameraType = null;
+            event.setYaw(player.getYRot());
+            event.setPitch(player.getXRot());
+            event.setRoll(0.0F);
         }
     }
-    //矩阵旋转坐标轴将相机移动向量进行转换
-    public static Vec3 transformToViewSpace(Vec3 originalVec, float yawDegrees) {
-        // 恢复 yawDegrees - 90 的偏移
-        double theta = Math.toRadians(yawDegrees);
-        double cosTheta = Math.cos(theta);
-        double sinTheta = Math.sin(theta);
 
-        double x = originalVec.x;
-        double z = originalVec.z;
+    @SubscribeEvent
+    public static void eventdo(ViewportEvent.ComputeFov event) {
+        Player player = Minecraft.getInstance().player;
+        AnimationApplier animationPlayer = ((IAnimatedPlayer) player).playerAnimator_getAnimation();
+        animationPlayer.setTickDelta((float) event.getPartialTick());
 
-        double xTransformed = x * cosTheta + z * sinTheta;
-        double zTransformed = x * sinTheta - z * cosTheta;
+        if (animationPlayer.isActive() && previousCameraType != null) {
+            Vec3f fov = animationPlayer.get3DTransform("camera", TransformType.SCALE, Vec3f.ZERO);
+            if (noVec3fZero(fov))
+                event.setFOV(anyValue(fov));
+        }
+    }
 
-        return new Vec3(xTransformed, originalVec.y, zTransformed);
+    private static boolean noVec3fZero(Vec3f vec) {
+        return vec != null && (vec.getX() != 0 || vec.getY() != 0 || vec.getZ() != 0);
+    }
+
+    private static double anyValue(Vec3f vec) {
+        if (vec.getX() != 0)
+            return vec.getX();
+        if (vec.getY() != 0)
+            return vec.getY();
+        return vec.getZ();
     }
 }
