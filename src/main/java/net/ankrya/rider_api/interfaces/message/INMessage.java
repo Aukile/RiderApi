@@ -12,7 +12,7 @@ import java.util.*;
  * 使用{@link net.ankrya.rider_api.message.NMessageCreater}创建网络包 <br>
  * 能够自动识别数据类型（必须使用接口中的方法写） <br>
  * 优化了发包的读写次数 <br>
- * （当然导致它具有了上限，但是上限是变量数量不能超过9（把中间体改成long就可以支持到18），应该不会有这种情况吧？）
+ * （当然导致它具有了上限，但是上限是变量数量不能超过18）
  */
 public interface INMessage {
 
@@ -27,7 +27,7 @@ public interface INMessage {
     /**自动解析,一行解决*/
     static void autoWriteAll(FriendlyByteBuf buf, Object... values){
         if (values.length == 0){
-            buf.writeInt(0);
+            buf.writeLong(0);
             return;
         }
 
@@ -38,7 +38,7 @@ public interface INMessage {
         int time = 0;
         int valueInt = 0;
         for (int type : types) valueInt = creatMassageNumber(valueInt, type, time++);
-        buf.writeInt(valueInt);
+        buf.writeLong(valueInt);
 
         for(int i = 0; i < types.size(); ++i) {
             int type = types.get(i);

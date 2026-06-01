@@ -65,7 +65,7 @@ public class NMessageCreater implements CustomPacketPayload{
     }
 
     private static INMessage creatMessage(FriendlyByteBuf buf, String path) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
-        int lengthNum = buf.readInt();
+        long lengthNum = buf.readLong();
 
         byte[] bytes = getDigits(lengthNum);
         int length = bytes.length;
@@ -97,16 +97,16 @@ public class NMessageCreater implements CustomPacketPayload{
         }
     }
 
-    public static byte[] getDigits(int number) {
+    public static byte[] getDigits(long number) {
         if (number == 0) {
             return new byte[0];
         }
 
-        int[] temp = new int[10];
+        long[] temp = new long[18];
         int count = 0;
 
         while (number > 0) {
-            int digit = number % 10;
+            long digit = number % 10;
             temp[count] = digit;
             count++;
             number /= 10;

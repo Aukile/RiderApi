@@ -4,7 +4,12 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
+import dev.kosmx.playerAnim.api.firstPerson.FirstPersonMode;
+import dev.kosmx.playerAnim.impl.IAnimatedPlayer;
+import net.ankrya.rider_api.compat.animation.PlayerAnimator;
 import net.ankrya.rider_api.item.base.armor.BaseRiderArmor;
+import net.ankrya.rider_api.item.base.armor.BaseRiderArmorBase;
+import net.ankrya.rider_api.item.renderer.base.BaseGeoArmorRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.PlayerModel;
@@ -40,6 +45,7 @@ import software.bernie.geckolib.model.GeoModel;
 import software.bernie.geckolib.renderer.GeoArmorRenderer;
 
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Objects;
 
 @EventBusSubscriber(Dist.CLIENT)
@@ -56,7 +62,12 @@ public class PlayerRender {
         int packedLight = event.getPackedLight();
         float partialTick = mc.getFrameTimeNs();
         EquipmentSlot slot = EquipmentSlot.CHEST;
-        renderArm(event, player, slot, poseStack, bufferSource, partialTick, packedLight, true);
+        ItemStack chest = player.getItemBySlot(slot);
+        boolean otherLimit = true;
+        if (chest.getItem() instanceof BaseRiderArmorBase armor) {
+            otherLimit = armor.limitToRenderArmor(player, chest);
+        }
+        renderArm(event, player, slot, poseStack, bufferSource, partialTick, packedLight, otherLimit);
     }
 
     @SuppressWarnings("unchecked")
@@ -78,17 +89,22 @@ public class PlayerRender {
 
             SetAllBoneNoVisible(geoArmorRender);
             GeoBone right =  geoArmorRender.getRightArmBone(geoModel);
+            boolean needLock = (!PlayerAnimator.instance().installed()) || (PlayerAnimator.instance().installed() && player instanceof IAnimatedPlayer animated && animated.playerAnimator_getAnimation().getFirstPersonMode() != FirstPersonMode.THIRD_PERSON_MODEL);
             if (right != null) {
                 right.setHidden(event.getArm() != HumanoidArm.RIGHT);
-                right.updateRotation(0, 0, 0);
-                right.updatePosition(0, 0, 0);
+                if (needLock){
+                    right.updateRotation(0, 0, 0);
+                    right.updatePosition(0, 0, 0);
+                }
             }
 
             GeoBone left =  geoArmorRender.getLeftArmBone(geoModel);
             if (left != null) {
                 left.setHidden(event.getArm() != HumanoidArm.LEFT);
-                left.updateRotation(0, 0, 0);
-                left.updatePosition(0, 0, 0);
+                if (needLock){
+                    left.updateRotation(0, 0, 0);
+                    left.updatePosition(0, 0, 0);
+                }
             }
             geoArmorRender.actuallyRender(poseStack, (Item) items,model,renderType, bufferSource, buffer,true, partialTick, packedLight, OverlayTexture.NO_OVERLAY, -1);
             event.setCanceled(true);
@@ -97,7 +113,7 @@ public class PlayerRender {
         poseStack.popPose();
     }
 
-    private static <T extends Item & GeoAnimatable & GeoItem> void SetAllBoneNoVisible(GeoArmorRenderer<T> render){
+    public static <T extends Item & GeoAnimatable & GeoItem> void SetAllBoneNoVisible(GeoArmorRenderer<T> render){
         GeoModel<T> model = render.getGeoModel();
         try {
             for (GeoBone geoBone : Arrays.asList(render.getHeadBone(model)
@@ -106,6 +122,12 @@ public class PlayerRender {
                     , render.getLeftBootBone(model))) {
                 if (geoBone != null) {
                     geoBone.setHidden(true);
+                }
+            }
+            if (render instanceof BaseGeoArmorRenderer<?> renderer){
+                Map<String, Boolean> map = renderer.getGeoArmorInterface().visibilityBones((BaseGeoArmorRenderer<?>) render);
+                for (Map.Entry<String, Boolean> entry : map.entrySet()){
+                    renderer.getGeoModel().getBone(entry.getKey()).ifPresent(bone -> bone.setHidden(entry.getValue()));
                 }
             }
         } catch (Exception ignored) {
@@ -140,11 +162,11 @@ public class PlayerRender {
             }
     }
 
-    private static boolean needVisiblePlayerPart(ItemStack stack, Player player){
+    public static boolean needVisiblePlayerPart(ItemStack stack, Player player){
         return stack.getItem() instanceof BaseRiderArmor riderArmor && riderArmor.needInvisibility(player.level(), player, stack, riderArmor.getSlot());
     }
 
-    private static <T extends LivingEntity> HumanoidModel<?> getArmorModelHook(T entity, ItemStack itemStack, EquipmentSlot slot, HumanoidModel<T> model) {
+    public static <T extends LivingEntity> HumanoidModel<?> getArmorModelHook(T entity, ItemStack itemStack, EquipmentSlot slot, HumanoidModel<T> model) {
         return GeoRenderProvider.of(itemStack).getGeoArmorRenderer(entity, itemStack, slot, model);
     }
 

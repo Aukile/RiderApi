@@ -23,7 +23,7 @@ import java.util.Map;
 
 public class BaseGeoArmorRenderer<T extends BaseGeoArmor> extends GeoArmorRenderer<T>{
     private IGeoItem item;
-    public BaseGeoArmorRenderer() {
+    private BaseGeoArmorRenderer() {
         super(new BaseGeoArmorModel<>());
     }
 
@@ -38,8 +38,12 @@ public class BaseGeoArmorRenderer<T extends BaseGeoArmor> extends GeoArmorRender
 
     @Override
     public @Nullable RenderType getRenderType(T animatable, ResourceLocation texture, @Nullable MultiBufferSource bufferSource, float partialTick) {
-        if (animatable.getRenderType(texture) == null) return super.getRenderType(animatable, texture, bufferSource, partialTick);
-        return animatable.getRenderType(texture);
+        RenderType type = super.getRenderType(animatable, texture, bufferSource, partialTick);
+        RenderType renderType = animatable.getRenderType(this, animatable, texture, bufferSource, partialTick, type);
+        if (renderType == null) {
+            return type;
+        }
+        return renderType;
     }
 
     @Override
@@ -67,20 +71,15 @@ public class BaseGeoArmorRenderer<T extends BaseGeoArmor> extends GeoArmorRender
 
     @Override
     public void renderCubesOfBone(PoseStack poseStack, GeoBone bone, VertexConsumer buffer, int packedLight, int packedOverlay, int colour) {
-        if (getGeoArmorInterface() != null && !getGeoArmorInterface().lightBones(this).isEmpty()){
+        String name = bone.getName();
+        if (getGeoArmorInterface() != null && !getGeoArmorInterface().lightBones(this).isEmpty() && getGeoArmorInterface().lightBones(this).contains(name)){;
             MultiBufferSource.BufferSource source = Minecraft.getInstance().renderBuffers().bufferSource();
-            String name = bone.getName();
-            if (getGeoArmorInterface().lightBones(this).contains(name)) {
-                VertexConsumer newBuffer = source.getBuffer(RenderType.beaconBeam(getTextureLocation(animatable), true));
-                super.renderCubesOfBone(poseStack, bone, newBuffer, packedLight, packedOverlay, colour);
-            } else if (!getGeoArmorInterface().boneByRenderType(this).isEmpty() && getGeoArmorInterface().boneByRenderType(this).containsKey(name)) {
-                for (Map.Entry<String, RenderType> entry : getGeoArmorInterface().boneByRenderType(this).entrySet()){
-                    if (name.equals(entry.getKey())) {
-                        VertexConsumer newBuffer = source.getBuffer(entry.getValue());
-                        super.renderCubesOfBone(poseStack, bone, newBuffer, packedLight, packedOverlay, colour);
-                    } else super.renderCubesOfBone(poseStack, bone, buffer, packedLight, packedOverlay, colour);
-                }
-            } else super.renderCubesOfBone(poseStack, bone, buffer, packedLight, packedOverlay, colour);
+            VertexConsumer newBuffer = source.getBuffer(RenderType.beaconBeam(getTextureLocation(animatable), true));
+            super.renderCubesOfBone(poseStack, bone, newBuffer, packedLight, packedOverlay, colour);
+        } else if (!getGeoArmorInterface().boneByRenderType(this).isEmpty() && getGeoArmorInterface().boneByRenderType(this).containsKey(name)) {;
+            MultiBufferSource.BufferSource source = Minecraft.getInstance().renderBuffers().bufferSource();
+            VertexConsumer newBuffer = source.getBuffer(getGeoArmorInterface().boneByRenderType(this).get(name));
+            super.renderCubesOfBone(poseStack, bone, newBuffer, packedLight, packedOverlay, colour);
         } else super.renderCubesOfBone(poseStack, bone, buffer, packedLight, packedOverlay, colour);
     }
 
@@ -88,7 +87,7 @@ public class BaseGeoArmorRenderer<T extends BaseGeoArmor> extends GeoArmorRender
         return item == null ? this.getAnimatable() : item;
     }
 
-    private IGeoArmor getGeoArmorInterface(){
+    public IGeoArmor getGeoArmorInterface(){
         if (getGeoItemBaseInterface() instanceof IGeoArmor geoArmor)
             return geoArmor;
         return null;

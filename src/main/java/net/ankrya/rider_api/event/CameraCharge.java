@@ -35,19 +35,15 @@ public class CameraCharge {
                 Minecraft.getInstance().options.setCameraType(CameraType.THIRD_PERSON_BACK);
             }
             if (noVec3fZero(rot)) {
-                float totalYaw   = player.getYRot() + rot.getY();
-                float totalPitch = player.getXRot() - rot.getX();
-                float totalRoll  = -rot.getZ();
-
-                event.setYaw(totalYaw);
-                event.setPitch(totalPitch);
-                event.setRoll(totalRoll);
+                event.setYaw(event.getYaw() + rot.getY());
+                event.setPitch(event.getPitch() + rot.getX());
+                event.setRoll(rot.getZ());
             }
             if (noVec3fZero(pos)) {
                 Vec3 localOffset = new Vec3(pos.getX(), pos.getY(), pos.getZ());
                 Vec3 worldOffset = localOffset
-                        .xRot(-player.getXRot() * Mth.DEG_TO_RAD)
-                        .yRot(-player.getYRot() * Mth.DEG_TO_RAD);
+                        .xRot(-event.getPitch() * Mth.DEG_TO_RAD)
+                        .yRot(-event.getYaw() * Mth.DEG_TO_RAD);
 
                 camera.position = player.position().add(worldOffset);
             }

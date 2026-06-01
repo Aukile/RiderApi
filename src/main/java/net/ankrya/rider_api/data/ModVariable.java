@@ -14,6 +14,8 @@ public class ModVariable {
     public static final String ARROW_DROP_MODE = "arrow_drop_mode";
     /**禁止盔甲槽位，boolean类型*/
     public static final String DISABLE_ARMOR_SLOT = "disable_armor_slot";
+    /**时间减慢时速，float类型*/
+    public static final String TIME_SLOW_TIMER = "time_slow_timer";
 
     /**
      * 添加变量 <br>
@@ -25,6 +27,7 @@ public class ModVariable {
         variables.registerVariable(boolean.class, DISABLE_MOVE, false, false);
         variables.registerVariable(boolean.class, ARROW_DROP_MODE, false, false);
         variables.registerVariable(boolean.class, DISABLE_ARMOR_SLOT, false, false);
+        variables.registerVariable(float.class, TIME_SLOW_TIMER, 500.0f, true);
         NeoForge.EVENT_BUS.post(new DataInitEvent(variables));
     }
 }

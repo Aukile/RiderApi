@@ -62,6 +62,8 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.fml.loading.FMLLoader;
 import org.jetbrains.annotations.ApiStatus;
 import org.joml.Matrix4f;
@@ -85,6 +87,7 @@ public abstract class GJ {
 
     /**杂项*/
     public static abstract class ToOther {
+        @OnlyIn(Dist.CLIENT)
         public static void setPersonFront(CameraType cameraType) {
             if (Minecraft.getInstance().options.getCameraType() != cameraType) {
                 Minecraft.getInstance().options.setCameraType(cameraType);

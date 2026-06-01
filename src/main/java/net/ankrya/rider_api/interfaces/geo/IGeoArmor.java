@@ -4,8 +4,11 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.ankrya.rider_api.item.base.armor.BaseGeoArmor;
 import net.ankrya.rider_api.item.renderer.base.BaseGeoArmorRenderer;
+import net.ankrya.rider_api.item.renderer.base.BaseGeoItemRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.Item;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import org.jetbrains.annotations.Nullable;
@@ -34,6 +37,11 @@ public interface IGeoArmor extends IGeoItem {
     /**会让这个组里面的都发光*/
     @OnlyIn(Dist.CLIENT)
     default Set<String> lightBones(BaseGeoArmorRenderer<?> renderer){return new HashSet<>();}
+
+    ///改渲染
+    default <T extends BaseGeoArmor> RenderType getRenderType(BaseGeoArmorRenderer<T> renderer, T animatable, ResourceLocation texture, @Nullable MultiBufferSource bufferSource, float partialTick, RenderType type) {
+        return null;
+    }
 
     default Map<String, RenderType> boneByRenderType(BaseGeoArmorRenderer<?> renderer){return new HashMap<>();}
 }

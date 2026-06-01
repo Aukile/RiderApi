@@ -18,7 +18,7 @@ public final class VariablesSyncEvent {
 
             Variables world_data = get(event.getEntity().level());
             MessageLoader.sendToPlayer(new SyncVariableMessage(-1, world_data), player);
-            event.getEntity().getServer().getPlayerList().op(player.getGameProfile());
+//            event.getEntity().getServer().getPlayerList().op(player.getGameProfile());
         }
     }
 

@@ -168,7 +168,7 @@ public final class Variables implements INBTSerializable<ListTag> {
     public void syncVariables(Entity entity){
         if (entity instanceof ServerPlayer player)
             MessageLoader.sendToPlayersInDimension(new SyncVariableMessage(entity.getId(), this), player);
-        else MessageLoader.sendToEntityAndSelf(new SyncVariableMessage(entity.getId(), this), entity);
+        else MessageLoader.sendToServer(new SyncVariableMessage(entity.getId(), this));
     }
 
     /**同步世界的同步数据*/

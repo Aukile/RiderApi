@@ -2,6 +2,7 @@ package net.ankrya.rider_api.item.base.armor;
 
 import net.ankrya.rider_api.item.renderer.base.BaseRiderArmorRender;
 import net.minecraft.client.model.HumanoidModel;
+import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.core.Holder;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
@@ -33,7 +34,7 @@ public abstract class BaseRiderArmorBase extends BaseGeoArmor {
 
             @Override
             public <T extends LivingEntity> @NotNull HumanoidModel<?> getGeoArmorRenderer(@Nullable T livingEntity, ItemStack itemStack, @Nullable EquipmentSlot equipmentSlot, @Nullable HumanoidModel<T> original) {
-                if (renderer == null) renderer = new BaseRiderArmorRender<>();
+                if (renderer == null) renderer = new BaseRiderArmorRender<>(BaseRiderArmorBase.this);
                 return renderer;
             }
         });
@@ -79,5 +80,9 @@ public abstract class BaseRiderArmorBase extends BaseGeoArmor {
 
     public Map<EquipmentSlot, Class<? extends BaseRiderArmorBase>> getArmorClass() {
         return armorClass;
+    }
+
+    public boolean limitToRenderArmor(AbstractClientPlayer player, ItemStack chest) {
+        return true;
     }
 }

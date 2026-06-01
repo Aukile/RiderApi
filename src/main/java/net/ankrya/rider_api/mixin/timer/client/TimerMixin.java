@@ -42,11 +42,11 @@ public abstract class TimerMixin implements ITimer {
             if (mc.player != null){
                 int time_ =    Variables.getVariable(mc.level, ModVariable.TIME_STATUS);
                 if (time_ == 1){
-                    this.msPerTick = 500f;
+                    this.msPerTick = Variables.getVariable(mc.level, ModVariable.TIME_SLOW_TIMER);
                 }else if (time_ == 2){
                     cir.setReturnValue((int) deltaTicks);
                 }else {
-                    this.msPerTick = 50f ;
+                    this.msPerTick = 50f;
                 }
             }
         }

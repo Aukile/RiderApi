@@ -44,11 +44,17 @@ import software.bernie.geckolib.renderer.layer.GeoRenderLayer;
 import java.util.*;
 import java.util.function.Consumer;
 
-/**懒狗化GeoItem~*/
+/**
+ * 懒狗化GeoItem~
+ */
 public interface IGeoItem extends GeoItem {
-    /**nbt更改动画使用*/
+    /**
+     * nbt更改动画使用
+     */
     String ANIMATION = "run_animation";
-    /**nbt重置动画使用，使用{@link IGeoItem#playAnimationAndReset}即可*/
+    /**
+     * nbt重置动画使用，使用{@link IGeoItem#playAnimationAndReset}即可
+     */
     String ANIMATION_STOP = "anim_stop";
     String NOW_ANIMATION = "now_anim";
 
@@ -73,18 +79,24 @@ public interface IGeoItem extends GeoItem {
         });
     }
 
-    /**播放动画*/
-    static void playAnimation(ItemStack itemStack, String animation){
+    /**
+     * 播放动画
+     */
+    static void playAnimation(ItemStack itemStack, String animation) {
         GJ.ToItem.setNbt(itemStack, nbt -> nbt.putString(ANIMATION, animation));
     }
 
-    /**播放动画并重置*/
-    static void playAnimationAndReset(ItemStack itemStack, String animation){
+    /**
+     * 播放动画并重置
+     */
+    static void playAnimationAndReset(ItemStack itemStack, String animation) {
         GJ.ToItem.setNbt(itemStack, nbt -> nbt.putBoolean(ANIMATION_STOP, true));
         playAnimation(itemStack, animation);
     }
 
-    /**动画设置（仅本地，全局生效）*/
+    /**
+     * 动画设置（仅本地，全局生效）
+     */
     default PlayState predicate(AnimationState<IGeoItem> state) {
         AnimationController<IGeoItem> controller = state.getController();
         ItemStack itemStack = state.getData(DataTickets.ITEMSTACK);
@@ -95,12 +107,14 @@ public interface IGeoItem extends GeoItem {
         }
 
         controller.setAnimation(RawAnimation.begin().thenPlay(getAnimation(itemStack)));
-        if(controller.getAnimationState() == AnimationController.State.STOPPED)
+        if (controller.getAnimationState() == AnimationController.State.STOPPED)
             state.resetCurrentAnimation();
         return PlayState.CONTINUE;
     }
 
-    /**通用性动画触发器，使用方法{@link IGeoItem#playAnimation}或{@link IGeoItem#playAnimationAndReset}触发*/
+    /**
+     * 通用性动画触发器，使用方法{@link IGeoItem#playAnimation}或{@link IGeoItem#playAnimationAndReset}触发
+     */
     default PlayState singleSynAnimate(AnimationState<IGeoItem> state) {
         AnimationController<IGeoItem> controller = state.getController();
         ItemStack itemStack = state.getData(DataTickets.ITEMSTACK);
@@ -109,8 +123,8 @@ public interface IGeoItem extends GeoItem {
         if (itemStack == null) return PlayState.STOP;
 
         LocalPlayer player = Minecraft.getInstance().player;
-        if (player != null){
-            if (server != null){
+        if (player != null) {
+            if (server != null) {
                 ResourceKey<Level> dimension = player.level().dimension();
                 GeoItem.getOrAssignId(itemStack, server.getLevel(dimension));
             }
@@ -145,7 +159,7 @@ public interface IGeoItem extends GeoItem {
      * 因为动画是一次性触发导致动画无法在关闭游戏后仍然保留<br>
      * 即关闭游戏重进之后会恢复至默认状态
      */
-    default AnimationController<IGeoItem> synAnimate(String name){
+    default AnimationController<IGeoItem> synAnimate(String name) {
         AnimationController<IGeoItem> controller = new AnimationController<>(this, name, 0, state -> PlayState.CONTINUE);
         for (String animationName : getAllAnimationName())
             controller.triggerableAnim(animationName, RawAnimation.begin().thenPlay(animationName));
@@ -153,7 +167,10 @@ public interface IGeoItem extends GeoItem {
     }
 
     default PlayState idle(AnimationState<IGeoItem> state) {
-        state.getController().setAnimation(RawAnimation.begin().thenLoop(getAnimation()));
+        if (state.getController().isPlayingTriggeredAnimation())
+            return PlayState.STOP;
+        if (state.getController().getAnimationState() == AnimationController.State.STOPPED)
+            state.setAndContinue(RawAnimation.begin().thenLoop(getAnimation()));
         return PlayState.CONTINUE;
     }
 
@@ -162,34 +179,41 @@ public interface IGeoItem extends GeoItem {
         return animation.isEmpty() ? getAnimation() : animation;
     }
 
-    /**全部动画名，配合{@link IGeoItem#synAnimate}使用*/
+    /**
+     * 全部动画名，配合{@link IGeoItem#synAnimate}使用
+     */
     default List<String> getAllAnimationName() {
         BakedAnimations animations = GeckoLibCache.getBakedAnimations().get(getAnimationFile());
         return animations.animations().keySet().stream().toList();
     }
 
-    /**触发{@link IGeoItem#synAnimate}动画使用例（更安全）*/
-    static void triggerAnimation(ItemStack itemStack, Entity entity, ServerLevel serverLevel, String animation){
-        if (itemStack.getItem() instanceof IGeoItem item){
+    /**
+     * 触发{@link IGeoItem#synAnimate}动画使用例（更安全）
+     */
+    static void triggerAnimation(ItemStack itemStack, Entity entity, ServerLevel serverLevel, String animation) {
+        if (itemStack.getItem() instanceof IGeoItem item) {
             playAnimationAndReset(itemStack, animation);
             item.triggerAnim(entity, GeoItem.getOrAssignId(itemStack, serverLevel), "controller", animation);
         }
     }
 
-    /**触发{@link IGeoItem#synAnimate}动画使用例*/
-    static void triggerAnimation(ItemStack itemStack, Entity entity, String animation){
-        if (itemStack.getItem() instanceof IGeoItem item){
+    /**
+     * 触发{@link IGeoItem#synAnimate}动画使用例
+     */
+    static void triggerAnimation(ItemStack itemStack, Entity entity, String animation) {
+        if (itemStack.getItem() instanceof IGeoItem item) {
             playAnimationAndReset(itemStack, animation);
             if (entity.level() instanceof ServerLevel serverLevel) {
                 item.triggerAnim(entity, GeoItem.getOrAssignId(itemStack, serverLevel), "controller", animation);
-            }
-            else if (itemStack.getComponents().has(GeckoLibConstants.STACK_ANIMATABLE_ID_COMPONENT.get()))
+            } else if (itemStack.getComponents().has(GeckoLibConstants.STACK_ANIMATABLE_ID_COMPONENT.get()))
                 item.triggerAnim(entity, GeoItem.getId(itemStack), "controller", animation);
         }
     }
 
-    /**获取当前播放的动画的动画名*/
-    static String getNowAnimation(ItemStack itemStack){
+    /**
+     * 获取当前播放的动画的动画名
+     */
+    static String getNowAnimation(ItemStack itemStack) {
         String name = GJ.ToItem.getNbt(itemStack).getString(NOW_ANIMATION);
         if (name.isEmpty()) name = GJ.ToItem.getNbt(itemStack).getString(ANIMATION);
         return name;
@@ -200,52 +224,56 @@ public interface IGeoItem extends GeoItem {
         if (this instanceof ArmorItem)
             controllerRegistrar.add(new AnimationController<>(this, "controller", 0, this::predicate));
         else {
-        controllerRegistrar.add(synAnimate("controller"));
-        controllerRegistrar.add(new AnimationController<>(this, "idle", 0, this::idle));
+            controllerRegistrar.add(new AnimationController<>(this, "idle", 0, this::idle));
+            controllerRegistrar.add(synAnimate("controller"));
         }
     }
 
-    /**隐藏块（物品）*/
+    ///隐藏块（物品）
     @OnlyIn(Dist.CLIENT)
-    default Map<String, Boolean> visibilityBones(BaseGeoItemRenderer<?> renderer) {return new HashMap<>();}
+    default Map<String, Boolean> visibilityBones(BaseGeoItemRenderer<?> renderer) {
+        return new HashMap<>();
+    }
 
-    /**是否自动识别 “_glowmask” 后缀发光，启用后必须保证贴图存在*/
-    default boolean autoGlow() {return false;}
+    ///是否自动识别 “_glowmask” 后缀发光，启用后必须保证贴图存在
+    default boolean autoGlow() {
+        return false;
+    }
 
-    /**默认动画名设置*/
+    ///默认动画名设置
     default String getAnimation() {
         return "idle";
     }
 
-    /**改渲染*/
-    @OnlyIn(Dist.CLIENT)
-    default RenderType getRenderType(ResourceLocation texture) {
-        return null;
-    }
-
-    /**添加Layer渲染*/
+    ///添加Layer渲染
     @OnlyIn(Dist.CLIENT)
     default GeoRenderLayer<?>[] getRenderLayers(GeoRenderer<?> renderer) {
         return new GeoRenderLayer[0];
     }
 
-    /**默认模型文件*/
+    ///改渲染
+    default <T extends Item & IGeoItem> RenderType getRenderType(BaseGeoItemRenderer<T> renderer, T animatable, ResourceLocation texture, @Nullable MultiBufferSource bufferSource, float partialTick, RenderType type) {
+        return null;
+    }
+
+    ///默认模型文件
     ResourceLocation getModel();
 
-    /**默认动画文件*/
+    ///默认动画文件
     ResourceLocation getAnimationFile();
 
-    /**默认贴图文件*/
+    ///默认贴图文件
     ResourceLocation getTexture();
 
     @OnlyIn(Dist.CLIENT)
-    default <T extends Item & IGeoItem> void withRender(BaseGeoItemRenderer<T> renderer, PoseStack poseStack, T animatable, BakedGeoModel model, @Nullable RenderType renderType, MultiBufferSource bufferSource, @Nullable VertexConsumer buffer, boolean isReRender, float partialTick, int packedLight, int packedOverlay, int colour){}
+    default <T extends Item & IGeoItem> void withRender(BaseGeoItemRenderer<T> renderer, PoseStack poseStack, T animatable, BakedGeoModel model, @Nullable RenderType renderType, MultiBufferSource bufferSource, @Nullable VertexConsumer buffer, boolean isReRender, float partialTick, int packedLight, int packedOverlay, int colour) {
+    }
 
-    default <T extends Item & IGeoItem> Set<String> lightBones(BaseGeoItemRenderer<T> renderer){
+    default <T extends Item & IGeoItem> Set<String> lightBones(BaseGeoItemRenderer<T> renderer) {
         return new HashSet<>();
     }
 
-    default <T extends Item & IGeoItem> Map<String, RenderType> boneByRenderType(BaseGeoItemRenderer<T> renderer){
+    default <T extends Item & IGeoItem> Map<String, RenderType> boneByRenderType(BaseGeoItemRenderer<T> renderer) {
         return new HashMap<>();
     }
 }
