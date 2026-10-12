@@ -17,7 +17,6 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.network.NetworkEvent;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Objects;
 import java.util.UUID;
 
 public class PlayerAnimationMessage implements INMessage {
@@ -60,8 +59,15 @@ public class PlayerAnimationMessage implements INMessage {
 
     @OnlyIn(Dist.CLIENT)
     public static void playerAnimation(AbstractClientPlayer player, ResourceLocation dataId, String animation, boolean showRightArm, boolean showLeftArm, boolean override){
-        KeyframeAnimationPlayer keyframeAnimationPlayer = new KeyframeAnimationPlayer(Objects.requireNonNull(PlayerAnimationRegistry.getAnimation(new ResourceLocation(animation))))
-                .setFirstPersonMode(FirstPersonMode.THIRD_PERSON_MODEL).setFirstPersonConfiguration(new FirstPersonConfiguration().setShowRightArm(showRightArm).setShowLeftItem(showLeftArm));
+        // 原来用 requireNonNull，动画名写错/资源缺失时直接抛异常（在网络包里抛会导致断开连接）
+        var keyframe = PlayerAnimationRegistry.getAnimation(new ResourceLocation(animation));
+        if (keyframe == null) {
+            net.ankrya.rider_api.RiderApi.LOGGER.error("[RiderApi] Player animation not found: {} (check assets/<modid>/player_animation/)", animation);
+            return;
+        }
+        // 原来第二个参数调用的是 setShowLeftItem，导致“显示左臂”实际控制的是左手物品
+        KeyframeAnimationPlayer keyframeAnimationPlayer = new KeyframeAnimationPlayer(keyframe)
+                .setFirstPersonMode(FirstPersonMode.THIRD_PERSON_MODEL).setFirstPersonConfiguration(new FirstPersonConfiguration().setShowRightArm(showRightArm).setShowLeftArm(showLeftArm));
         PlayerAnimator.instance().playAnimation(player, dataId, keyframeAnimationPlayer, override);
     }
 }

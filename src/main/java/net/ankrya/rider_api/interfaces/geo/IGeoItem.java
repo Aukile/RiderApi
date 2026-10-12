@@ -113,6 +113,7 @@ public interface IGeoItem extends GeoItem {
         ItemStack itemStack = state.getData(DataTickets.ITEMSTACK);
         MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
 
+        if (itemStack == null) return PlayState.STOP;
         LocalPlayer player = Minecraft.getInstance().player;
         if (player != null){
             if (!(server == null)){
@@ -146,21 +147,58 @@ public interface IGeoItem extends GeoItem {
      * 同步动画触发器
      * 请必须写好全部的动画名在{@link IGeoItem#getAllAnimationName}(默认已自动解析)<br>
      * 使用{@link IGeoItem#triggerAnimation}调用动画<br>
-     * <strong>！注意！</strong><br>
-     * 因为动画是一次性触发导致动画无法在关闭游戏后仍然保留<br>
-     * 即关闭游戏重进之后会恢复至默认状态
+     * 触发的动画名会存进物品 NBT {@link GeoItemAnimData#TRIGGERED_ANIMATION}，
+     * 关闭游戏重进（或其他玩家后来才看到这个物品）时会自动恢复：<br>
+     * hold_on_last_frame 的动画直接恢复到最后一帧；loop 的动画重新开始循环；play_once 的动画不恢复。<br>
+     * 想回到默认动画请用 {@link IGeoItem#clearTriggeredAnimation}
      */
     default AnimationController<IGeoItem> synAnimate(String name){
-        AnimationController<IGeoItem> controller = new AnimationController<>(this, name, 0, state -> PlayState.CONTINUE);
+        boolean[] restored = {false};
+        AnimationController<IGeoItem> controller = new TriggerRestoreController<>(this, name, 0, state -> {
+            // 控制器是按物品动画 id 创建的，新建（例如重进游戏）后第一次运行时检查一次就够了
+            if (!restored[0]) {
+                ItemStack itemStack = state.getData(DataTickets.ITEMSTACK);
+                if (itemStack != null) {
+                    restored[0] = true;
+                    restoreTriggeredAnimation(state.getController(), itemStack);
+                }
+            }
+            return PlayState.CONTINUE;
+        });
         for (String animationName : getAllAnimationName())
             controller.triggerableAnim(animationName, RawAnimation.begin().thenPlay(animationName));
         return controller;
     }
 
+    /** 根据物品上保存的触发动画恢复控制器状态（客户端） */
+    private void restoreTriggeredAnimation(AnimationController<IGeoItem> controller, ItemStack itemStack) {
+        String animation = GeoItemAnimData.get(itemStack);
+        if (animation == null || animation.isEmpty() || !(controller instanceof TriggerRestoreController<?> restoreController))
+            return;
+        BakedAnimations animations = GeckoLibCache.getBakedAnimations().get(getAnimationFile());
+        Animation baked = animations == null ? null : animations.getAnimation(animation);
+        if (baked == null || baked.loopType() == Animation.LoopType.PLAY_ONCE)
+            return; // 只播一次的动画早就播完了，不需要恢复
+        restoreController.restoreTriggered(animation, baked.loopType() == Animation.LoopType.HOLD_ON_LAST_FRAME);
+    }
+
     default PlayState idle(AnimationState<IGeoItem> state) {
+        // 触发动画（"controller" 控制器）播放时 idle 停下，否则触发动画没覆盖到的骨骼会继续动
+        if (state.getController().isPlayingTriggeredAnimation() || isMainControllerTriggered(state))
+            return PlayState.STOP;
         state.getController().setAnimation(RawAnimation.begin().thenLoop(getAnimation()));
         return PlayState.CONTINUE;
     }
+
+    private boolean isMainControllerTriggered(AnimationState<IGeoItem> state) {
+        ItemStack itemStack = state.getData(DataTickets.ITEMSTACK);
+        if (itemStack == null) return false;
+        long id = GeoItem.getId(itemStack);
+        if (id == Long.MAX_VALUE) return false;
+        AnimationController<?> main = getAnimatableInstanceCache().getManagerForId(id).getAnimationControllers().get("controller");
+        return main != null && main != state.getController() && main.isPlayingTriggeredAnimation();
+    }
+
 
     private String getAnimation(ItemStack itemStack) {
         String animation = GJ.ToItem.getNbt(itemStack).getString(ANIMATION);
@@ -177,6 +215,7 @@ public interface IGeoItem extends GeoItem {
     static void triggerAnimation(ItemStack itemStack, Entity entity, ServerLevel serverLevel, String animation){
         if (itemStack.getItem() instanceof IGeoItem item){
             playAnimationAndReset(itemStack, animation);
+            GeoItemAnimData.set(itemStack, animation);
             item.triggerAnim(entity, GeoItem.getOrAssignId(itemStack, serverLevel), "controller", animation);
         }
     }
@@ -185,12 +224,31 @@ public interface IGeoItem extends GeoItem {
     static void triggerAnimation(ItemStack itemStack, Entity entity, String animation){
         if (itemStack.getItem() instanceof IGeoItem item){
             playAnimationAndReset(itemStack, animation);
+            GeoItemAnimData.set(itemStack, animation);
             if (entity.level() instanceof ServerLevel serverLevel) {
                 item.triggerAnim(entity, GeoItem.getOrAssignId(itemStack, serverLevel), "controller", animation);
             }
             else if (GJ.ToItem.getNbt(itemStack).contains(GeoItem.ID_NBT_KEY))
                 item.triggerAnim(entity, GeoItem.getId(itemStack), "controller", animation);
         }
+    }
+
+    /**
+     * 停止触发动画并清除保存的状态，回到默认（idle）动画。<br>
+     * 停在最后一帧的动画需要用这个方法才能回去
+     */
+    static void clearTriggeredAnimation(ItemStack itemStack, Entity entity) {
+        if (!(itemStack.getItem() instanceof IGeoItem item)) return;
+        GeoItemAnimData.remove(itemStack);
+        long id = GeoItem.getId(itemStack);
+        if (id != Long.MAX_VALUE)
+            item.stopTriggeredAnim(entity, id, "controller", null);
+    }
+
+    /** 获取保存的触发动画名（没有返回空字符串） */
+    static String getTriggeredAnimation(ItemStack itemStack) {
+        String animation = GeoItemAnimData.get(itemStack);
+        return animation == null ? "" : animation;
     }
 
     /**获取当前播放的动画的动画名*/
@@ -244,4 +302,14 @@ public interface IGeoItem extends GeoItem {
 
     @OnlyIn(Dist.CLIENT)
     default <T extends Item & IGeoItem> void withRender(BaseGeoItemRenderer<T> tBaseGeoItemRenderer, PoseStack poseStack, T animatable, BakedGeoModel model, RenderType renderType, MultiBufferSource bufferSource, VertexConsumer buffer, boolean isReRender, float partialTick, int packedLight, int packedOverlay, float red, float green, float blue, float alpha){}
+
+    /** 需要发光渲染（beaconBeam）的骨骼名 */
+    default <T extends Item & IGeoItem> java.util.Set<String> lightBones(BaseGeoItemRenderer<T> renderer) {
+        return new java.util.HashSet<>();
+    }
+
+    /** 指定骨骼使用的渲染类型 */
+    default <T extends Item & IGeoItem> Map<String, RenderType> boneByRenderType(BaseGeoItemRenderer<T> renderer) {
+        return new HashMap<>();
+    }
 }

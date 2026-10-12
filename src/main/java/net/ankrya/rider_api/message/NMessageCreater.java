@@ -10,7 +10,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Supplier;
 
 /**
  * {@link  INMessage} 网络包创建器 <br>
@@ -43,18 +42,19 @@ public class NMessageCreater{
         } catch (Throwable e) {
             throw new RuntimeException(e);
         }
-        return new NMessageCreater(message);
+        NMessageCreater create = new NMessageCreater(message);
+        return create;
     }
 
     // 执行message对象的方法
-    public static void run(final NMessageCreater create, final Supplier<NetworkEvent.Context> supplier) {
+    public static void run(final NMessageCreater create, final java.util.function.Supplier<NetworkEvent.Context> supplier) {
         NetworkEvent.Context context = supplier.get();
         context.enqueueWork(() -> create.message.run(context));
         context.setPacketHandled(true);
     }
 
     private static INMessage creatMessage(FriendlyByteBuf buf, String path) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
-        int lengthNum = buf.readInt();
+        long lengthNum = buf.readLong();
 
         byte[] bytes = getDigits(lengthNum);
         int length = bytes.length;
@@ -71,31 +71,30 @@ public class NMessageCreater{
         }
         if (!Objects.equals(path, AllPackt.class.getName())) {
             if (hasData) {
-                return (INMessage) classForName(path).getDeclaredConstructor(parameterClass).newInstance(parameters);
-            } else return (INMessage) classForName(path).getDeclaredConstructor().newInstance();
+                return (INMessage) messageClass(path).getDeclaredConstructor(parameterClass).newInstance(parameters);
+            } else return (INMessage) messageClass(path).getDeclaredConstructor().newInstance();
         } else {
-            if (hasData) {
-                String messageName = buf.readUtf();
-                INMessage message = (INMessage) Class.forName(messageName).getDeclaredConstructor(parameterClass).newInstance(parameters);
-                return (INMessage) classForName(path).getDeclaredConstructor(String.class, INMessage.class).newInstance(messageName, message);
-            } else {
-                String messageName = buf.readUtf();
-                INMessage message = (INMessage) Class.forName(messageName).getDeclaredConstructor().newInstance();
-                return (INMessage) classForName(path).getDeclaredConstructor(String.class, INMessage.class).newInstance(messageName, message);
-            }
+            String messageName = buf.readUtf();
+            INMessage message = hasData
+                    ? (INMessage) messageClass(messageName).getDeclaredConstructor(parameterClass).newInstance(parameters)
+                    : (INMessage) messageClass(messageName).getDeclaredConstructor().newInstance();
+            // 发送者 id 和"是否发回给发送者"，见 AllPackt
+            int sourceId = buf.readInt();
+            boolean includeSender = buf.readBoolean();
+            return new AllPackt(messageName, message, sourceId, includeSender);
         }
     }
 
-    public static byte[] getDigits(int number) {
+    public static byte[] getDigits(long number) {
         if (number == 0) {
             return new byte[0];
         }
 
-        int[] temp = new int[10];
+        long[] temp = new long[18];
         int count = 0;
 
         while (number > 0) {
-            int digit = number % 10;
+            long digit = number % 10;
             temp[count] = digit;
             count++;
             number /= 10;
@@ -118,6 +117,7 @@ public class NMessageCreater{
             case 6 -> buf.readResourceLocation();
             case 7 -> buf.readUUID();
             case 8 -> buf.readBlockPos();
+            case 9 -> buf.readLong();
             default -> throw new IllegalArgumentException("Unknown parameter type: " + type);
         };
     }
@@ -125,11 +125,23 @@ public class NMessageCreater{
     private static Class<?> classForName(String name){
         return CLASS_CACHE.computeIfAbsent(name, className -> {
             try {
-                return Class.forName(className);
+                // 先不初始化类，校验通过后再用
+                Class<?> clazz = Class.forName(className, false, NMessageCreater.class.getClassLoader());
+                if (!INMessage.class.isAssignableFrom(clazz))
+                    throw new IllegalArgumentException("Not an INMessage: " + className);
+                return clazz;
             } catch (ClassNotFoundException e) {
                 throw new RuntimeException(e);
             }
         });
+    }
+
+    /**
+     * 安全检查：网络包里的类名来自对方，必须是 INMessage 才允许实例化。
+     * 原来任何类名都会被 Class.forName + 反射构造，恶意客户端可以让服务端实例化任意类
+     */
+    private static Class<?> messageClass(String name){
+        return classForName(name);
     }
 
 //    private record ClassKey(Class<?> clazz, Class<?>[] paramTypes) {}

@@ -11,4 +11,9 @@ public interface IVariable<T> {
 
     Tag write(T value);
     T read(Tag nbt);
+
+    /** 复制一个值，避免多个 Variables 共用同一个可变对象（CompoundTag、ItemStack 会覆写） */
+    default T copy(T value) {
+        return value;
+    }
 }

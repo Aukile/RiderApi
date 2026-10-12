@@ -66,20 +66,24 @@ public class BaseGeoArmorRenderer<T extends BaseGeoArmor> extends GeoArmorRender
 
     @Override
     public void renderCubesOfBone(PoseStack poseStack, GeoBone bone, VertexConsumer buffer, int packedLight, int packedOverlay, float red, float green, float blue, float alpha) {
-        if (getGeoArmorInterface() != null && !getGeoArmorInterface().lightBones(this).isEmpty()){
+        // 原来：boneByRenderType 只有在 lightBones 不为空时才生效；并且遍历 map 时每个不匹配的条目都会把骨骼再渲染一遍（重复渲染）
+        IGeoArmor geoArmor = getGeoArmorInterface();
+        if (geoArmor == null) {
+            super.renderCubesOfBone(poseStack, bone, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            return;
+        }
+        String name = bone.getName();
+        if (geoArmor.lightBones(this).contains(name)) {
             MultiBufferSource.BufferSource source = Minecraft.getInstance().renderBuffers().bufferSource();
-            String name = bone.getName();
-            if (getGeoArmorInterface().lightBones(this).contains(name)) {
-                VertexConsumer newBuffer = source.getBuffer(RenderType.beaconBeam(getTextureLocation(animatable), true));
-                super.renderCubesOfBone(poseStack, bone, newBuffer, packedLight, packedOverlay, red, green, blue, alpha);
-            } else if (!getGeoArmorInterface().boneByRenderType(this).isEmpty() && getGeoArmorInterface().boneByRenderType(this).containsKey(name)) {
-                for (Map.Entry<String, RenderType> entry : getGeoArmorInterface().boneByRenderType(this).entrySet()){
-                    if (name.equals(entry.getKey())) {
-                        VertexConsumer newBuffer = source.getBuffer(entry.getValue());
-                        super.renderCubesOfBone(poseStack, bone, newBuffer, packedLight, packedOverlay, red, green, blue, alpha);
-                    } else super.renderCubesOfBone(poseStack, bone, buffer, packedLight, packedOverlay, red, green, blue, alpha);
-                }
-            } else super.renderCubesOfBone(poseStack, bone, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            VertexConsumer newBuffer = source.getBuffer(RenderType.beaconBeam(getTextureLocation(animatable), true));
+            super.renderCubesOfBone(poseStack, bone, newBuffer, packedLight, packedOverlay, red, green, blue, alpha);
+            return;
+        }
+        Map<String, RenderType> byType = geoArmor.boneByRenderType(this);
+        RenderType type = byType.get(name);
+        if (type != null) {
+            MultiBufferSource.BufferSource source = Minecraft.getInstance().renderBuffers().bufferSource();
+            super.renderCubesOfBone(poseStack, bone, source.getBuffer(type), packedLight, packedOverlay, red, green, blue, alpha);
         } else super.renderCubesOfBone(poseStack, bone, buffer, packedLight, packedOverlay, red, green, blue, alpha);
     }
 
@@ -87,7 +91,7 @@ public class BaseGeoArmorRenderer<T extends BaseGeoArmor> extends GeoArmorRender
         return item == null ? this.getAnimatable() : item;
     }
 
-    private IGeoArmor getGeoArmorInterface(){
+    public IGeoArmor getGeoArmorInterface(){
         if (getGeoItemBaseInterface() instanceof IGeoArmor geoArmor)
             return geoArmor;
         return null;

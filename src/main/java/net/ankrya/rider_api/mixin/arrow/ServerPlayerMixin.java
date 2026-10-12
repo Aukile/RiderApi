@@ -14,6 +14,7 @@ import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TieredItem;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -35,8 +36,21 @@ public abstract class ServerPlayerMixin extends Player {
 
     @Inject(method = {"drop(Lnet/minecraft/world/item/ItemStack;ZZ)Lnet/minecraft/world/entity/item/ItemEntity;"}, at = @At("HEAD"),cancellable = true)
     public void drop(ItemStack stack, boolean p_9086_, boolean p_9087_, CallbackInfoReturnable<ItemEntity> cir){
-        if ((boolean)Variables.getVariable(this, ModVariable.ARROW_DROP_MODE) || stack.getItem() instanceof ItemToArrow){
-            LivingEntity shoot = this;
+        LivingEntity shoot = this;
+        if (stack.getItem() instanceof ItemToArrow itemToArrow && itemToArrow.startThrow(shoot, stack)){
+            Level level = shoot.level();
+            if (!level.isClientSide()) {
+                float damageBonus = 0;
+                if (stack.getItem() instanceof TieredItem tieredItem) damageBonus = tieredItem.getTier().getAttackDamageBonus();
+                Projectile _entityToSpawn = ArrowSource.shoot(stack, itemToArrow.pick(shoot, stack), level, this, itemToArrow.damage(shoot, stack, damageBonus), itemToArrow.knockback(shoot, stack));
+                itemToArrow.onShoot(shoot, stack, _entityToSpawn);
+                _entityToSpawn.setPos(itemToArrow.shootPos(shoot, stack));
+                Vec3 angle = itemToArrow.angle(shoot, stack);
+                _entityToSpawn.shoot(angle.x, angle.y, angle.z, itemToArrow.throwPower(shoot, stack), 0);
+                level.addFreshEntity(_entityToSpawn);
+            }
+            cir.setReturnValue(null);
+        } else if ((boolean) Variables.getVariable(this, ModVariable.ARROW_DROP_MODE)){
             Level level = shoot.level();
             if (!level.isClientSide()) {
                 float damageBonus = 0;

@@ -2,13 +2,12 @@ package net.ankrya.rider_api.message;
 
 import com.google.common.primitives.Primitives;
 import net.ankrya.rider_api.interfaces.message.IEXMessage;
-import net.ankrya.rider_api.message.ex_message.AllPackt;
+import net.ankrya.rider_api.message.ex_message.AllPacktForIEX;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Objects;
-import java.util.function.Supplier;
 
 /**
  * {@link IEXMessage} 的创建器 <br>
@@ -23,7 +22,7 @@ public class EXMessageCreater{
 
     public static void toBuf(EXMessageCreater create, FriendlyByteBuf buf) {
         String path = create.message.getClass().getName();
-        byte[] bytes = path.getBytes();
+        byte[] bytes = path.getBytes(java.nio.charset.StandardCharsets.UTF_8);
         buf.writeInt(bytes.length);
         for (byte b : bytes) {
             buf.writeByte(b);
@@ -36,7 +35,7 @@ public class EXMessageCreater{
         for (int i = 0; i < bytes.length; i++) {
             bytes[i] = buf.readByte();
         }
-        String path = new String(bytes);
+        String path = new String(bytes, java.nio.charset.StandardCharsets.UTF_8);
         IEXMessage message;
         try {
             message = creatMessage(buf, path);
@@ -46,7 +45,7 @@ public class EXMessageCreater{
         return new EXMessageCreater(message);
     }
 
-    public static void run(final EXMessageCreater create, final Supplier<NetworkEvent.Context> supplier) {
+    public static void run(final EXMessageCreater create, final java.util.function.Supplier<NetworkEvent.Context> supplier) {
         NetworkEvent.Context context = supplier.get();
         context.enqueueWork(() -> create.message.run(context));
         context.setPacketHandled(true);
@@ -55,7 +54,8 @@ public class EXMessageCreater{
     private static IEXMessage creatMessage(FriendlyByteBuf buf, String path) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
         boolean hasParameters = buf.readBoolean();
 
-        if (!Objects.equals(path, AllPackt.class.getName())) {
+        // 原来这里判断的是 AllPackt（INMessage 体系的），导致 AllPacktForIEX 永远走错分支、反序列化必定失败
+        if (!Objects.equals(path, AllPacktForIEX.class.getName())) {
             if (hasParameters) {
                 int length = buf.readInt();
                 Class<?>[] parameterClass = new Class[length];
@@ -66,8 +66,8 @@ public class EXMessageCreater{
                     parameterClass[i] = Primitives.unwrap(aClass);
                     parameters[i] = object;
                 }
-                return (IEXMessage) Class.forName(path).getDeclaredConstructor(parameterClass).newInstance(parameters);
-            } else return (IEXMessage) Class.forName(path).getDeclaredConstructor().newInstance();
+                return (IEXMessage) messageClass(path).getDeclaredConstructor(parameterClass).newInstance(parameters);
+            } else return (IEXMessage) messageClass(path).getDeclaredConstructor().newInstance();
         } else {
             if (hasParameters) {
                 int length = buf.readInt();
@@ -82,14 +82,22 @@ public class EXMessageCreater{
                         parameters[i] = object;
                     } else messageName = (String) object;
                 }
-                IEXMessage message = (IEXMessage) Class.forName(messageName).getDeclaredConstructor(parameterClass).newInstance(parameters);
-                return (IEXMessage) Class.forName(path).getDeclaredConstructor(String.class,IEXMessage.class).newInstance(messageName, message);
+                IEXMessage message = (IEXMessage) messageClass(messageName).getDeclaredConstructor(parameterClass).newInstance(parameters);
+                return (IEXMessage) messageClass(path).getDeclaredConstructor(String.class,IEXMessage.class).newInstance(messageName, message);
             } else {
                 String messageName = (String) readParameter(buf);
-                IEXMessage message = (IEXMessage) Class.forName(messageName).getDeclaredConstructor().newInstance();
-                return (IEXMessage) Class.forName(path).getDeclaredConstructor(String.class,IEXMessage.class).newInstance(messageName, message);
+                IEXMessage message = (IEXMessage) messageClass(messageName).getDeclaredConstructor().newInstance();
+                return (IEXMessage) messageClass(path).getDeclaredConstructor(String.class,IEXMessage.class).newInstance(messageName, message);
             }
         }
+    }
+
+    /** 安全检查：只允许实例化 IEXMessage 的实现类 */
+    private static Class<?> messageClass(String name) throws ClassNotFoundException {
+        Class<?> clazz = Class.forName(name, false, EXMessageCreater.class.getClassLoader());
+        if (!IEXMessage.class.isAssignableFrom(clazz))
+            throw new IllegalArgumentException("Not an IEXMessage: " + name);
+        return clazz;
     }
 
     private static Comparable<?> readParameter(FriendlyByteBuf buf){

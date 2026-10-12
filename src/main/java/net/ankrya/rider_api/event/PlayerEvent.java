@@ -23,6 +23,9 @@ public class PlayerEvent {
     /**普攻冷却*/
     @SubscribeEvent
     public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
+        // 只在服务端倒计时，再同步给客户端。
+        // 原来客户端也会执行，每 tick 都把整份数据发给服务端，和服务端互相覆盖
+        if (event.player.level().isClientSide()) return;
         if (event.phase == TickEvent.Phase.END){
             int hit = Variables.getVariable(event.player, ModVariable.HIT_COOLING);
             if (hit > 0) Variables.setVariable(event.player, ModVariable.HIT_COOLING, hit - 1);
@@ -49,6 +52,18 @@ public class PlayerEvent {
         LivingEntity entity = event.getEntity();
         if ((int) Variables.getVariable(entity, ModVariable.TIME_STATUS) != 0 && hasTimerUser(entity)){
             GJ.TimerControl.timerStartUp(entity.level(), 0);
+        }
+    }
+
+    /** 时停/时缓的使用者下线时恢复世界时间，否则世界会一直停住（数据还会被存档） */
+    @SubscribeEvent
+    public static void onPlayerLogout(net.minecraftforge.event.entity.player.PlayerEvent.PlayerLoggedOutEvent event){
+        Player player = event.getEntity();
+        if (player.level().isClientSide()) return;
+        if ((int) Variables.getVariable(player, ModVariable.TIME_STATUS) != 0){
+            Variables.setVariable(player, ModVariable.TIME_STATUS, 0);
+            if (GJ.TimerControl.getWorldTime(player.level()) != 0)
+                GJ.TimerControl.timerStartUp(player.level(), 0);
         }
     }
 

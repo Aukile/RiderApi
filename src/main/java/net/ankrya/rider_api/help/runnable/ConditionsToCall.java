@@ -31,7 +31,10 @@ public class ConditionsToCall<T>{
     public void tick(TickEvent.ServerTickEvent event) {
         if (event.phase == TickEvent.Phase.END){
             if (conditions.test(tick)) {
+                // 原来执行后不注销，监听器会永远挂在事件总线上
+                this.bus.unregister(this);
                 getFutureTask().run();
+                return;
             }
             tick++;
         }

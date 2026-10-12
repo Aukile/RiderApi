@@ -137,6 +137,15 @@ public class SpecialArrow extends AbstractArrow implements GeoEntity {
         return specialArrow;
     }
 
+    /** 与主分支同名的写法（主分支把 shoot 改名为 toShoot），效果和 shoot 相同 */
+    public static AbstractArrow toShoot(AbstractArrow arrow, double vx, double vy, double vz, float power, double damage, int knockback, float scattering){
+        return shoot(arrow, vx, vy, vz, power, damage, knockback, scattering);
+    }
+
+    public static AbstractArrow toShoot(AbstractArrow arrow, LivingEntity entity, float power, double damage, int knockback, float scattering) {
+        return shoot(arrow, entity, power, damage, knockback, scattering);
+    }
+
     public static AbstractArrow shoot(AbstractArrow specialArrow, LivingEntity entity, float power, double damage, int knockback, float scattering) {
         GJ.ToEntity.turnTo(specialArrow, entity);
         return shoot(specialArrow, entity.getViewVector(1).x, entity.getViewVector(1).y, entity.getViewVector(1).z, power, damage, knockback, scattering);

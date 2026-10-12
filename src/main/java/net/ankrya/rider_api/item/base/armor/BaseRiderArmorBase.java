@@ -19,6 +19,11 @@ public abstract class BaseRiderArmorBase extends BaseGeoArmor {
         super(material, type, properties);
     }
 
+    /** 技能轮盘（{@link net.ankrya.rider_api.help.skill.SkillWheelScreen}）显示的技能列表，默认没有 */
+    public java.util.List<net.ankrya.rider_api.help.skill.Skill> getSkillList(net.minecraft.world.entity.player.Player player) {
+        return java.util.List.of();
+    }
+
     public static EquipmentSlot[] getSlots() {
         return new EquipmentSlot[]{EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.FEET};
     }
@@ -59,5 +64,10 @@ public abstract class BaseRiderArmorBase extends BaseGeoArmor {
 
     public Map<EquipmentSlot, Class<? extends BaseRiderArmorBase>> getArmorClass() {
         return armorClass;
+    }
+
+    /** 渲染玩家时是否限制只渲染盔甲（见 PlayerRender），默认 true */
+    public boolean limitToRenderArmor(net.minecraft.client.player.AbstractClientPlayer player, ItemStack chest) {
+        return true;
     }
 }

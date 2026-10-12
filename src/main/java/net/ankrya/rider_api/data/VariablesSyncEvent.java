@@ -21,6 +21,17 @@ public final class VariablesSyncEvent {
         event.addListener(provider::invalidate);
     }
 
+    /**
+     * 玩家开始看到某个实体时，把这个实体的变量发给他。<br>
+     * 原来只有设置变量的那一刻会同步，之后才进入视野/登录的玩家拿不到（例如时缓免疫、单独时速状态）
+     */
+    @SubscribeEvent
+    public static void onStartTracking(PlayerEvent.StartTracking event) {
+        if (event.getEntity() instanceof ServerPlayer player)
+            event.getTarget().getCapability(Variables.VARIABLES).ifPresent(vars ->
+                    MessageLoader.getApiLoader().sendToPlayer(new SyncVariableMessage(event.getTarget().getId(), vars), player));
+    }
+
     @SubscribeEvent
     public static void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) {
@@ -64,10 +75,15 @@ public final class VariablesSyncEvent {
 
     @SubscribeEvent
     public static void clonePlayer(PlayerEvent.Clone event) {
+        // 原来新建的 clone 没有放回新玩家身上，复制的数据直接丢了；
+        // 另外 Forge 1.20 中旧玩家的 Capability 在死亡后已失效，需要先 reviveCaps 才能读到
+        event.getOriginal().reviveCaps();
         Variables original = Variables.getCapability(event.getOriginal());
-        Variables clone = new Variables();
-        clone.cloneIfSave(original);
-        Variables.getCapability(event.getEntity());
+        Variables clone = Variables.getCapability(event.getEntity());
+        // 只有真正死亡才只保留 save 变量；从末地返回等非死亡克隆应完整保留
+        if (event.isWasDeath()) clone.cloneIfSave(original);
+        else clone.cloneAll(original);
+        event.getOriginal().invalidateCaps();
     }
 
     public static Variables get(Level world) {

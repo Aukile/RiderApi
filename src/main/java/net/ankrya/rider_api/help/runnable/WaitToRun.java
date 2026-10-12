@@ -28,8 +28,9 @@ public class WaitToRun {
         if (event.phase == TickEvent.Phase.END) {
             this.delayTick = (this.delayTick > 0) ? (this.delayTick - 1) : 0;
             if (this.delayTick <= 0) {
-                this.runnable.run();
+                // 先注销再执行：runnable 抛异常时也不会每 tick 重复执行
                 this.bus.unregister(this);
+                this.runnable.run();
             }
         }
     }

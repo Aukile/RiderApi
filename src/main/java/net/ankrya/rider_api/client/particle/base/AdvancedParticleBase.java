@@ -156,7 +156,6 @@ public class AdvancedParticleBase extends TextureSheetParticle {
     }
 
     public void render(VertexConsumer buffer, Camera renderInfo, float partialTicks) {
-        System.out.println("++rendering particle");
         this.alpha = this.prevAlpha + (this.alpha - this.prevAlpha) * partialTicks;
         if ((double)this.alpha < 0.01) {
             this.alpha = 0.01F;
@@ -241,7 +240,6 @@ public class AdvancedParticleBase extends TextureSheetParticle {
             }
 
         }
-        System.out.println("--render particle over");
     }
 
     public float getAge() {

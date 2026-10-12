@@ -3,6 +3,7 @@ package net.ankrya.rider_api.mixin.client;
 import net.ankrya.rider_api.data.ModVariable;
 import net.ankrya.rider_api.data.Variables;
 import net.ankrya.rider_api.help.GJ;
+import net.ankrya.rider_api.init.RiderEffects;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.MouseHandler;
 import net.minecraft.world.entity.player.Player;
@@ -17,6 +18,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MouseHandlerMixin {
 
     @Shadow @Final private Minecraft minecraft;
+
+    /** 眩晕时禁止鼠标点击和滚轮 */
+    @Inject(method = {"onPress", "onScroll"}, at = @At("HEAD"), cancellable = true)
+    private void rider$stunDisabled(CallbackInfo ci){
+        if (minecraft.player != null && minecraft.player.hasEffect(RiderEffects.STUN.get()))
+            ci.cancel();
+    }
 
     @Inject(method = "turnPlayer",at = @At("HEAD"),cancellable = true)
     public void turnPlayer(CallbackInfo ci) {

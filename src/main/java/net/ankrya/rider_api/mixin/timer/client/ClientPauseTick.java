@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import net.ankrya.rider_api.data.ModVariable;
 import net.ankrya.rider_api.data.Variables;
 import net.ankrya.rider_api.help.GJ;
+import net.ankrya.rider_api.help.TimeRateHelper;
 import net.ankrya.rider_api.interfaces.timer.ITimer;
 import net.ankrya.rider_api.mixin.accessor.MinecraftAccessor;
 import net.minecraft.Util;
@@ -62,14 +63,21 @@ public class ClientPauseTick {
         @Inject(method = "renderEntity",at = @At("HEAD"),cancellable = true)
         private void renderEntity(Entity p_109518_, double p_109519_, double p_109520_, double p_109521_, float p_109522_, PoseStack p_109523_, MultiBufferSource p_109524_, CallbackInfo ci) {
             if (this.level != null) {
-                if (((int) Variables.getVariable(level, ModVariable.TIME_STATUS) == 2 && GJ.TimerControl.isPauseEntity(p_109518_))
-                        || ((int) Variables.getVariable(level, ModVariable.TIME_STATUS) == 1 && GJ.TimerControl.isSlowEntity(p_109518_) ) ){
+                int timeState = GJ.TimerControl.getWorldTime(level);
+                float patialTick = -1f;
+                if ((timeState == 2 && GJ.TimerControl.isPauseEntity(p_109518_))
+                        || (timeState == 1 && GJ.TimerControl.isSlowEntity(p_109518_))) {
+                    ITimer timerTimer = (ITimer) ((MinecraftAccessor)minecraft).getTimer();
+                    patialTick = timerTimer.rider_api$partialTick();
+                } else if (timeState != 2 && GJ.TimerControl.getCustomTimeRate(p_109518_, timeState) >= 0f) {
+                    // 单独时速：用这个实体自己的进度作为 partialTick，不同速率的实体都能平滑插值
+                    patialTick = TimeRateHelper.partialTick(p_109518_);
+                }
 
-                    ITimer ITimer = (ITimer) ((MinecraftAccessor)minecraft).getTimer();
-                    float patialTick = ITimer.rider_api$partialTick();
-                    double d0 = Mth.lerp((double)patialTick, p_109518_.xOld, p_109518_.getX());
-                    double d1 = Mth.lerp((double)patialTick, p_109518_.yOld, p_109518_.getY());
-                    double d2 = Mth.lerp((double)patialTick, p_109518_.zOld, p_109518_.getZ());
+                if (patialTick >= 0f) {
+                    double d0 = Mth.lerp(patialTick, p_109518_.xOld, p_109518_.getX());
+                    double d1 = Mth.lerp(patialTick, p_109518_.yOld, p_109518_.getY());
+                    double d2 = Mth.lerp(patialTick, p_109518_.zOld, p_109518_.getZ());
                     float f = Mth.lerp(patialTick, p_109518_.yRotO, p_109518_.getYRot());
                     this.entityRenderDispatcher.render(p_109518_, d0 - p_109519_, d1 - p_109520_, d2 - p_109521_, f, patialTick, p_109523_, p_109524_, this.entityRenderDispatcher.getPackedLightCoords(p_109518_, p_109522_));
                     ci.cancel();

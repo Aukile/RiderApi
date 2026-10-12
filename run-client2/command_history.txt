@@ -1,0 +1,4 @@
+/riderapi timer Ankrya normal
+/riderapi timer Ankrya slow
+/riderapi time slow
+/riderapi timer Dev normal

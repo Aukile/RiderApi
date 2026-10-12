@@ -4,7 +4,17 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
+import dev.kosmx.playerAnim.api.firstPerson.FirstPersonMode;
+import dev.kosmx.playerAnim.impl.IAnimatedPlayer;
+import net.ankrya.rider_api.compat.animation.PlayerAnimator;
+import net.ankrya.rider_api.effect.EffectAnchor;
+import net.ankrya.rider_api.effect.PlayerEffect;
+import net.ankrya.rider_api.effect.PlayerEffectManager;
+import net.ankrya.rider_api.effect.render.PlayerEffectRenderer;
 import net.ankrya.rider_api.item.base.armor.BaseRiderArmor;
+import net.ankrya.rider_api.item.base.armor.BaseRiderArmorBase;
+import net.ankrya.rider_api.item.renderer.base.BaseGeoArmorRenderer;
+import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.PlayerModel;
@@ -16,6 +26,7 @@ import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.player.PlayerRenderer;
 import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -24,10 +35,10 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.RenderArmEvent;
-import net.minecraftforge.client.event.RenderHandEvent;
-import net.minecraftforge.client.event.RenderPlayerEvent;
+import net.minecraftforge.client.event.*;
+import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
@@ -38,6 +49,8 @@ import software.bernie.geckolib.core.object.Color;
 import software.bernie.geckolib.renderer.GeoArmorRenderer;
 
 import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
 @Mod.EventBusSubscriber(Dist.CLIENT)
 public class PlayerRender {
@@ -61,17 +74,23 @@ public class PlayerRender {
         float partialTick = mc.getFrameTime();
 
         EquipmentSlot slot = EquipmentSlot.CHEST;
-        renderArm(event, player, slot, poseStack, bufferSource, partialTick, packedLight, true);
+        ItemStack chest = player.getItemBySlot(slot);
+        boolean otherLimit = true;
+        if (chest.getItem() instanceof BaseRiderArmorBase armor) {
+            otherLimit = armor.limitToRenderArmor(player, chest);
+        }
+        renderArm(event, player, slot, poseStack, bufferSource, partialTick, packedLight, otherLimit);
     }
 
-    private static void renderArm(RenderArmEvent event, AbstractClientPlayer player, EquipmentSlot slot, PoseStack poseStack, MultiBufferSource bufferSource, float partialTick, int packedLight, boolean otherLimit) {
+    public static void renderArm(RenderArmEvent event, AbstractClientPlayer player, EquipmentSlot slot, PoseStack poseStack, MultiBufferSource bufferSource, float partialTick, int packedLight, boolean otherLimit) {
         ItemStack chest = player.getItemBySlot(slot);
+        if (chest == null) return;
         EntityRenderDispatcher entityrenderdispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
         EntityRenderer<?> entityrenderer = entityrenderdispatcher.getRenderer(player);
         PlayerModel<AbstractClientPlayer> playermodel = ((PlayerRenderer) entityrenderer).getModel();
         poseStack.pushPose();
 
-        if (chest.getItem() instanceof GeoItem items && otherLimit) {
+        if (!chest.isEmpty() && chest.getItem() instanceof GeoItem items && otherLimit) {
             GeoArmorRenderer geoArmorRender = (GeoArmorRenderer) getArmorModelHook(player, chest, slot, playermodel);
 
             VertexConsumer buffer = bufferSource.getBuffer(RenderType.entityTranslucent(geoArmorRender.getTextureLocation(items)));
@@ -82,17 +101,25 @@ public class PlayerRender {
 
             SetAllBoneNoVisible(geoArmorRender);
             GeoBone right = geoArmorRender.getRightArmBone();
+            // 安装了 playerAnimator 且当前动画使用第三人称模型时，不锁定手臂骨骼（让动画姿势在第一人称也生效）
+            boolean needLock = !PlayerAnimator.instance().installed()
+                    || !(player instanceof IAnimatedPlayer animated)
+                    || animated.playerAnimator_getAnimation().getFirstPersonMode() != FirstPersonMode.THIRD_PERSON_MODEL;
             if (right != null) {
                 right.setHidden(event.getArm() != HumanoidArm.RIGHT);
-                right.updateRotation(0, 0, 0);
-                right.updatePosition(0, 0, 0);
+                if (needLock) {
+                    right.updateRotation(0, 0, 0);
+                    right.updatePosition(0, 0, 0);
+                }
             }
 
             GeoBone left = geoArmorRender.getLeftArmBone();
             if (left != null) {
                 left.setHidden(event.getArm() != HumanoidArm.LEFT);
-                left.updateRotation(0, 0, 0);
-                left.updatePosition(0, 0, 0);
+                if (needLock) {
+                    left.updateRotation(0, 0, 0);
+                    left.updatePosition(0, 0, 0);
+                }
             }
             geoArmorRender.actuallyRender(poseStack, (Item) items, model, renderType, bufferSource, buffer, true, partialTick, packedLight, OverlayTexture.NO_OVERLAY, renderColor.getRed() / 255f, renderColor.getGreen() / 255f,
                     renderColor.getBlue() / 255f, renderColor.getAlpha() / 255f);
@@ -102,16 +129,110 @@ public class PlayerRender {
         poseStack.popPose();
     }
 
-    private static void SetAllBoneNoVisible(GeoArmorRenderer<?> render) {
+    public static void SetAllBoneNoVisible(GeoArmorRenderer<?> render) {
         try {
             for (GeoBone geoBone : Arrays.asList(render.getHeadBone()
                     , render.getBodyBone(), render.getRightLegBone()
                     , render.getRightBootBone(), render.getLeftLegBone()
                     , render.getLeftBootBone())) {
-                geoBone.setHidden(true);
+                // 原来遇到第一个不存在的骨骼就抛异常，后面的骨骼都不会被隐藏
+                if (geoBone != null)
+                    geoBone.setHidden(true);
             }
-        } catch (Exception e) {
+            if (render instanceof BaseGeoArmorRenderer<?> renderer && renderer.getGeoArmorInterface() != null) {
+                Map<String, Boolean> map = renderer.getGeoArmorInterface().visibilityBones(renderer);
+                for (Map.Entry<String, Boolean> entry : map.entrySet())
+                    renderer.getGeoModel().getBone(entry.getKey()).ifPresent(bone -> bone.setHidden(entry.getValue()));
+            }
+        } catch (Exception ignored) {
         }
+    }
+
+    @SubscribeEvent
+    public static void onClientLogin(ClientPlayerNetworkEvent.LoggingIn event) {
+        PlayerEffectManager.get().clearAll();
+    }
+
+    /** 主分支写在 RegisterClientEvent 里；1.20 的 RegisterClientEvent 在 MOD 总线上，收不到这个事件，所以放在这里 */
+    @SubscribeEvent
+    public static void onClientLogout(ClientPlayerNetworkEvent.LoggingOut event) {
+        net.ankrya.rider_api.compat.animation.GeoArmorBender.clearAll();
+        PlayerEffectManager.get().clearAll();
+    }
+
+    @SubscribeEvent
+    public static void onClientTick(TickEvent.ClientTickEvent event) {
+        if (event.phase != TickEvent.Phase.END) return;
+        if (!Minecraft.getInstance().isPaused()) PlayerEffectManager.get().tick();
+    }
+
+    @SubscribeEvent
+    public static void onRenderPlayer(RenderPlayerEvent.Post event) {
+        Player player = event.getEntity();
+        List<PlayerEffect> effects = PlayerEffectManager.get().getPlayerEffects(player.getUUID());
+        if (effects.isEmpty()) return;
+
+        PoseStack poseStack = event.getPoseStack();
+        MultiBufferSource bufferSource = event.getMultiBufferSource();
+        float partialTick = event.getPartialTick();
+        int packedLight = event.getPackedLight();
+
+        for (PlayerEffect effect : effects) {
+            poseStack.pushPose();
+            if (effect.getConfig().anchor() instanceof EffectAnchor.FollowPlayer follow) {
+                poseStack.translate(follow.offsetX(), follow.offsetY(), follow.offsetZ());
+                poseStack.mulPose(Axis.YP.rotationDegrees(-Mth.lerp(partialTick, player.yBodyRotO, player.yBodyRot)));
+            }
+
+            PlayerEffectRenderer.getInstance().render(
+                    effect, poseStack, bufferSource, packedLight, partialTick);
+
+            poseStack.popPose();
+        }
+    }
+
+    @SubscribeEvent
+    public static void onRenderLevel(RenderLevelStageEvent event) {
+        if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_TRANSLUCENT_BLOCKS || Minecraft.getInstance().level == null) {
+            return;
+        }
+
+        List<PlayerEffect> effects = PlayerEffectManager.get().getWorldEffects();
+        if (effects.isEmpty()) return;
+
+        PoseStack poseStack = event.getPoseStack();
+        MultiBufferSource.BufferSource bufferSource = Minecraft.getInstance().renderBuffers().bufferSource();
+        Camera camera = event.getCamera();
+        Vec3 cameraPos = camera.getPosition();
+        float partialTick = event.getPartialTick();
+
+        for (PlayerEffect effect : effects) {
+            if (!(effect.getConfig().anchor() instanceof EffectAnchor.WorldPosition worldPos)) {
+                continue;
+            }
+
+            Vec3 effectPos = worldPos.getPosition();
+
+            // 距离过远则跳过
+            if (cameraPos.distanceToSqr(effectPos) > 4096.0) continue;
+
+            poseStack.pushPose();
+            // 转换到世界坐标（相对摄像机）
+            poseStack.translate(
+                    effectPos.x - cameraPos.x,
+                    effectPos.y - cameraPos.y,
+                    effectPos.z - cameraPos.z
+            );
+
+            int packedLight = net.minecraft.client.renderer.LevelRenderer.getLightColor(Minecraft.getInstance().level, BlockPos.containing(effectPos));
+
+            PlayerEffectRenderer.getInstance().render(
+                    effect, poseStack, bufferSource, packedLight, partialTick);
+
+            poseStack.popPose();
+        }
+
+        bufferSource.endBatch();
     }
 
     @SubscribeEvent
@@ -143,7 +264,7 @@ public class PlayerRender {
             }
     }
 
-    private static boolean needVisiblePlayerPart(ItemStack stack, Player player) {
+    public static boolean needVisiblePlayerPart(ItemStack stack, Player player) {
         return stack.getItem() instanceof BaseRiderArmor riderArmor && riderArmor.needInvisibility(player.level(), player, stack, riderArmor.getSlot());
     }
 

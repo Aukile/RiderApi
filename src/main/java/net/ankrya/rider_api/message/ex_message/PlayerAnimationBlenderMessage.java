@@ -1,0 +1,76 @@
+package net.ankrya.rider_api.message.ex_message;
+
+import dev.kosmx.playerAnim.api.firstPerson.FirstPersonConfiguration;
+import dev.kosmx.playerAnim.api.firstPerson.FirstPersonMode;
+import dev.kosmx.playerAnim.api.layered.KeyframeAnimationPlayer;
+import dev.kosmx.playerAnim.minecraftApi.PlayerAnimationRegistry;
+import net.ankrya.rider_api.compat.animation.PlayerAnimator;
+import net.ankrya.rider_api.help.GJ;
+import net.ankrya.rider_api.interfaces.message.INMessage;
+import net.minecraft.client.player.AbstractClientPlayer;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.network.NetworkEvent;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.UUID;
+
+/**
+ * 和 {@link PlayerAnimationMessage} 一样，但按 Blender（emotecraft 原生）格式处理物品骨骼坐标（不做轴交换）
+ */
+public class PlayerAnimationBlenderMessage implements INMessage {
+    final UUID uuid;
+    final ResourceLocation layer;
+    final String animation;
+    final boolean showRightArm;
+    final boolean showLeftArm;
+    final boolean override;
+
+    public PlayerAnimationBlenderMessage(UUID uuid, ResourceLocation layer, String animation, boolean showRightArm, boolean showLeftArm, boolean override) {
+        this.uuid = uuid;
+        this.layer = layer;
+        this.animation = animation;
+        this.showRightArm = showRightArm;
+        this.showLeftArm = showLeftArm;
+        this.override = override;
+    }
+
+    @Override
+    public void toBytes(@NotNull FriendlyByteBuf buf) {
+        INMessage.autoWriteAll(buf, uuid, layer, animation, showRightArm, showLeftArm, override);
+    }
+
+    @Override
+    public void run(NetworkEvent.Context ctx) {
+        if (ctx.getDirection().getReceptionSide().isClient()){
+            ctx.enqueueWork(() -> {
+                Level level = GJ.Easy.getLevel(ctx);
+                if (level != null){
+                    Player player = level.getPlayerByUUID(uuid);
+                    if (player instanceof AbstractClientPlayer clientPlayer) {
+                        playerAnimation(clientPlayer, layer, animation, showRightArm, showLeftArm, override);
+                    }
+                }
+            });
+        }
+        ctx.setPacketHandled(true);
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    public static void playerAnimation(AbstractClientPlayer player, ResourceLocation dataId, String animation, boolean showRightArm, boolean showLeftArm, boolean override){
+        // 原来用 requireNonNull，动画名写错/资源缺失时直接抛异常（在网络包里抛会导致断开连接）
+        var keyframe = PlayerAnimationRegistry.getAnimation(new ResourceLocation(animation));
+        if (keyframe == null) {
+            net.ankrya.rider_api.RiderApi.LOGGER.error("[RiderApi] Player animation not found: {} (check assets/<modid>/player_animation/)", animation);
+            return;
+        }
+        // 原来第二个参数调用的是 setShowLeftItem，导致“显示左臂”实际控制的是左手物品
+        KeyframeAnimationPlayer keyframeAnimationPlayer = new KeyframeAnimationPlayer(keyframe)
+                .setFirstPersonMode(FirstPersonMode.THIRD_PERSON_MODEL).setFirstPersonConfiguration(new FirstPersonConfiguration().setShowRightArm(showRightArm).setShowLeftArm(showLeftArm));
+        PlayerAnimator.instance().playAnimation(player, dataId, keyframeAnimationPlayer, override, true);
+    }
+}

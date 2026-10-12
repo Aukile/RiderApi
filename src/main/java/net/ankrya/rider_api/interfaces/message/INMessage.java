@@ -14,7 +14,7 @@ import java.util.UUID;
  * 使用{@link net.ankrya.rider_api.message.NMessageCreater}创建网络包 <br>
  * 能够自动识别数据类型（必须使用接口中的方法写） <br>
  * 优化了发包的读写次数 <br>
- * （当然导致它具有了上限，但是上限是变量数量不能超过9（把中间体改成long就可以支持到18），应该不会有这种情况吧？）
+ * （当然导致它具有了上限，但是上限是变量数量不能超过18）
  */
 public interface INMessage {
 
@@ -29,7 +29,7 @@ public interface INMessage {
     /**自动解析,一行解决*/
     static void autoWriteAll(FriendlyByteBuf buf, Object... values){
         if (values.length == 0){
-            buf.writeInt(0);
+            buf.writeLong(0);
             return;
         }
 
@@ -37,12 +37,15 @@ public interface INMessage {
         List<Object> valueList = new ArrayList<>();
         for (var value : values) autoAnalysis(value, types, valueList);
 
+        // 原来用 int 拼接类型码，超过 9 个参数就溢出（注释里写的上限 18 个其实达不到），改为 long
+        if (types.size() > 18)
+            throw new IllegalArgumentException("INMessage supports at most 18 parameters, got " + types.size());
         int time = 0;
-        int valueInt = 0;
-        for (int type : types) valueInt = creatMassageNumber(valueInt, type, time++);
-        buf.writeInt(valueInt);
+        long valueLong = 0;
+        for (int type : types) valueLong = creatMassageNumber(valueLong, type, time++);
+        buf.writeLong(valueLong);
 
-        for (int i = 0; i < types.size(); i++) {
+        for(int i = 0; i < types.size(); ++i) {
             int type = types.get(i);
             writeFromType(buf, type, valueList.get(i));
         }
@@ -59,11 +62,12 @@ public interface INMessage {
             case 6: buf.writeResourceLocation((ResourceLocation) value); break;
             case 7: buf.writeUUID((UUID) value); break;
             case 8: buf.writeBlockPos((BlockPos) value); break;
+            case 9: buf.writeLong((long) value); break;
         }
     }
 
     /**自动解析的协助方法，请勿调用*/
-    static void autoAnalysis(Object value, List<Integer> types, List<Object>  values){
+    static <T> void autoAnalysis(Object value, List<Integer> types, List<Object>  values){
         Class<?> aClass = value.getClass();
         values.add(value);
         if (aClass.isAssignableFrom(Integer.class)) types.add(1);
@@ -74,10 +78,17 @@ public interface INMessage {
         else if (aClass.isAssignableFrom(ResourceLocation.class)) types.add(6);
         else if (aClass.isAssignableFrom(UUID.class)) types.add(7);
         else if (aClass.isAssignableFrom(BlockPos.class)) types.add(8);
+        else if (aClass.isAssignableFrom(Long.class)) types.add(9);
         else throw new IllegalArgumentException("Unsupported type: " + aClass.getName());
     }
 
     static int creatMassageNumber(int value, int type,int time){
         return (int) (value + type * Math.pow(10, time));
+    }
+
+    static long creatMassageNumber(long value, int type, int time){
+        long pow = 1;
+        for (int i = 0; i < time; i++) pow *= 10;
+        return value + type * pow;
     }
 }

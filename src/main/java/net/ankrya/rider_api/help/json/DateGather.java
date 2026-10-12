@@ -118,4 +118,59 @@ public abstract class DateGather {
             return "Block States";
         }
     }
+
+    /**
+     * 战利品表生成器的骨架（主分支新增）。默认没有任何战利品表，继承后重写 BlockLoot/EntityLoot 的 generate 添加。<br>
+     * 注意：原版 BlockLootSubProvider/EntityLootSubProvider 会检查“所有已注册方块/实体”是否都有战利品表，
+     * 这里把检查范围限定为空，避免空骨架直接让数据生成失败
+     */
+    public static class LootTable extends net.minecraft.data.loot.LootTableProvider {
+        public LootTable(PackOutput output, java.util.Set<ResourceLocation> requiredTables, java.util.List<SubProviderEntry> subProviders) {
+            super(output, requiredTables, subProviders);
+        }
+
+        public LootTable(PackOutput output, java.util.Set<ResourceLocation> requiredTables) {
+            this(output, requiredTables, java.util.List.of(
+                    new SubProviderEntry(BlockLoot::new, net.minecraft.world.level.storage.loot.parameters.LootContextParamSets.BLOCK),
+                    new SubProviderEntry(EntityLoot::new, net.minecraft.world.level.storage.loot.parameters.LootContextParamSets.ENTITY)));
+        }
+
+        public static class BlockLoot extends net.minecraft.data.loot.BlockLootSubProvider {
+            protected BlockLoot(java.util.Set<Item> explosionResistant, net.minecraft.world.flag.FeatureFlagSet enabledFeatures) {
+                super(explosionResistant, enabledFeatures);
+            }
+
+            public BlockLoot() {
+                this(java.util.Collections.emptySet(), net.minecraft.world.flag.FeatureFlags.REGISTRY.allFlags());
+            }
+
+            @Override
+            protected void generate() {
+            }
+
+            @Override
+            protected @NotNull Iterable<Block> getKnownBlocks() {
+                return java.util.Collections.emptyList();
+            }
+        }
+
+        public static class EntityLoot extends net.minecraft.data.loot.EntityLootSubProvider {
+            protected EntityLoot(net.minecraft.world.flag.FeatureFlagSet required) {
+                super(required);
+            }
+
+            public EntityLoot() {
+                this(net.minecraft.world.flag.FeatureFlags.REGISTRY.allFlags());
+            }
+
+            @Override
+            public void generate() {
+            }
+
+            @Override
+            protected java.util.stream.@NotNull Stream<net.minecraft.world.entity.EntityType<?>> getKnownEntityTypes() {
+                return java.util.stream.Stream.empty();
+            }
+        }
+    }
 }

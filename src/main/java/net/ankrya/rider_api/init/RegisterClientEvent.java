@@ -5,10 +5,9 @@ import net.ankrya.rider_api.client.particle.ParticleTypeFactory;
 import net.ankrya.rider_api.client.particle.base.AdvancedParticleBase;
 import net.ankrya.rider_api.client.particle.base.ParticleRibbon;
 import net.ankrya.rider_api.client.particle.base.SpreadBase;
-import net.ankrya.rider_api.client.particle.base.advanced.AdvancedParticleData;
-import net.ankrya.rider_api.client.particle.base.advanced.RibbonParticleData;
 import net.ankrya.rider_api.client.shaber.ModShaders;
 import net.ankrya.rider_api.client.shaber.model.base.CosmicModelLoader;
+import net.ankrya.rider_api.compat.animation.GeoArmorBender;
 import net.ankrya.rider_api.compat.animation.PlayerAnimator;
 import net.ankrya.rider_api.entity.ArrowSource;
 import net.ankrya.rider_api.entity.LongTimeEffect;
@@ -35,6 +34,7 @@ public class RegisterClientEvent {
     @SubscribeEvent
     public static void registerPlayerAnimator(final FMLClientSetupEvent event) {
         PlayerAnimator.instance().init();
+        GeoArmorBender.register();
     }
 
     @SubscribeEvent

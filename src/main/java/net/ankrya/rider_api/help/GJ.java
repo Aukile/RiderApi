@@ -15,6 +15,7 @@ import net.ankrya.rider_api.interfaces.timer.ITimer;
 import net.ankrya.rider_api.message.MessageLoader;
 import net.ankrya.rider_api.message.NMessageCreater;
 import net.ankrya.rider_api.message.common.LoopSoundMessage;
+import net.ankrya.rider_api.message.ex_message.OnetimeMessage;
 import net.ankrya.rider_api.message.ex_message.PlayLoopSound;
 import net.ankrya.rider_api.message.ex_message.StopLoopSound;
 import net.minecraft.client.CameraType;
@@ -22,6 +23,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.commands.arguments.blocks.BlockInput;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.NonNullList;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleType;
 import net.minecraft.core.particles.ParticleTypes;
@@ -34,17 +36,22 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.Clearable;
+import net.minecraft.world.Container;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.item.crafting.Recipe;
+import net.minecraft.world.item.crafting.RecipeManager;
+import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
@@ -52,6 +59,7 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.fml.loading.FMLLoader;
 import net.minecraftforge.network.NetworkEvent;
 import org.jetbrains.annotations.ApiStatus;
 import org.joml.Matrix4f;
@@ -102,6 +110,9 @@ public abstract class GJ {
         }
 
         public static Player getPlayer(NetworkEvent.Context context) {
+            // 正在执行 AllPackt 转发来的消息时，返回最初的发送者（和高版本的行为一致）
+            Player source = net.ankrya.rider_api.message.ex_message.AllPackt.currentSource();
+            if (source != null && context.getDirection().getReceptionSide().isClient()) return source;
             return context.getSender() == null && context.getDirection().getReceptionSide().isClient() ? getPlayer() : context.getSender();
         }
 
@@ -131,6 +142,16 @@ public abstract class GJ {
                 return new String[0];
             }
         }
+
+        /**判定是否为开发环境*/
+        public static boolean isDevEnvironment() {
+            return !FMLLoader.isProduction();
+        }
+
+        /** 在服务端执行一次性的 GJ 指令（客户端调用会发给服务端执行） */
+        public static void useOnetime(GJ order){
+            MessageLoader.getApiLoader().sendToServer(new NMessageCreater(new OnetimeMessage(order)));
+        }
     }
 
     /**世界相关*/
@@ -148,6 +169,10 @@ public abstract class GJ {
 
         public static List<LivingEntity> rangeFind(Level level, Vec3 center, int radius) {
             return rangeFind(LivingEntity.class, level, center, radius);
+        }
+
+        public static List<Mob> rangeFindMob(Level level, Vec3 center, int radius) {
+            return rangeFind(Mob.class, level, center, radius);
         }
 
         public static <T extends Entity> List<T> rangeFind(Class<T> clazz, Level level, Vec3 center, int radius) {
@@ -251,7 +276,9 @@ public abstract class GJ {
             if (entity instanceof ServerPlayer serverPlayer) {
                 return serverPlayer.gameMode.getGameModeForPlayer();
             } else if (entity instanceof Player player && player.level().isClientSide()) {
-                PlayerInfo playerInfo = Objects.requireNonNull(Minecraft.getInstance().getConnection()).getPlayerInfo(player.getGameProfile().getId());
+                // 原来 requireNonNull 在没有连接时直接抛异常，方法本身是允许返回 null 的
+                var connection = Minecraft.getInstance().getConnection();
+                PlayerInfo playerInfo = connection == null ? null : connection.getPlayerInfo(player.getGameProfile().getId());
                 if (playerInfo != null)
                     return playerInfo.getGameMode();
             }
@@ -364,6 +391,30 @@ public abstract class GJ {
                 EnchantmentHelper.setEnchantments(enchantments, stack);
             }
         }
+
+        /**
+         * 按“第 i 个原料槽 → 物品”查找配方产物，找不到返回 ItemStack.EMPTY<br>
+         * （带下标越界检查）
+         */
+        public static <C extends Container, T extends Recipe<C>> ItemStack findRecipeResult(Level level, RecipeType<T> type, Map<Integer, ItemStack> stacks) {
+            RecipeManager manager = level.getRecipeManager();
+            List<T> recipes = manager.getAllRecipesFor(type);
+            for (T recipe : recipes){
+                NonNullList<Ingredient> ingredients = recipe.getIngredients();
+                boolean continueFlag = true;
+                for (int i : stacks.keySet()){
+                    ItemStack stack = stacks.get(i);
+                    if (i < 0 || i >= ingredients.size() || !ingredients.get(i).test(stack)){
+                        continueFlag = false;
+                        break;
+                    }
+                }
+                if (!continueFlag)
+                    continue;
+                return recipe.getResultItem(level.registryAccess()).copy();
+            }
+            return ItemStack.EMPTY;
+        }
     }
 
     /**数学相关*/
@@ -402,7 +453,23 @@ public abstract class GJ {
                 level.sendParticles(ParticleTypes.EXPLOSION, (target.getX()), (target.getY() + 1), (target.getZ()), 2, 0.1, 0.1, 0.1, 0.1);
         }
 
+        /** 和高版本命名一致的写法 */
+        public static void explosionTo(Entity source, Entity target, Level world, int amount) {
+            ExplosionTo(source, target, world, amount);
+        }
+
+        public static void explosionTo(Entity source, Vec3 vec3, int range, Level world, int amount){
+            explosionTo(source, vec3, range, world, amount, true);
+        }
+
         public static void ExplosionTo(Entity source, Vec3 vec3, int range, Level world, int amount){
+            explosionTo(source, vec3, range, world, amount, true);
+        }
+
+        /**
+         * @param centerExplosion 是否在中心生成爆炸粒子
+         */
+        public static void explosionTo(Entity source, Vec3 vec3, int range, Level world, int amount, boolean centerExplosion){
             List<LivingEntity> livingEntities = ToWorld.rangeFind(world, vec3, range);
             for (LivingEntity target : livingEntities){
                 if (target != source){
@@ -410,7 +477,7 @@ public abstract class GJ {
                     target.hurt(world.damageSources().explosion(target, source), amount);
                 }
             }
-            if (world instanceof ServerLevel level)
+            if (centerExplosion && world instanceof ServerLevel level)
                 level.sendParticles(ParticleTypes.EXPLOSION, vec3.x, vec3.y, vec3.z, 2, 0.1, 0.1, 0.1, 0.1);
         }
     }
@@ -435,6 +502,59 @@ public abstract class GJ {
 
         public static boolean isPauseEntity(Entity entity) {
             return (int) Variables.getVariable(entity, ModVariable.TIME_STATUS) == ITimer.timeStop;
+        }
+
+        /**
+         * 设置实体的单独时速（请在服务端调用，会自动同步给客户端，并随实体保存）<br>
+         * rate 相对真实时间：1 = 正常速度，0.5 = 半速，0.1 = 十分之一，0 = 完全冻结，最大 {@link TimeRateHelper#MAX_RATE}<br>
+         * 在普通状态和时缓状态下都生效；时停状态下仍按时停规则（只有时停免疫实体能动）<br>
+         * 优先级：时缓免疫实体（{@link #isSlowEntity}）> 单独时速 > 世界速度<br>
+         * 玩家不支持单独时速（玩家的移动由客户端控制），请继续用免疫状态
+         */
+        public static void setEntityTimeRate(Entity entity, float rate) {
+            if (Float.isNaN(rate)) rate = -1f;
+            Variables.setVariable(entity, ModVariable.TIME_RATE, rate < 0f ? -1f : Math.min(rate, TimeRateHelper.MAX_RATE));
+        }
+
+        /** 清除单独时速，恢复跟随世界 */
+        public static void clearEntityTimeRate(Entity entity) {
+            if ((float) Variables.getVariable(entity, ModVariable.TIME_RATE) >= 0f)
+                Variables.setVariable(entity, ModVariable.TIME_RATE, -1f);
+        }
+
+        /** 获取设置的单独时速，没有设置返回 -1 */
+        public static float getEntityTimeRate(Entity entity) {
+            return Variables.getVariable(entity, ModVariable.TIME_RATE);
+        }
+
+        /** 时缓时世界的速度（相对真实时间），由 TIME_SLOW_TIMER 换算，默认 500ms → 0.1 */
+        public static float getWorldSlowRate(Level level) {
+            float msPerTick = Variables.getVariable(level, ModVariable.TIME_SLOW_TIMER);
+            if (!(msPerTick > 50f)) return 1f;
+            return 50f / msPerTick;
+        }
+
+        /** 实体当前实际的速度（相对真实时间），综合了世界状态、免疫状态和单独时速 */
+        public static float getEffectiveTimeRate(Entity entity) {
+            Level level = entity.level();
+            int state = getWorldTime(level);
+            if (state == 2) return isPauseEntity(entity) ? 1f : 0f;
+            float custom = getCustomTimeRate(entity, state);
+            if (custom >= 0f) return custom;
+            if (state == 1) return isSlowEntity(entity) ? 1f : getWorldSlowRate(level);
+            return 1f;
+        }
+
+        /**
+         * 内部使用：实体是否走单独时速，是则返回速率，否则返回 -1<br>
+         * 时停、玩家、时缓中的免疫实体都返回 -1（它们走原来的逻辑）
+         */
+        public static float getCustomTimeRate(Entity entity, int worldState) {
+            if (worldState == 2 || entity instanceof Player) return -1f;
+            if (worldState == 1 && isSlowEntity(entity)) return -1f;
+            float rate = Variables.getVariable(entity, ModVariable.TIME_RATE);
+            if (!(rate >= 0f)) return -1f;
+            return Math.min(rate, TimeRateHelper.MAX_RATE);
         }
     }
 

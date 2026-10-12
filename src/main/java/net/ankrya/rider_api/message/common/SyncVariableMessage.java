@@ -2,9 +2,11 @@ package net.ankrya.rider_api.message.common;
 
 import net.ankrya.rider_api.data.Variables;
 import net.ankrya.rider_api.help.GJ;
+import net.ankrya.rider_api.message.MessageLoader;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.network.NetworkEvent;
@@ -49,6 +51,14 @@ public class SyncVariableMessage {
             if (context.getDirection().getReceptionSide().isClient()){
                 Level level = GJ.Easy.getLevel(context);
                 update(message, level);
+            } else {
+                // 客户端只能同步“自己”的数据（防止恶意客户端修改别的实体或整个世界的数据）
+                ServerPlayer sender = context.getSender();
+                if (sender == null || message.id != sender.getId()) return;
+                sender.getCapability(Variables.VARIABLES).ifPresent(cap -> {
+                    cap.deserializeNBT(message.variables.serializeNBT());
+                    MessageLoader.getApiLoader().sendToAllTracking(new SyncVariableMessage(message.id, cap), sender);
+                });
             }
         });
         context.setPacketHandled(true);

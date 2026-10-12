@@ -1,8 +1,11 @@
 package net.ankrya.rider_api;
 
 import com.mojang.logging.LogUtils;
+import net.ankrya.rider_api.init.ApiGameRules;
 import net.ankrya.rider_api.init.ApiRegister;
+import net.ankrya.rider_api.init.RiderEffects;
 import net.ankrya.rider_api.message.MessageLoader;
+import net.ankrya.rider_api.quest.registry.QuestAttachments;
 import net.ankrya.rider_api.util.Config;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.ModLoadingContext;
@@ -21,6 +24,9 @@ public class RiderApi {
         IEventBus bus = FMLJavaModLoadingContext.get().getModEventBus();
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, Config.SPEC);
         ApiRegister.init(bus);
+        RiderEffects.EFFECTS.register(bus);
+        ApiGameRules.init();
+        QuestAttachments.register(bus);
         bus.addListener(this::registerPackets);
     }
 

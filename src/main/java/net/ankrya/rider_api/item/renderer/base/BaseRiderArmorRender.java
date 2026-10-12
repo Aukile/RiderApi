@@ -1,9 +1,18 @@
 package net.ankrya.rider_api.item.renderer.base;
 
+import net.ankrya.rider_api.interfaces.geo.IGeoItem;
 import net.ankrya.rider_api.item.base.armor.BaseRiderArmorBase;
 import net.minecraft.world.entity.EquipmentSlot;
 
 public class BaseRiderArmorRender<T extends BaseRiderArmorBase> extends BaseGeoArmorRenderer<T>{
+    public BaseRiderArmorRender() {
+        super();
+    }
+
+    public BaseRiderArmorRender(IGeoItem item) {
+        super(item);
+    }
+
     @Override
     protected void applyBoneVisibilityBySlot(EquipmentSlot currentSlot) {
         super.applyBoneVisibilityBySlot(currentSlot);

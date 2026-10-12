@@ -256,7 +256,12 @@ public final class VariableSerializer {
 
         @Override
         public CompoundTag read(Tag tag) {
-            return (CompoundTag) tag;
+            return ((CompoundTag) tag).copy();
+        }
+
+        @Override
+        public CompoundTag copy(CompoundTag value) {
+            return value == null ? null : value.copy();
         }
     };
 
@@ -327,6 +332,11 @@ public final class VariableSerializer {
         @Override
         public void write(FriendlyByteBuf buf, ItemStack value) {
             buf.writeItemStack(value, true);
+        }
+
+        @Override
+        public ItemStack copy(ItemStack value) {
+            return value == null ? ItemStack.EMPTY : value.copy();
         }
 
         @Override

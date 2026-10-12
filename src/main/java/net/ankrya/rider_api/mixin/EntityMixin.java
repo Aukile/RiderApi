@@ -3,9 +3,11 @@ package net.ankrya.rider_api.mixin;
 import net.ankrya.rider_api.client.sound.LoopSound;
 import net.ankrya.rider_api.data.ModVariable;
 import net.ankrya.rider_api.data.Variables;
+import net.ankrya.rider_api.init.RiderEffects;
 import net.ankrya.rider_api.interfaces.inside_use.ISoundMap;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
@@ -57,24 +59,38 @@ public abstract class EntityMixin implements ISoundMap {
         }
     }
 
-    @Inject(method = "move", at = @At("HEAD"), cancellable = true)
+    @Inject(method = {"move"}, at = {@At("HEAD")}, cancellable = true)
     public void move(MoverType moverType, Vec3 vec3, CallbackInfo ci) {
-        if ((boolean) Variables.getVariable((Entity) (Object) this, ModVariable.DISABLE_MOVE)){
+        Entity self = (Entity) (Object) this;
+        if ((Boolean) Variables.getVariable(self, ModVariable.DISABLE_MOVE)) {
+            ci.cancel();
+        }
+        if (self instanceof LivingEntity living && living.hasEffect(RiderEffects.ROOT.get())) {
             ci.cancel();
         }
     }
 
-    @Inject(method = "turn", at = @At("HEAD"), cancellable = true)
+    @Inject(method = {"turn"}, at = {@At("HEAD")}, cancellable = true)
     public void turn(double xRot, double yRot, CallbackInfo ci) {
-        if ((boolean) Variables.getVariable((Entity) (Object) this, ModVariable.DISABLE_MOVE)){
+        Entity self = (Entity) (Object) this;
+        if ((Boolean)Variables.getVariable(self, ModVariable.DISABLE_MOVE)) {
+            ci.cancel();
+        }
+        if (self instanceof LivingEntity living && living.hasEffect(RiderEffects.ROOT.get())) {
+            self.setDeltaMovement(Vec3.ZERO);
             ci.cancel();
         }
     }
 
-    @Inject(method = "tick", at = @At("HEAD"))
+    @Inject(method = {"tick"}, at = {@At("HEAD")})
     public void tick(CallbackInfo ci) {
-        if ((boolean) Variables.getVariable((Entity) (Object) this, ModVariable.DISABLE_MOVE)){
+        Entity self = (Entity) (Object) this;
+        if ((Boolean)Variables.getVariable(self, ModVariable.DISABLE_MOVE)) {
             this.setDeltaMovement(Vec3.ZERO);
         }
+        if (self instanceof LivingEntity living && living.hasEffect(RiderEffects.ROOT.get())) {
+            this.setDeltaMovement(Vec3.ZERO);
+        }
+
     }
 }

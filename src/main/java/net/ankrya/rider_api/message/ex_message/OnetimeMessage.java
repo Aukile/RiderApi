@@ -30,7 +30,11 @@ public class OnetimeMessage implements INMessage {
 
     private static GJ getOnetime(String name, Player player) {
         try {
-            return (GJ) Class.forName(name).getDeclaredConstructor(Player.class).newInstance(player);
+            // 安全检查：只允许实例化 GJ 的子类
+            Class<?> clazz = Class.forName(name, false, OnetimeMessage.class.getClassLoader());
+            if (!GJ.class.isAssignableFrom(clazz))
+                throw new IllegalArgumentException("Not a GJ: " + name);
+            return (GJ) clazz.getDeclaredConstructor(Player.class).newInstance(player);
         } catch (Throwable e) {
             throw new RuntimeException(e);
         }

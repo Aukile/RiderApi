@@ -26,7 +26,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public final class Variables implements ICapabilitySerializable<ListTag> {
     public static final Capability<Variables> VARIABLES = CapabilityManager.get(new CapabilityToken<>() {});
-    public static final Map<String, Data<?>> variablesDefault = new HashMap<>();
+    public static final Map<String, Data<?>> variablesDefault = new java.util.concurrent.ConcurrentHashMap<>();
     private final LazyOptional<Variables> optional = LazyOptional.of(() -> this);
     Map<String, Data<?>> variables = new HashMap<>();
     AtomicInteger idPool = new AtomicInteger();
@@ -48,7 +48,9 @@ public final class Variables implements ICapabilitySerializable<ListTag> {
         if (variables.containsKey(name))
             throw new RuntimeException("Name already exists");
         else {
-            boolean save = variables.get(name).isSave();
+            // 原来这里取 variables.get(name).isSave()，而 name 一定不存在，必定空指针
+            Data<?> def = variablesDefault.get(name);
+            boolean save = def != null && def.isSave();
             variables.put(name, new Data<>(value, name, data, save));
         }
     }
@@ -56,16 +58,26 @@ public final class Variables implements ICapabilitySerializable<ListTag> {
     public Variables cloneIfSave(Variables  variables){
         variables.variables.forEach((name, data) -> {
             if (data.isSave()){
-                this.variables.put(name, data);
-            } else this.variables.put(name, Variables.variablesDefault.get(name));
+                this.variables.put(name, data.copy());
+            } else {
+                // 原来直接放入全局默认值对象，之后 set 会把“默认值”一起改掉
+                Data<?> def = Variables.variablesDefault.get(name);
+                if (def != null) this.variables.put(name, def.copy());
+            }
         });
+        return this;
+    }
+
+    /** 完整复制（非死亡的克隆，例如从末地返回） */
+    public Variables cloneAll(Variables variables){
+        variables.variables.forEach((name, data) -> this.variables.put(name, data.copy()));
         return this;
     }
 
     public Variables synIfSave(Variables  variables){
         variables.variables.forEach((name, data) -> {
             if (data.isSave()){
-               this.variables.put(name, data);
+               this.variables.put(name, data.copy());
             }
         });
         return this;
@@ -103,6 +115,7 @@ public final class Variables implements ICapabilitySerializable<ListTag> {
             String name = compoundTag.getString("name");
             int type = compoundTag.getInt("type");
             Tag value = compoundTag.get("value");
+            if (value == null) return;
             boolean save = compoundTag.getBoolean("save");
             Data<?> data = Data.read(value, type, name, save);
             variables.put(name, data);
@@ -130,7 +143,8 @@ public final class Variables implements ICapabilitySerializable<ListTag> {
     private <T> void syncVariables(String name, T defaultValue, IVariable<T> type, boolean save){
         Data<T> data = new Data<>(defaultValue, name, type, save);
         variables.put(name, data);
-        variablesDefault.put(name, data);
+        // 默认值单独存一份副本：原来放的是同一个对象，任何实例 set 之后全局默认值都会被改掉
+        variablesDefault.putIfAbsent(name, data.copy());
     }
 
     /**设置玩家的数据*/
@@ -155,8 +169,19 @@ public final class Variables implements ICapabilitySerializable<ListTag> {
     @SuppressWarnings("unchecked")
     public <T> T getVariable(String name){
         if (!variables.containsKey(name))
-            return (T) variablesDefault.get(name).value;
+            return defaultValue(name);
         return (T) variables.get(name).value;
+    }
+
+    /** 获取默认值 */
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    public static <T> T defaultValue(String name){
+        if (!variablesDefault.containsKey(name))
+            new Variables().init(); // 触发 ModVariable.init 和 DataInitEvent，填充默认值表
+        Data data = variablesDefault.get(name);
+        if (data == null)
+            throw new RuntimeException("Variable does not exist: " + name);
+        return (T) data.load.copy(data.value);
     }
 
     public static Variables getCapability(Entity entity) {
@@ -171,6 +196,9 @@ public final class Variables implements ICapabilitySerializable<ListTag> {
     public void syncVariables(Entity entity){
         if (entity instanceof ServerPlayer player)
             MessageLoader.getApiLoader().sendToPlayersInDimension(new SyncVariableMessage(entity.getId(), this), player);
+        else if (!entity.level().isClientSide())
+            // 原来非玩家实体在服务端也走 sendToServer，数据根本发不到客户端
+            MessageLoader.getApiLoader().sendToPlayersInDimension(new SyncVariableMessage(entity.getId(), this), entity.level());
         else MessageLoader.getApiLoader().sendToServer(new SyncVariableMessage(entity.getId(), this));
     }
 
@@ -246,6 +274,11 @@ public final class Variables implements ICapabilitySerializable<ListTag> {
 
         public Tag write(){
             return load.write(value);
+        }
+
+        /** 复制一份（可变值也会复制） */
+        public Data<T> copy(){
+            return new Data<>(load.copy(value), name, load, save);
         }
 
         public static <T> Data<T> read(Tag nbt, int typeId, String name, boolean save){

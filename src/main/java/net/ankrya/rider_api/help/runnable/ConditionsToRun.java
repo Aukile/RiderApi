@@ -34,8 +34,9 @@ public class ConditionsToRun {
         if (event.phase == TickEvent.Phase.END) {
             this.tick++;
             if (conditions.test(tick)) {
-                this.runnable.run();
+                // 先注销再执行：runnable 抛异常时也不会每 tick 重复执行
                 this.bus.unregister(this);
+                this.runnable.run();
             }
         }
     }

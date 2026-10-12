@@ -3,6 +3,7 @@ package net.ankrya.rider_api.item.base.armor;
 import net.ankrya.rider_api.api.event.RiderArmorEquipEvent;
 import net.ankrya.rider_api.api.event.RiderArmorRemoveEvent;
 import net.ankrya.rider_api.help.GJ;
+import net.ankrya.rider_api.init.ApiGameRules;
 import net.minecraft.core.Holder;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.effect.MobEffect;
@@ -46,6 +47,9 @@ public abstract class BaseRiderArmor extends BaseRiderArmorBase {
     @Override
     public void inventoryTick(@NotNull ItemStack stack, @NotNull Level level, @NotNull Entity entity, int slotId, boolean isSelected) {
         super.inventoryTick(stack, level, entity, slotId, isSelected);
+        // 物品栏增删、药水效果都只应在服务端处理，结果会自动同步到客户端。
+        // 原来客户端也执行一遍，会出现"幽灵物品"、物品闪烁和客户端/服务端背包不一致
+        if (level.isClientSide()) return;
         if (entity instanceof Player player){
             ItemStack carried = player.containerMenu.getCarried();
             if (carried.is(stack.getItem())) {
@@ -55,7 +59,7 @@ public abstract class BaseRiderArmor extends BaseRiderArmorBase {
         }
         if (entity instanceof LivingEntity livingEntity){
             if (allArmorEquip(livingEntity)){
-                if (needInvisibility(level, livingEntity, stack, slot)) livingEntity.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, 10, 0, false, false));
+                if (needInvisibility(level, livingEntity, stack, slot) && level.getGameRules().getBoolean(ApiGameRules.INVISIBILITY)) livingEntity.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, 10, 0, false, false));
                 for (Map.Entry<Holder<MobEffect>, Integer> entry : getEffects(level, livingEntity, stack, slot).entrySet()){
                     if (entry.getValue() > 0){
                         if (entry.getKey().get() == MobEffects.NIGHT_VISION)

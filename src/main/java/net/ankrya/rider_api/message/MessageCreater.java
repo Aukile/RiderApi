@@ -4,8 +4,6 @@ import net.ankrya.rider_api.interfaces.message.IFMessage;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 
-import java.util.function.Supplier;
-
 /**
  * {@link  IFMessage} 的创建器
  * @author 八云紫Ender <br>
@@ -19,7 +17,7 @@ public final class MessageCreater {
 
     public static void toBuf(MessageCreater create, FriendlyByteBuf buf) {
         String path = create.message.getClass().getName();
-        byte[] bytes = path.getBytes();
+        byte[] bytes = path.getBytes(java.nio.charset.StandardCharsets.UTF_8);
         buf.writeInt(bytes.length);
         for (byte b : bytes) {
             buf.writeByte(b);
@@ -33,10 +31,14 @@ public final class MessageCreater {
         for (int i = 0; i < bytes.length; i++) {
             bytes[i] = buf.readByte();
         }
-        String path = new String(bytes);
+        String path = new String(bytes, java.nio.charset.StandardCharsets.UTF_8);
         IFMessage message;
         try {
-            message = (IFMessage) Class.forName(path).getDeclaredConstructor().newInstance();
+            // 安全检查：只允许实例化 IFMessage 的实现类
+            Class<?> clazz = Class.forName(path, false, MessageCreater.class.getClassLoader());
+            if (!IFMessage.class.isAssignableFrom(clazz))
+                throw new IllegalArgumentException("Not an IFMessage: " + path);
+            message = (IFMessage) clazz.getDeclaredConstructor().newInstance();
         } catch (Throwable e) {
             throw new RuntimeException(e);
         }
@@ -46,12 +48,12 @@ public final class MessageCreater {
     }
 
     // 执行message对象的方法
-    public static void run(final MessageCreater create, final Supplier<NetworkEvent.Context> supplier) {
-        NetworkEvent.Context context = supplier.get();
-        context.enqueueWork(() -> {
+    public static void run(final MessageCreater create, final java.util.function.Supplier<NetworkEvent.Context> supplier) {
+        NetworkEvent.Context ctx = supplier.get();
+        ctx.enqueueWork(() -> {
 //			Main.LOGGER.info("run task " + create.message);
-            create.message.run(context);
+            create.message.run(ctx);
         });
-        context.setPacketHandled(true);
+        ctx.setPacketHandled(true);
     }
 }

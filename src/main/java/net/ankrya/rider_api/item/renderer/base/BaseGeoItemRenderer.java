@@ -4,12 +4,14 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.ankrya.rider_api.interfaces.geo.IGeoItem;
 import net.ankrya.rider_api.item.model.base.BaseGeoItemModel;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import org.jetbrains.annotations.Nullable;
 import software.bernie.geckolib.cache.object.BakedGeoModel;
+import software.bernie.geckolib.cache.object.GeoBone;
 import software.bernie.geckolib.renderer.GeoItemRenderer;
 import software.bernie.geckolib.renderer.layer.AutoGlowingGeoLayer;
 import software.bernie.geckolib.renderer.layer.GeoRenderLayer;
@@ -30,6 +32,28 @@ public class BaseGeoItemRenderer<T extends Item & IGeoItem> extends GeoItemRende
         for (GeoRenderLayer<?> layer : item.getRenderLayers(this))
             this.addRenderLayer((GeoRenderLayer<T>) layer);
         if (item.autoGlow()) this.addRenderLayer(new AutoGlowingGeoLayer<>(this));
+    }
+
+    /** 按 {@link IGeoItem#lightBones} / {@link IGeoItem#boneByRenderType} 给指定骨骼换渲染类型（发光等） */
+    @Override
+    public void renderCubesOfBone(PoseStack poseStack, GeoBone bone, VertexConsumer buffer, int packedLight, int packedOverlay, float red, float green, float blue, float alpha) {
+        IGeoItem geoItem = getGeoItemInterface();
+        if (geoItem != null) {
+            String name = bone.getName();
+            if (geoItem.lightBones(this).contains(name)) {
+                MultiBufferSource.BufferSource source = Minecraft.getInstance().renderBuffers().bufferSource();
+                VertexConsumer newBuffer = source.getBuffer(RenderType.beaconBeam(getTextureLocation(animatable), true));
+                super.renderCubesOfBone(poseStack, bone, newBuffer, packedLight, packedOverlay, red, green, blue, alpha);
+                return;
+            }
+            RenderType type = geoItem.boneByRenderType(this).get(name);
+            if (type != null) {
+                MultiBufferSource.BufferSource source = Minecraft.getInstance().renderBuffers().bufferSource();
+                super.renderCubesOfBone(poseStack, bone, source.getBuffer(type), packedLight, packedOverlay, red, green, blue, alpha);
+                return;
+            }
+        }
+        super.renderCubesOfBone(poseStack, bone, buffer, packedLight, packedOverlay, red, green, blue, alpha);
     }
 
     @Override

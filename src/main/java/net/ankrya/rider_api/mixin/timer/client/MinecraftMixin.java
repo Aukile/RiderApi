@@ -206,28 +206,26 @@ public abstract class MinecraftMixin extends ReentrantBlockableEventLoop<Runnabl
 
         if (this.level != null) {
             int time_Status = (int) Variables.getVariable(this.level, ModVariable.TIME_STATUS);
+            // 每帧都推进正常速度的计时器。原来只在时缓/时停时才推进，
+            // 进入时缓/时停的第一帧会把之前所有的时间一次性补回来（连续 tick 10 次，画面跳一下）
+            int j = rider_api$ITimer.rider_api$advanceTime(Util.getMillis());
             if (time_Status == 1) {
-
-                int i1;
                 if (p_91384_) {
-                    int j = rider_api$ITimer.rider_api$advanceTime(Util.getMillis());
-
-                    for (i1 = 0; i1 < Math.min(10, j); ++i1) {
+                    for (int i1 = 0; i1 < Math.min(10, j); ++i1) {
                         this.rider_api$specialTickStart(time_Status);
                     }
-
                 }
-
-            }else if (time_Status == 2) {
-                int i1;
+            } else if (time_Status == 2) {
                 if (p_91384_) {
-                    int j = rider_api$ITimer.rider_api$advanceTime(Util.getMillis());
-
-                    for (i1 = 0; i1 < Math.min(10, j); ++i1) {
+                    for (int i1 = 0; i1 < Math.min(10, j); ++i1) {
                         this.tick();
                     }
-
                 }
+            }
+
+            // 单独时速的实体按每帧经过的真实时间推进（暂停菜单打开时不推进）
+            if (time_Status != 2 && !this.pause && this.level instanceof TimerClientLevel timerLevel) {
+                timerLevel.rider_api$tickEntitiesByRate(rider_api$ITimer.rider_api$tickDelta());
             }
 
             if (time_Status != 2) {
@@ -303,7 +301,7 @@ public abstract class MinecraftMixin extends ReentrantBlockableEventLoop<Runnabl
                     Screen $$4 = this.screen;
                     if ($$4 instanceof InBedChatScreen) {
                         InBedChatScreen inbedchatscreen = (InBedChatScreen) $$4;
-                        if (!this.player.isSleeping()) {
+                        if (this.player != null && !this.player.isSleeping()) {
                             inbedchatscreen.onPlayerWokeUp();
                         }
                     }
@@ -455,7 +453,7 @@ public abstract class MinecraftMixin extends ReentrantBlockableEventLoop<Runnabl
         this.tutorial.onLookAt(this.level, this.hitResult);
 
         this.gui.tick(this.pause || time_Status == 2);
-        this.profiler.pop();
+        // 原来这里有一个没有对应 push 的 profiler.pop()，开启性能分析(F3)时会导致 profiler 栈错乱
 
         if (this.screen == null && this.player != null) {
             if (this.player.isDeadOrDying() && !(this.screen instanceof DeathScreen)) {
@@ -467,7 +465,7 @@ public abstract class MinecraftMixin extends ReentrantBlockableEventLoop<Runnabl
             Screen $$4 = this.screen;
             if ($$4 instanceof InBedChatScreen) {
                 InBedChatScreen inbedchatscreen = (InBedChatScreen) $$4;
-                if (!this.player.isSleeping()) {
+                if (this.player != null && !this.player.isSleeping()) {
                     inbedchatscreen.onPlayerWokeUp();
                 }
             }
@@ -495,6 +493,9 @@ public abstract class MinecraftMixin extends ReentrantBlockableEventLoop<Runnabl
                 }, "Ticking screen", this.screen.getClass().getCanonicalName());
             }
         }
+
+        // 上面的按键/界面处理可能导致断开连接（player、level 变成 null），接着调用 gameRenderer.tick() 会空指针崩溃
+        if (this.level == null || this.player == null) return;
 
         if (!this.pause && this.level != null) {
             this.gameMode.tick();

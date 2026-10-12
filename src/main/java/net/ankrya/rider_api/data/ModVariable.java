@@ -16,6 +16,15 @@ public class ModVariable {
     public static final String ARROW_DROP_MODE = "arrow_drop_mode";
     /**禁止盔甲栏，boolean类型*/
     public static final String DISABLE_ARMOR_SLOT = "disable_armor_slot";
+    /**时间减慢时速，float类型*/
+    public static final String TIME_SLOW_TIMER = "time_slow_timer";
+    /**
+     * 实体单独时速，float类型，相对真实时间（1 = 正常，0.5 = 半速，0 = 冻结），小于 0 表示跟随世界。<br>
+     * 请用 {@link net.ankrya.rider_api.help.GJ.TimerControl#setEntityTimeRate} 设置
+     */
+    public static final String TIME_RATE = "time_rate";
+    /**int类型，技能选项*/
+    public static final String SKILL_OPTION = "skill_option";
 
 
     /**
@@ -29,6 +38,9 @@ public class ModVariable {
         variables.registerVariable(boolean.class, DISABLE_MOVE, false, false);
         variables.registerVariable(boolean.class, ARROW_DROP_MODE, false, false);
         variables.registerVariable(boolean.class, DISABLE_ARMOR_SLOT, false, false);
+        variables.registerVariable(float.class, TIME_SLOW_TIMER, 500.0f, true);
+        variables.registerVariable(float.class, TIME_RATE, -1.0f, false);
+        variables.registerVariable(int.class, SKILL_OPTION, 0, false);
         MinecraftForge.EVENT_BUS.post(new DataInitEvent(variables));
     }
 }

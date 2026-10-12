@@ -6,7 +6,6 @@ import net.ankrya.rider_api.interfaces.message.INMessage;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
@@ -43,6 +42,7 @@ public class StopLoopSound implements INMessage {
 
     @OnlyIn(Dist.CLIENT)
     public static void stopSound(Minecraft instance, StopLoopSound message) {
-        instance.getSoundManager().stop(message.location, SoundSource.PLAYERS);
+        // 原来固定按 PLAYERS 停止，其它声源类型的循环音效停不掉
+        instance.getSoundManager().stop(message.location, PlayLoopSound.getSoundSource(message.type));
     }
 }
